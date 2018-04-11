@@ -1,0 +1,27 @@
+{
+  "name": "TestApp",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node node_modules/react-native/local-cli/cli.js start",
+    "test": "jest"
+  },
+  "dependencies": {
+    "assert": "^1.4.1",
+    "buffer": "^5.1.0",
+    "node-libs-browser": "^2.1.0",
+    "process": "^0.11.10",
+    "react": "16.3.1",
+    "react-native": "0.55.2",
+    "state-channel": "git+https://github.com/AmitShah/state-channel.git"
+  },
+  "devDependencies": {
+    "babel-jest": "22.4.3",
+    "babel-preset-react-native": "4.0.0",
+    "jest": "22.4.3",
+    "react-test-renderer": "16.3.1"
+  },
+  "jest": {
+    "preset": "react-native"
+  }
+}
