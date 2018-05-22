@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "assert": "^1.4.1",
-    "blockchain-service": "git+https://github.com/AmitShah/blockchain-service.git",
+    "blockchain-service": "https://github.com/gonetwork-admin/gonetwork-blockchain-service.git#with-lib",
     "buffer": "^5.1.0",
     "node-libs-browser": "^2.1.0",
     "process": "^0.11.10",
