@@ -15,7 +15,8 @@
     "react": "16.3.1",
     "react-native": "0.55.2",
     "react-native-securerandom": "^0.1.1",
-    "state-channel": "git+https://github.com/AmitShah/state-channel.git"
+    "state-channel": "git+https://github.com/gonetwork-admin/state-channel.git",
+    "react-native-paho-mqtt":"*"
   },
   "devDependencies": {
     "babel-jest": "22.4.3",

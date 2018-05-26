@@ -2,7 +2,7 @@
 * @Author: amitshah
 * @Date:   2018-04-18 00:32:59
 * @Last Modified by:   amitshah
-* @Last Modified time: 2018-04-18 02:24:08
+* @Last Modified time: 2018-04-26 20:04:38
 */
 
 global.Buffer = require('buffer').Buffer;
@@ -11,7 +11,10 @@ global.process = require('process');
 import { AppRegistry } from 'react-native';
 import App from './App';
 import { generateSecureRandom } from 'react-native-securerandom';
- 
+import { Client, Message } from 'react-native-paho-mqtt';
+
+
+console.log(Client);
 
 const stateChannel= require('state-channel');
 const events = require('events');
@@ -67,8 +70,6 @@ class TestEventBus extends events.EventEmitter{
 
   }
 
-
-
   onReceive(packet){
     this.msgCount++;
     var msg = message.DESERIALIZE_AND_DECODE_MESSAGE(packet);
@@ -91,28 +92,14 @@ function createEngine(address,privateKey,blockchainService){
     return e;
 }
 
+
 var blockchainQueue = [];
 var sendQueue = [];
 var currentBlock = new util.BN(55);
 var channelAddress = util.toBuffer("0x8bf6a4702d37b7055bc5495ac302fe77dae5243b");
 var engine = createEngine(util.toBuffer(acct1),pk1);
 var engine2 = createEngine(util.toBuffer(acct4),pk4);
- //SETUP AND DEPOSIT FOR ENGINES
-engine.send = function  (msg) {
- sendQueue.push(message.SERIALIZE(msg));
-}
 
-engine2.send = function  (msg) {
- sendQueue.push(message.SERIALIZE(msg));
-}
-
-engine.blockchain = function (msg)  {
-
-  blockchainQueue.push(msg);
-}
-engine2.blockchain = function (msg)  {
-  blockchainQueue.push(msg);
-}
 
 engine.onNewChannel(channelAddress,
  util.toBuffer(acct1),
@@ -127,239 +114,351 @@ engine2.onNewChannel(channelAddress,
 
 
 
-engine.onDeposited(channelAddress,util.toBuffer(acct1), new util.BN(27));
-engine2.onDeposited(channelAddress,util.toBuffer(acct1), new util.BN(27));
-
-//END SETUP
-
-
-currentBlock = currentBlock.add(new util.BN(1));
-
-//START  A DIRECT TRANSFER FROM ENGINE(0) to ENGINE(1)
-
-//to,target,amount,expiration,secret,hashLock
-var secretHashPair = message.GenerateRandomSecretHashPair();
-
-engine.sendMediatedTransfer(
-  util.toBuffer(acct4),
-  util.toBuffer(acct4),
-  new util.BN(15),
-  currentBlock.add(new util.BN(stateChannel.channel.REVEAL_TIMEOUT)).add(new util.BN(1)),
-  secretHashPair.secret,
-  secretHashPair.hash,
-  );
-
-var mediatedTransfer = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
-
-
-engine2.onMessage(mediatedTransfer);
-
-
-var requestSecret = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length - 1]);
-engine.onMessage(requestSecret);
-var revealSecretInitiator = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
-
-engine2.onMessage(revealSecretInitiator);
-
-var revealSecretTarget = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
-console.log(revealSecretTarget);
-engine.onMessage(revealSecretTarget);
-
-
-console.log(engine2.messageState);
-console.log(sendQueue);
-
- var secretToProof = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
- engine2.onMessage(secretToProof);
-
-sendQueue = [];
-
-secretHashPair = message.GenerateRandomSecretHashPair();
-
-engine2.sendMediatedTransfer(
-  util.toBuffer(acct1),
-  util.toBuffer(acct1),
-  new util.BN(7),
-  currentBlock.add(new util.BN(stateChannel.channel.REVEAL_TIMEOUT)).add(new util.BN(1)),
-  secretHashPair.secret,
-  secretHashPair.hash,
-  );
-
-
-mediatedTransfer = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
-
-
-engine.onMessage(mediatedTransfer);
-
-
-requestSecret = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length - 1]);
-engine2.onMessage(requestSecret);
-revealSecretInitiator = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
-
-engine.onMessage(revealSecretInitiator);
-
-revealSecretTarget = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
-engine2.onMessage(revealSecretTarget);
-
-
-
-secretToProof = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
- engine.onMessage(secretToProof);
-
-
-
-//SEND new lock half open
-sendQueue = [];
-
-secretHashPair = message.GenerateRandomSecretHashPair();
-
-engine2.sendMediatedTransfer(
-  util.toBuffer(acct1),
-  util.toBuffer(acct1),
-  new util.BN(3),
-  currentBlock.add(new util.BN(stateChannel.channel.REVEAL_TIMEOUT)).add(new util.BN(1)),
-  secretHashPair.secret,
-  secretHashPair.hash,
-  );
-
-
-mediatedTransfer = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
-
-
-engine.onMessage(mediatedTransfer);
-
-
-requestSecret = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length - 1]);
-engine2.onMessage(requestSecret);
-revealSecretInitiator = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
-
-engine.onMessage(revealSecretInitiator);
-
-sendQueue = [];
-
-secretHashPair = message.GenerateRandomSecretHashPair();
-
-engine2.sendMediatedTransfer(
-  util.toBuffer(acct1),
-  util.toBuffer(acct1),
-  new util.BN(2),
-  currentBlock.add(new util.BN(stateChannel.channel.REVEAL_TIMEOUT)).add(new util.BN(1)),
-  secretHashPair.secret,
-  secretHashPair.hash,
-  );
-
-
-mediatedTransfer = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
-engine.onMessage(mediatedTransfer);
-
-
-requestSecret = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length - 1]);
-engine2.onMessage(requestSecret);
-revealSecretInitiator = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
-
-engine.onMessage(revealSecretInitiator);
-
-sendQueue = [];
-
-secretHashPair = message.GenerateRandomSecretHashPair();
-
-engine2.sendMediatedTransfer(
-  util.toBuffer(acct1),
-  util.toBuffer(acct1),
-  new util.BN(2),
-  currentBlock.add(new util.BN(stateChannel.channel.REVEAL_TIMEOUT)).add(new util.BN(1)),
-  secretHashPair.secret,
-  secretHashPair.hash,
-  );
-
-
-mediatedTransfer = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
-engine.onMessage(mediatedTransfer);
-
-
-requestSecret = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length - 1]);
-engine2.onMessage(requestSecret);
-revealSecretInitiator = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
-
-engine.onMessage(revealSecretInitiator);
-
-
-engine2.closeChannel(channelAddress);
-
-engine.onClosed(channelAddress,16);
-
-//MANUAL TEST BEGINS
-
-var bc = new bcs.blockchain.BlockchainService(0,function(cb) {
-  cb(pk1);
-})
-
-var bc4 = new bcs.blockchain.BlockchainService(0,function(cb) {
-  cb(pk4);
-})
-
-var tx = bc.newChannel(8,1,"0x05e1b1806579881cfd417e1716f23b1900568346", acct4,150);
-console.log("web3.eth.sendRawTransaction(\"0x"+tx.serialize().toString('hex')+"\",function(err,txHash){ console.log(err);})");
-
-tx = bc.approve(9,1, "0x9c1af2395beb97375eaee816e355863ec925bc2e","0x8bf6a4702d37b7055bc5495ac302fe77dae5243b",500);
-console.log("web3.eth.sendRawTransaction(\"0x"+tx.serialize().toString('hex')+"\",function(err,txHash){ console.log(err);})");
-
-
-tx = bc.deposit(10,1,"0x8bf6a4702d37b7055bc5495ac302fe77dae5243b",27);
-console.log("web3.eth.sendRawTransaction(\"0x"+tx.serialize().toString('hex')+"\",function(err,txHash){ console.log(err);})");
-
-
-var proof = blockchainQueue[0][1];
-
-//console.log("MESSAGE HASH:"+proof.messageHash.toString('hex'));
-
-//TESTED ONLY acct4 can submit proof as its signed by acct1, tested, and self signed proofs are not accepted :)
-
-tx = bc4.close(0,1,"0x8bf6a4702d37b7055bc5495ac302fe77dae5243b",proof);
-console.log("web3.eth.sendRawTransaction(\"0x"+tx.serialize().toString('hex')+"\",function(err,txHash){ console.log(err);})");
-
-
-
-var proof2 = blockchainQueue[2][1];
-tx = bc.updateTransfer(11,1,util.addHexPrefix(channelAddress.toString("hex")),proof2);
-console.log("web3.eth.sendRawTransaction(\"0x"+tx.serialize().toString('hex')+"\",function(err,txHash){ console.log(err);})");
-
-
-var k = 0;
-for(var i =0; i < blockchainQueue[3][1].length; i++){
-  var withdrawProof = blockchainQueue[3][1][i];
-  var encodedLock = withdrawProof[2].slice(0,96);
-  var secret =withdrawProof[2].slice(96,128);
+engine.onDeposited(channelAddress,util.toBuffer(acct1), new util.BN(2700000));
+engine2.onDeposited(channelAddress,util.toBuffer(acct1), new util.BN(27000000));
+
+//Set up an in-memory alternative to global localStorage 
+const myStorage = {
+  setItem: (key, item) => {
+    myStorage[key] = item;
+  },
+  getItem: (key) => myStorage[key],
+  removeItem: (key) => {
+    delete myStorage[key];
+  },
+};
+
+/* create mqtt client */
+const client = new Client({ uri: 'ws://test.mosquitto.org:8080/', clientId: 'clientId', storage: myStorage });
+client.on('connectionLost', (responseObject) => {
+  if (responseObject.errorCode !== 0) {
+    console.log(responseObject.errorMessage);
+  }
+});
+client.on('messageReceived', (m) => {
+  if(!m.duplicate){
+    console.log(engine2.channels[channelAddress.toString("hex")].peerState.proof.transferredAmount.toString(10));
+    engine2.onMessage(message.DESERIALIZE_AND_DECODE_MESSAGE(m.payloadString));
+  }
+});
+ 
+// connect the client 
+client.connect()
+  .then(() => {
+    // Once a connection has been made, make a subscription and send a message. 
+    console.log('onConnect');
+    return client.subscribe(acct4);
+  })
+  // .then(() => {
+  //   const message = new Message('Hello');
+  //   message.destinationName = 'World';
+  //   client.send(message);
+  // })
+  .catch((responseObject) => {
+    if (responseObject.errorCode !== 0) {
+      console.log('onConnectionLost:' + responseObject.errorMessage);
+    }
+  })
+;
+
+
+// mqtt.createClient({
+//   uri: 'mqtt://test.mosquitto.org:1883', 
+//   clientId: 'your_client_id'
+// }).then(function(client) {
+//   debugger;
+//   engine2.send = function(msg){
+//     client2.publish("0x"+msg.to.toString("hex"),message.SERIALIZE(msg));
+//   }
+//   client.on('closed', function() {
+//     console.log('mqtt.event.closed');
+    
+//   });
   
-  //if(util.sha3(secret).compare(withdrawProof[0].hashLock)===0 && stateChannel.merkletree.checkMerkleProof(withdrawProof[1], proof2.locksRoot, util.sha3(encodedLock)) === true){
-    k++;  
-    //console.info("lock #"+k+" processing encoded lock:" +encodedLock.toString('hex'));
-    // withdrawProof array index (Lock object, merkleProof: Bytes<32>[], Bytes<96> encodedLock)
-    tx = bc.withdrawLock(11+k, 1, channelAddress, withdrawProof[2],withdrawProof[1],secret);
-    console.log("web3.eth.sendRawTransaction(\"0x"+tx.serialize().toString('hex')+"\",function(err,txHash){ console.log(err);})");
+//   client.on('error', function(msg) {
+//     console.log('mqtt.event.error', msg);
+    
+//   });
 
-  // }else{
-  //   console.error("ERROR PROCESSING LOCK:"+k);
-  // }
+//   client.on('message', function(msg) {
+//     engine2.onMessage(message.DESERIALIZE_AND_DECODE_MESSAGE(msg));
+//     console.log('mqtt.event.message', msg);
+//   });
+
+//   client.on('connect', function() {
+//     console.log('connected');
+//     client.subscribe(acct4, 0);
+    
+//   });
+
+//   client.connect();
+// }).catch(function(err){
+//   console.log(err);
+// });
+
+//  //SETUP AND DEPOSIT FOR ENGINES
+// engine.send = function  (msg) {
+//  sendQueue.push(message.SERIALIZE(msg));
+// }
+
+// engine2.send = function  (msg) {
+//  sendQueue.push(message.SERIALIZE(msg));
+// }
+
+// engine.blockchain = function (msg)  {
+
+//   blockchainQueue.push(msg);
+// }
+// engine2.blockchain = function (msg)  {
+//   blockchainQueue.push(msg);
+// }
+
+// engine.onNewChannel(channelAddress,
+//  util.toBuffer(acct1),
+//   new util.BN(0),
+//   util.toBuffer(acct4),
+//   new util.BN(0));
+// engine2.onNewChannel(channelAddress,
+//   util.toBuffer(acct1),
+//   new util.BN(0),
+//   util.toBuffer(acct4),
+//   new util.BN(0))
+
+
+
+// engine.onDeposited(channelAddress,util.toBuffer(acct1), new util.BN(27));
+// engine2.onDeposited(channelAddress,util.toBuffer(acct1), new util.BN(27));
+
+// //END SETUP
+
+
+// currentBlock = currentBlock.add(new util.BN(1));
+
+// //START  A DIRECT TRANSFER FROM ENGINE(0) to ENGINE(1)
+
+// //to,target,amount,expiration,secret,hashLock
+// var secretHashPair = message.GenerateRandomSecretHashPair();
+
+// engine.sendMediatedTransfer(
+//   util.toBuffer(acct4),
+//   util.toBuffer(acct4),
+//   new util.BN(15),
+//   currentBlock.add(new util.BN(stateChannel.channel.REVEAL_TIMEOUT)).add(new util.BN(1)),
+//   secretHashPair.secret,
+//   secretHashPair.hash,
+//   );
+
+// var mediatedTransfer = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
+
+
+// engine2.onMessage(mediatedTransfer);
+
+
+// var requestSecret = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length - 1]);
+// engine.onMessage(requestSecret);
+// var revealSecretInitiator = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
+
+// engine2.onMessage(revealSecretInitiator);
+
+// var revealSecretTarget = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
+// console.log(revealSecretTarget);
+// engine.onMessage(revealSecretTarget);
+
+
+// console.log(engine2.messageState);
+// console.log(sendQueue);
+
+//  var secretToProof = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
+//  engine2.onMessage(secretToProof);
+
+// sendQueue = [];
+
+// secretHashPair = message.GenerateRandomSecretHashPair();
+
+// engine2.sendMediatedTransfer(
+//   util.toBuffer(acct1),
+//   util.toBuffer(acct1),
+//   new util.BN(7),
+//   currentBlock.add(new util.BN(stateChannel.channel.REVEAL_TIMEOUT)).add(new util.BN(1)),
+//   secretHashPair.secret,
+//   secretHashPair.hash,
+//   );
+
+
+// mediatedTransfer = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
+
+
+// engine.onMessage(mediatedTransfer);
+
+
+// requestSecret = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length - 1]);
+// engine2.onMessage(requestSecret);
+// revealSecretInitiator = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
+
+// engine.onMessage(revealSecretInitiator);
+
+// revealSecretTarget = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
+// engine2.onMessage(revealSecretTarget);
+
+
+
+// secretToProof = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
+//  engine.onMessage(secretToProof);
+
+
+
+// //SEND new lock half open
+// sendQueue = [];
+
+// secretHashPair = message.GenerateRandomSecretHashPair();
+
+// engine2.sendMediatedTransfer(
+//   util.toBuffer(acct1),
+//   util.toBuffer(acct1),
+//   new util.BN(3),
+//   currentBlock.add(new util.BN(stateChannel.channel.REVEAL_TIMEOUT)).add(new util.BN(1)),
+//   secretHashPair.secret,
+//   secretHashPair.hash,
+//   );
+
+
+// mediatedTransfer = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
+
+
+// engine.onMessage(mediatedTransfer);
+
+
+// requestSecret = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length - 1]);
+// engine2.onMessage(requestSecret);
+// revealSecretInitiator = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
+
+// engine.onMessage(revealSecretInitiator);
+
+// sendQueue = [];
+
+// secretHashPair = message.GenerateRandomSecretHashPair();
+
+// engine2.sendMediatedTransfer(
+//   util.toBuffer(acct1),
+//   util.toBuffer(acct1),
+//   new util.BN(2),
+//   currentBlock.add(new util.BN(stateChannel.channel.REVEAL_TIMEOUT)).add(new util.BN(1)),
+//   secretHashPair.secret,
+//   secretHashPair.hash,
+//   );
+
+
+// mediatedTransfer = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
+// engine.onMessage(mediatedTransfer);
+
+
+// requestSecret = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length - 1]);
+// engine2.onMessage(requestSecret);
+// revealSecretInitiator = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
+
+// engine.onMessage(revealSecretInitiator);
+
+// sendQueue = [];
+
+// secretHashPair = message.GenerateRandomSecretHashPair();
+
+// engine2.sendMediatedTransfer(
+//   util.toBuffer(acct1),
+//   util.toBuffer(acct1),
+//   new util.BN(2),
+//   currentBlock.add(new util.BN(stateChannel.channel.REVEAL_TIMEOUT)).add(new util.BN(1)),
+//   secretHashPair.secret,
+//   secretHashPair.hash,
+//   );
+
+
+// mediatedTransfer = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
+// engine.onMessage(mediatedTransfer);
+
+
+// requestSecret = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length - 1]);
+// engine2.onMessage(requestSecret);
+// revealSecretInitiator = message.DESERIALIZE_AND_DECODE_MESSAGE(sendQueue[sendQueue.length -1]);
+
+// engine.onMessage(revealSecretInitiator);
+
+
+// engine2.closeChannel(channelAddress);
+
+// engine.onClosed(channelAddress,16);
+
+// //MANUAL TEST BEGINS
+
+// var bc = new bcs.blockchain.BlockchainService(0,function(cb) {
+//   cb(pk1);
+// })
+
+// var bc4 = new bcs.blockchain.BlockchainService(0,function(cb) {
+//   cb(pk4);
+// })
+
+// var tx = bc.newChannel(8,1,"0x05e1b1806579881cfd417e1716f23b1900568346", acct4,150);
+// console.log("web3.eth.sendRawTransaction(\"0x"+tx.serialize().toString('hex')+"\",function(err,txHash){ console.log(err);})");
+
+// tx = bc.approve(9,1, "0x9c1af2395beb97375eaee816e355863ec925bc2e","0x8bf6a4702d37b7055bc5495ac302fe77dae5243b",500);
+// console.log("web3.eth.sendRawTransaction(\"0x"+tx.serialize().toString('hex')+"\",function(err,txHash){ console.log(err);})");
+
+
+// tx = bc.deposit(10,1,"0x8bf6a4702d37b7055bc5495ac302fe77dae5243b",27);
+// console.log("web3.eth.sendRawTransaction(\"0x"+tx.serialize().toString('hex')+"\",function(err,txHash){ console.log(err);})");
+
+
+// var proof = blockchainQueue[0][1];
+
+// //console.log("MESSAGE HASH:"+proof.messageHash.toString('hex'));
+
+// //TESTED ONLY acct4 can submit proof as its signed by acct1, tested, and self signed proofs are not accepted :)
+
+// tx = bc4.close(0,1,"0x8bf6a4702d37b7055bc5495ac302fe77dae5243b",proof);
+// console.log("web3.eth.sendRawTransaction(\"0x"+tx.serialize().toString('hex')+"\",function(err,txHash){ console.log(err);})");
+
+
+
+// var proof2 = blockchainQueue[2][1];
+// tx = bc.updateTransfer(11,1,util.addHexPrefix(channelAddress.toString("hex")),proof2);
+// console.log("web3.eth.sendRawTransaction(\"0x"+tx.serialize().toString('hex')+"\",function(err,txHash){ console.log(err);})");
+
+
+// var k = 0;
+// for(var i =0; i < blockchainQueue[3][1].length; i++){
+//   var withdrawProof = blockchainQueue[3][1][i];
+//   var encodedLock = withdrawProof[2].slice(0,96);
+//   var secret =withdrawProof[2].slice(96,128);
+  
+//   //if(util.sha3(secret).compare(withdrawProof[0].hashLock)===0 && stateChannel.merkletree.checkMerkleProof(withdrawProof[1], proof2.locksRoot, util.sha3(encodedLock)) === true){
+//     k++;  
+//     //console.info("lock #"+k+" processing encoded lock:" +encodedLock.toString('hex'));
+//     // withdrawProof array index (Lock object, merkleProof: Bytes<32>[], Bytes<96> encodedLock)
+//     tx = bc.withdrawLock(11+k, 1, channelAddress, withdrawProof[2],withdrawProof[1],secret);
+//     console.log("web3.eth.sendRawTransaction(\"0x"+tx.serialize().toString('hex')+"\",function(err,txHash){ console.log(err);})");
+
+//   // }else{
+//   //   console.error("ERROR PROCESSING LOCK:"+k);
+//   // }
 
    
-}
+// }
 
-//RUN IN TESTRPC to move blocks ahead
+// //RUN IN TESTRPC to move blocks ahead
 
-console.log("for(var i =0; i < 150; i++){");
-console.log("web3.eth.sendTransaction({from:web3.eth.accounts[1],to:web3.eth.accounts[2],value:10})");
-console.log("}");
+// console.log("for(var i =0; i < 150; i++){");
+// console.log("web3.eth.sendTransaction({from:web3.eth.accounts[1],to:web3.eth.accounts[2],value:10})");
+// console.log("}");
 
-tx = bc.settle(15,1,"0x8bf6a4702d37b7055bc5495ac302fe77dae5243b");
-console.log("web3.eth.sendRawTransaction(\"0x"+tx.serialize().toString('hex')+"\",function(err,txHash){ console.log(err);})");
-
-
+// tx = bc.settle(15,1,"0x8bf6a4702d37b7055bc5495ac302fe77dae5243b");
+// console.log("web3.eth.sendRawTransaction(\"0x"+tx.serialize().toString('hex')+"\",function(err,txHash){ console.log(err);})");
 
 
 
-console.info("Proof2 expected locksroot:"+proof2.locksRoot.toString('hex'))
 
-debugger;
+
+// console.info("Proof2 expected locksroot:"+proof2.locksRoot.toString('hex'))
+
+// debugger;
 
 AppRegistry.registerComponent('TestApp', () => App);
