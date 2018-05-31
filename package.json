@@ -1,0 +1,38 @@
+{
+  "name": "go-network-app",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "compile": "rm -rf lib/ && node_modules/typescript/bin/tsc --declaration",
+    "start": "node node_modules/react-native/local-cli/cli.js start",
+    "test": "jest",
+    "lint": "node_modules/tslint/bin/tslint -c tslint.json 'src/**/*.ts'",
+    "lint-js": "node node_modules/standard/bin/cmd 'src/state-channel/**/*.js' 'test/**/*.js' 'demo/**/*.js'",
+    "watch": "rm -rf lib/ && node_modules/typescript/bin/tsc --watch"
+  },
+  "dependencies": {
+    "assert": "^1.4.1",
+    "buffer": "^5.1.0",
+    "go-network-framework": "^0.1.1",
+    "node-libs-browser": "^2.1.0",
+    "process": "^0.11.10",
+    "react": "16.3.1",
+    "react-native": "0.55.2",
+    "react-native-securerandom": "^0.1.1",
+    "react-native-paho-mqtt": "*"
+  },
+  "devDependencies": {
+    "@types/react": "^16.3.1",
+    "@types/react-native": "^0.55.2",
+    "babel-jest": "22.4.3",
+    "babel-preset-react-native": "4.0.0",
+    "jest": "22.4.3",
+    "react-test-renderer": "16.3.1",
+    "tslint": "^5.10.0",
+    "tslint-config-standard": "^7.0.0",
+    "typescript": "^2.8.3"
+  },
+  "jest": {
+    "preset": "react-native"
+  }
+}

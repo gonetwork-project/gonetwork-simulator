@@ -1,0 +1,17 @@
+{
+  "include": [
+    "./src/**/*"
+  ],
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "jsx": "react-native",
+    "lib": ["es2015", "es2017"],
+    "sourceMap": true,
+    "sourceRoot": "./src",
+    "outDir": "./lib",
+    "skipLibCheck": true,
+    "strict": true,
+    "noImplicitAny": false,
+  }
+}
