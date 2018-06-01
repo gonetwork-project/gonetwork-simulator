@@ -2,7 +2,7 @@ import * as React from 'react'
 import { View, Text, Button } from 'react-native'
 import * as keychain from 'react-native-keychain'
 
-import PrivKeyQRScanner from '../components/PrivKeyQRScanner'
+import PrivKeyQRScanner from '../components/KeyQRScanner'
 
 export interface State {
   isKeychainOK?: boolean
