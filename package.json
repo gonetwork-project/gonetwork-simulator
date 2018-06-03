@@ -21,7 +21,8 @@
     "react-native-camera": "^1.1.4",
     "react-native-keychain": "^3.0.0-rc.3",
     "react-native-paho-mqtt": "*",
-    "react-native-securerandom": "^0.1.1"
+    "react-native-securerandom": "^0.1.1",
+    "react-native-vector-icons": "^4.6.0"
   },
   "devDependencies": {
     "@types/react": "^16.3.1",
