@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold'
   },
   line: {
-    height: 1,
+    height: StyleSheet.hairlineWidth,
     flex: 1,
     marginHorizontal: 20,
     backgroundColor: '#eaeaed'
