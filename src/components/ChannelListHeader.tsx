@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native'
-import { BlueLinkColor } from '../theme'
+import { TextButtonColor } from '../theme'
 
 export interface Props {
   onNewChannel?: () => void
@@ -39,6 +39,6 @@ const styles = StyleSheet.create({
   button: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: BlueLinkColor
+    color: TextButtonColor
   }
 })

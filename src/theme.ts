@@ -15,4 +15,4 @@ export const SettledColor = '#676ad7'
 export const ListItemTextColor = '#182e57'
 export const ListItemDividerColor = '#e9eaed'
 
-export const BlueLinkColor = '#00abe9'
+export const TextButtonColor = '#00abe9'
