@@ -23,6 +23,7 @@
     "react-native-keychain": "^3.0.0-rc.3",
     "react-native-paho-mqtt": "*",
     "react-native-securerandom": "^0.1.1",
+    "react-native-vector-icons": "^4.6.0"
     "rxjs": "^5.5.11"
   },
   "devDependencies": {

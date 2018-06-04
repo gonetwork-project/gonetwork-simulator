@@ -3,6 +3,7 @@ package com.testapp;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import com.oblador.vectoricons.VectorIconsPackage;
 import org.reactnative.camera.RNCameraPackage;
 import com.oblador.keychain.KeychainPackage;
 import net.rhogan.rnsecurerandom.RNSecureRandomPackage;
@@ -26,6 +27,7 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
+            new VectorIconsPackage(),
             new RNCameraPackage(),
             new KeychainPackage(),
             new RNSecureRandomPackage()
