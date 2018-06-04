@@ -17,6 +17,7 @@ export interface Props {
   channelAddress: string,
   peerName: string,
   balance: number,
+  balanceCurrency?: string,
   time?: number,
   onLockPress?: () => void,
   onArrowPress?: () => void
@@ -34,7 +35,7 @@ export default (props: Props) => (
 
     <View style={ styles.balanceWrapper }>
       <View style={ styles.balance }>
-        <Text style={ styles.balanceCurrency }>$</Text>
+        <Text style={ styles.balanceCurrency }>{ props.balanceCurrency || '$' }</Text>
         <Text style={ styles.balanceWhole }>{ props.balance.toFixed(0) }</Text>
         <Text style={ styles.balanceDecimal }>{ props.balance.toFixed(2).substr(-3) }</Text>
       </View>

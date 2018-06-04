@@ -11,8 +11,8 @@ export default class UIDemo extends React.Component {
     return (
       <SafeAreaView>
         <View style={ { flexDirection: 'row', justifyContent: 'space-around', marginTop: 30, marginBottom: 30 } }>
-          <TopBalanceHero cryptoCurrency='ETH' usdValue={ 853.24 } cryptoValue={ 1.12011042 } />
-          <TopBalanceHero cryptoCurrency='GOT' usdValue={ 316.19 } cryptoValue={ 0.00121142 } />
+          <TopBalanceHero cryptoCurrency='ETH' fiatValue={ 853.24 } cryptoValue={ 1.12011042 } />
+          <TopBalanceHero cryptoCurrency='GOT' fiatValue={ 316.19 } cryptoValue={ 0.00121142 } />
         </View>
 
         <View>
