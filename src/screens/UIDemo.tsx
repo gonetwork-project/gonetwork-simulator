@@ -1,10 +1,10 @@
 import * as React from 'react'
 import { View, SafeAreaView } from 'react-native'
-import TopBalanceHero from './components/TopBalanceHero'
-import AccountLockedBar from './components/AccountLockedBar'
-import { ListBackgroundColor } from './theme'
-import ChannelListItem from './components/ChannelListItem'
-import ChannelListHeader from './components/ChannelListHeader'
+import TopBalanceHero from '../components/TopBalanceHero'
+import AccountLockedBar from '../components/AccountLockedBar'
+import { ListBackgroundColor } from '../theme'
+import ChannelListItem from '../components/ChannelListItem'
+import ChannelListHeader from '../components/ChannelListHeader'
 
 export default class UIDemo extends React.Component {
   render () {
