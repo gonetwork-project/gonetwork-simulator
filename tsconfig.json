@@ -1,6 +1,7 @@
 {
   "include": [
-    "./src/**/*"
+    "./src/**/*",
+    "./node_modules/types-ethereumjs-util/index.d.ts"
   ],
   "compilerOptions": {
     "target": "es6",
