@@ -4,21 +4,19 @@ import MDIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import IonIcon from 'react-native-vector-icons/Ionicons'
 import { PrimaryTextColor, SecondaryTextColor } from '../theme'
 
-export default function AccountLockedBar () {
-  return (
-    <View style={ styles.background }>
-      <View style={ styles.bar }>
-        <MDIcon name='lock' color={ SecondaryTextColor } size={ 16 } />
-        <Text style={ styles.lockedText }>Account Locked</Text>
-        <View style={ { flex: 1 } } />
-        <Text style={ styles.unlockText }>UNLOCK</Text>
-        <View style={ { backgroundColor: '#000', borderRadius: 18 } }>
-          <IonIcon name='ios-finger-print' color='#fff' size={ 20 } style={ styles.unlockIcon } />
-        </View>
+export default () => (
+  <View style={ styles.background }>
+    <View style={ styles.bar }>
+      <MDIcon name='lock' color={ SecondaryTextColor } size={ 16 } />
+      <Text style={ styles.lockedText }>Account Locked</Text>
+      <View style={ { flex: 1 } } />
+      <Text style={ styles.unlockText }>UNLOCK</Text>
+      <View style={ { backgroundColor: '#000', borderRadius: 18 } }>
+        <IonIcon name='ios-finger-print' color='#fff' size={ 20 } style={ styles.unlockIcon } />
       </View>
     </View>
-  )
-}
+  </View>
+)
 
 const styles = StyleSheet.create({
   background: {

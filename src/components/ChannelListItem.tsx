@@ -22,48 +22,46 @@ export interface Props {
   onArrowPress?: () => void
 }
 
-export default function ChannelListItem (props: Props) {
-  return (
-    <View style={ styles.root }>
-      <View style={ styles.leftBox }>
-        <Text style={ [styles.state, { color: stateColor(props.state) }] }>
-          { props.state.toUpperCase() }
-        </Text>
-        <Text style={ styles.address }>{ props.channelAddress }</Text>
-        <Text style={ styles.peerName }>{ props.peerName }</Text>
-      </View>
-
-      <View style={ styles.balanceWrapper }>
-        <View style={ styles.balance }>
-          <Text style={ styles.balanceCurrency }>$</Text>
-          <Text style={ styles.balanceWhole }>{ props.balance.toFixed(0) }</Text>
-          <Text style={ styles.balanceDecimal }>{ props.balance.toFixed(2).substr(-3) }</Text>
-        </View>
-      </View>
-
-      { props.state === 'open' &&
-      <View style={ styles.rightBox }>
-        <TouchableOpacity onPress={ props.onLockPress }
-                          style={ [styles.rightButton, {
-                            borderBottomColor: ListItemDividerColor,
-                            borderBottomWidth: 1
-                          }] }>
-          <MDIcon name='lock-outline' color={ SecondaryTextColor } size={ 20 } />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={ props.onArrowPress } style={ styles.rightButton }>
-          <MDIcon name='arrow-right' color={ SecondaryTextColor } size={ 20 } />
-        </TouchableOpacity>
-      </View>
-      }
-
-      { props.state === 'closed' && props.time !== undefined &&
-      <View style={ [styles.rightBox, styles.rightBoxCentered] }>
-        <Text style={ styles.remainingTime }>{ secondsToTime(props.time) }</Text>
-      </View>
-      }
+export default (props: Props) => (
+  <View style={ styles.root }>
+    <View style={ styles.leftBox }>
+      <Text style={ [styles.state, { color: stateColor(props.state) }] }>
+        { props.state.toUpperCase() }
+      </Text>
+      <Text style={ styles.address }>{ props.channelAddress }</Text>
+      <Text style={ styles.peerName }>{ props.peerName }</Text>
     </View>
-  )
-}
+
+    <View style={ styles.balanceWrapper }>
+      <View style={ styles.balance }>
+        <Text style={ styles.balanceCurrency }>$</Text>
+        <Text style={ styles.balanceWhole }>{ props.balance.toFixed(0) }</Text>
+        <Text style={ styles.balanceDecimal }>{ props.balance.toFixed(2).substr(-3) }</Text>
+      </View>
+    </View>
+
+    { props.state === 'open' &&
+    <View style={ styles.rightBox }>
+      <TouchableOpacity onPress={ props.onLockPress }
+                        style={ [styles.rightButton, {
+                          borderBottomColor: ListItemDividerColor,
+                          borderBottomWidth: 1
+                        }] }>
+        <MDIcon name='lock-outline' color={ SecondaryTextColor } size={ 20 } />
+      </TouchableOpacity>
+      <TouchableOpacity onPress={ props.onArrowPress } style={ styles.rightButton }>
+        <MDIcon name='arrow-right' color={ SecondaryTextColor } size={ 20 } />
+      </TouchableOpacity>
+    </View>
+    }
+
+    { props.state === 'closed' && props.time !== undefined &&
+    <View style={ [styles.rightBox, styles.rightBoxCentered] }>
+      <Text style={ styles.remainingTime }>{ secondsToTime(props.time) }</Text>
+    </View>
+    }
+  </View>
+)
 
 function stateColor (state: State) {
   switch (state) {

@@ -11,18 +11,16 @@ export interface Props {
   cryptoValue: number
 }
 
-export default function TopBalanceHero (props: Props) {
-  return (
-    <View style={ styles.root }>
-      <Text style={ styles.crypto }>{ props.cryptoCurrency }</Text>
-      <View style={ styles.usdValueWrapper }>
-        <Text style={ styles.usdIcon }>$</Text>
-        <Text style={ styles.usdValue }>{ props.usdValue.toFixed(2) }</Text>
-      </View>
-      <Text style={ styles.cryptoValue }>{ `${props.cryptoValue} ${props.cryptoCurrency}` }</Text>
+export default (props: Props) => (
+  <View style={ styles.root }>
+    <Text style={ styles.crypto }>{ props.cryptoCurrency }</Text>
+    <View style={ styles.usdValueWrapper }>
+      <Text style={ styles.usdIcon }>$</Text>
+      <Text style={ styles.usdValue }>{ props.usdValue.toFixed(2) }</Text>
     </View>
-  )
-}
+    <Text style={ styles.cryptoValue }>{ `${props.cryptoValue} ${props.cryptoCurrency}` }</Text>
+  </View>
+)
 
 const styles = StyleSheet.create({
   root: {

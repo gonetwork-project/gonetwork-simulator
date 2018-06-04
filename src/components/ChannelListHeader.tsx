@@ -6,19 +6,17 @@ export interface Props {
   onNewChannel?: () => void
 }
 
-export default function ChannelListHeader (props: Props) {
-  return (
-    <View style={ styles.root }>
-      <Text style={ styles.channels }>Channels</Text>
+export default (props: Props) => (
+  <View style={ styles.root }>
+    <Text style={ styles.channels }>Channels</Text>
 
-      <View style={ styles.line } />
+    <View style={ styles.line } />
 
-      <TouchableOpacity onPress={ props.onNewChannel }>
-        <Text style={ styles.button }>ADD CHANNEL</Text>
-      </TouchableOpacity>
-    </View>
-  )
-}
+    <TouchableOpacity onPress={ props.onNewChannel }>
+      <Text style={ styles.button }>ADD CHANNEL</Text>
+    </TouchableOpacity>
+  </View>
+)
 
 const styles = StyleSheet.create({
   root: {
