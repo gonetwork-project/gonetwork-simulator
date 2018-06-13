@@ -24,7 +24,7 @@ export const accounts = accountsSub.asObservable()
 // todo: discuss
 export const addAccount = (privateKey: string): Promise<boolean> => {
   if (util.isValidPrivate(util.toBuffer(privateKey))) {
-    const address = util.bufferToHex(util.privateToAddress(privateKey))
+    const address = util.bufferToHex(util.privateToAddress(util.toBuffer(privateKey)))
     const current = accountsSub.value || []
     if (current.find(a => a.address === address)) {
       return Promise.resolve(false)
