@@ -4,6 +4,18 @@
 import { as, util, MonitoringConfig } from 'go-network-framework'
 import { Buffer } from 'buffer'
 
+const contractsRaw = {
+  'gotToken': '0x5d4f988d08fd1388f64c4d01222e9669a3eb698f',
+  'testToken': '0x930c782dac097411ec02ddb2bf99776c2c614aea',
+  'manager': '0x14230160c6d3cc38f4825de0a6829cf936afd5a3'
+}
+
+export const contracts = Object.keys(contractsRaw)
+  .reduce((acc, k) => {
+    acc[k] = as.Address(new Buffer(contractsRaw[k].substring(2), 'hex'))
+    return acc
+  }, {}) as any
+
 export type Account = {
   privateKey: any,
   privateKeyStr: string,
@@ -12,7 +24,8 @@ export type Account = {
 }
 
 // todo: make it configurable - most likely just by providing ports via argv
-export const mqttUrl = 'mqtt://localhost:1883'
+// export const mqttUrl = 'mqtt://localhost:1883'
+export const mqttUrl = 'wss://bdsrzqit:AnCHA9ACH4Q9@m13.cloudmqtt.com:31001'
 export const rpcUrl = 'http://localhost:8546'
 
 export const account = (privateKeyStr: string,

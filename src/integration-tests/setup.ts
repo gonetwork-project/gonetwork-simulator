@@ -4,18 +4,6 @@ import { Buffer } from 'buffer'
 
 import * as cfgBase from './config'
 
-const contractsRaw = {
-  'gotToken': '0x5d4f988d08fd1388f64c4d01222e9669a3eb698f',
-  'testToken': '0x930c782dac097411ec02ddb2bf99776c2c614aea',
-  'manager': '0x14230160c6d3cc38f4825de0a6829cf936afd5a3'
-}
-
-const contracts = Object.keys(contractsRaw)
-  .reduce((acc, k) => {
-    acc[k] = as.Address(new Buffer(contractsRaw[k].substring(2), 'hex'))
-    return acc
-  }, {}) as any
-
 export const wait = (ms: Millisecond) => new Promise(resolve => setTimeout(resolve, ms))
 export const minutes = n => n * 60 * 1000
 
@@ -26,6 +14,7 @@ export const setupClient = (accountIndex: number, config?: Partial<typeof cfgBas
   const cfg = Object.assign({}, cfgBase, config)
   const account = cfg.accounts[accountIndex]
   if (!account) throw new Error('NO ACCOUNT FOUND')
+  const contracts = cfg.contracts
 
   const p2p = new P2P({
     mqttUrl: cfg.mqttUrl,
@@ -51,7 +40,22 @@ export const setupClient = (accountIndex: number, config?: Partial<typeof cfgBas
     revealTimeout: cfg.revealTimeout
   })
 
-  return { p2p, engine, blockchain, owner: account, txs: blockchain.txs }
+  return { contracts, p2p, engine, blockchain, owner: account, txs: blockchain.txs }
+}
+
+export const expect = (cn: boolean | Function | any) => {
+  if (typeof cn === 'function') {
+    try {
+      cn()
+    } catch (e) {
+      return { toThrow: () => null, toBe: (a: true) => null }
+    }
+    throw new Error('Should throw')
+  }
+
+  if (!cn) throw new Error('Excpected true')
+
+  return { toBe: (a: true) => null, toThrow: () => null }
 }
 
 export type Client = ReturnType<typeof setupClient>
