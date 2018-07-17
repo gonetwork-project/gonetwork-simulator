@@ -3,6 +3,9 @@
     "./src/**/*",
     "./node_modules/types-ethereumjs-util/index.d.ts"
   ],
+  "exclude": [
+    "./node_modules"
+  ],
   "compilerOptions": {
     "target": "es6",
     "module": "commonjs",

@@ -1,6 +1,6 @@
 import * as Rx from 'rxjs'
 
-import { Monitoring, infuraMonitoring } from 'go-network-framework'
+import { Monitoring } from 'go-network-framework'
 
 const cfg = {
   NETWORK: 'ropsten',
@@ -12,25 +12,22 @@ const cfg = {
   ]
 }
 
-console.log('CONFIG', cfg, Monitoring, infuraMonitoring)
+// FIXME - requires RPC, but most likely the file will be removed
+const monitoring = new Monitoring({
+  rpc: {} as any,
+  logsInterval: 200,
+  channelManagerAddress: cfg.CHANNEL_MANAGER_ADDRESS,
+  tokenAddresses: cfg.TOKEN_ADDRESSES,
 
-const monitoring = new Monitoring(
-  Object.assign(
-    infuraMonitoring(cfg.NETWORK, cfg.INFURA_TOKEN), // todo: token seems not required
-    {
-      channelManagerAddress: cfg.CHANNEL_MANAGER_ADDRESS,
-      tokenAddresses: cfg.TOKEN_ADDRESSES,
+  storage: { // no persistent storage for now
+    getItem: (id) => Promise.resolve(null),
+    setItem: (id, item) => Promise.resolve(true),
+    getAllKeys: () => Promise.resolve([]),
 
-      storage: { // no persistent storage for now
-        getItem: (id) => Promise.resolve(null),
-        setItem: (id, item) => Promise.resolve(true),
-        getAllKeys: () => Promise.resolve([]),
-
-        multiGet: (keys) => Promise.resolve([]),
-        multiSet: (xs) => Promise.resolve(true)
-      }
-    })
-)
+    multiGet: (keys) => Promise.resolve([]),
+    multiSet: (xs) => Promise.resolve(true)
+  }
+} as any)
 
 Rx.Observable.fromEvent(monitoring, 'ChannelNew')
   .take(10)
@@ -39,6 +36,6 @@ Rx.Observable.fromEvent(monitoring, 'ChannelNew')
   .concatMap(add =>
     Rx.Observable.timer(2500)
       .mapTo(add)
-      .do(monitoring.subscribeAddress)
+      .do(monitoring.subscribeAddress as any)
   )
   .subscribe()
