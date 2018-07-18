@@ -5,13 +5,13 @@ import { Observable } from 'rxjs'
 import * as flowsOff from './flows-offchain'
 import * as flowsOn from './flows-onchain'
 
-import { as, message } from 'go-network-framework'
+import { as, message, Millisecond } from 'go-network-framework'
 
 import { setupClient, wait, expect } from './setup'
 
 const run = () => {
   const c1 = setupClient(0)
-  const c2 = setupClient(5)
+  const c2 = setupClient(1)
 
   const sub = Observable.from([c1, c2])
     .mergeMap((c, idx) => c.blockchain.monitoring.protocolErrors()
@@ -31,7 +31,6 @@ const run = () => {
 
   flowsOn.createChannelAndDeposit(c1, c2, as.Wei(500))
     .then(x => console.log('CREATED', x))
-    .then(() => wait(5000))
     .then(() => console.log('CHECKPOINT - after contract creation', c1, c2))
     .then(() => expect(flowsOff.transferredEqual(c1, as.Wei(0), c2, as.Wei(0))).toBe(true))
     .then(() => console.log('CHECKPOINT - before direct'))
@@ -40,16 +39,18 @@ const run = () => {
     .then(() => expect(flowsOff.transferredEqual(c1, as.Wei(200), c2, as.Wei(0))).toBe(true))
     .then(flowsOff.sendMediated(c2, c1, as.Wei(50)))
     .then(flowsOff.sendMediated(c2, c1, as.Wei(50)))
-    .then(() => console.log('CHECKPOINT'))
+    .then(() => console.log('CHECKPOINT - after mediated'))
     .then(() => expect(flowsOff.transferredEqual(c1, as.Wei(200), c2, as.Wei(100))).toBe(true))
     .then(() => expect(() => flowsOff.sendDirect(c2, c1, as.Wei(201))()).toThrow())
     .then(flowsOff.sendDirect(c2, c1, as.Wei(150)))
     .then(() => expect(flowsOff.transferredEqual(c1, as.Wei(200), c2, as.Wei(150))).toBe(true))
     .then(flowsOff.sendMediated(c2, c1, as.Wei(50)))
+    .then(() => console.log('CHECKPOINT - after c2 direct & mediated'))
     .then(() => expect(flowsOff.transferredEqual(c1, as.Wei(200), c2, as.Wei(200))).toBe(true))
     .then(flowsOff.sendMediated(c1, c2, as.Wei(50)))
     .then(flowsOff.sendMediated(c1, c2, as.Wei(50)))
     .then(flowsOff.sendMediated(c1, c2, as.Wei(50)))
+    .then(() => console.log('CHECKPOINT - after c1 mediated x 3'))
     .then(() => expect(flowsOff.transferredEqual(c1, as.Wei(350), c2, as.Wei(200))).toBe(true))
     .then(() => Promise.all([
       flowsOff.sendMediated(c1, c2, as.Wei(100))(),
@@ -60,10 +61,17 @@ const run = () => {
       flowsOff.sendDirect(c1, c2, as.Wei(500))(),
       flowsOff.sendMediated(c2, c1, as.Wei(50))()
     ]))
+    .then(() => console.log('CHECKPOINT - after cross transfers'))
     .then(() => expect(flowsOff.transferredEqual(c1, as.Wei(500), c2, as.Wei(300))).toBe(true))
+    .then(() => console.log('BEFORE CLOSE'))
     .then(() => flowsOn.closeChannel(c1, c2, 2))
+    .then((x) => {
+      console.log('CHECKPOINT - after closed')
+      return x
+    })
     .then(flowsOn.checkBalances(as.Wei(200), as.Wei(500)))
     .then(() => console.log('ALL_GOOD!!'))
+    .catch(err => console.error('UNCAUGHT', err))
 }
 
 run()
@@ -71,8 +79,8 @@ run()
 export default class IntegrationTest extends React.Component {
 
   render () {
-    return <View style={{ paddingTop: 56 }}>
-      <Text>Integration Test</Text>
+    return <View>
+      <Text style={{ marginTop: 46, marginLeft: 32, fontSize: 24, fontWeight: 'bold' }}>Integration Test</Text>
     </View>
   }
 }

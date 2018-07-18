@@ -22,8 +22,8 @@ export type Account = {
 }
 
 // todo: make it configurable - most likely just by providing ports via argv
-// export const mqttUrl = 'mqtt://localhost:1883'
-export const mqttUrl = 'wss://bdsrzqit:AnCHA9ACH4Q9@m13.cloudmqtt.com:31001'
+export const mqttUrl = 'ws://localhost:1883'
+// export const mqttUrl = 'wss://bdsrzqit:AnCHA9ACH4Q9@m13.cloudmqtt.com:31001'
 export const rpcUrl = 'http://localhost:8546'
 
 export const account = (privateKeyStr: string,
@@ -35,7 +35,7 @@ export const account = (privateKeyStr: string,
   })
 
 export const monitoringConfig: Partial<MonitoringConfig> = {
-  logsInterval: 2 * 1000,
+  logsInterval: 500,
   startBlock: 'latest'
 }
 

@@ -33,7 +33,6 @@ export const sendDirect = (from: Client, to: Client, amount: Wei) => () => {
     throw e
   }
   return Observable.fromEvent(to.p2p, 'message-received')
-    .do(x => console.log('MSG', x))
     .take(1) // DirectTransfer
     .delay(100) // allow processing by engine
     .toPromise()

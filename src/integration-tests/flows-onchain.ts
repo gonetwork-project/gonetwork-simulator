@@ -24,12 +24,18 @@ export const deposit = (from: Client, token: Address, channel: Address, amount: 
     .then(() => from.txs.deposit({ to: channel }, { amount: amount }))
 
 export const createChannelAndDeposit = (from: Client, to: Client, amount: Wei) =>
+Promise.all([
+  from.blockchain.monitoring.asStream('ChannelNewBalance')
+    .take(1)
+    .delay(0)
+    .toPromise(),
   createChannel(from, to.owner.address, amount)
     .then(ch => deposit(from, from.contracts.testToken, ch, amount)
       .then(() => ({ channel: ch }))
-      .then(log(`CREATED AND DEPOSITED
-        ${amount.toString()}$ chan: 0x${ch.toString('hex')} from: 0x${from.owner.addressStr} to: 0x${to.owner.addressStr}`))
+      .then(log(`CREATED AND DEPOSITED ${amount.toString()}$ chan: 0x${ch.toString('hex')} from: 0x${from.owner.addressStr} to: 0x${to.owner.addressStr}`))
     )
+])
+  .then(([_, x]) => x)
 
 export type Balances = { channel: Wei, opener: Wei, other: Wei }
 export const checkBalances = (openerToOtherNet: Wei, openerDeposit: Wei) =>
@@ -55,9 +61,14 @@ export const closeChannel = (opener: Client, other: Client, expectedTransfers: 0
   channelAddress = opener.engine.channelByPeer[other.owner.addressStr].channelAddress) => {
   const balances = getBalances(opener, other, channelAddress)
   return balances()
+    .then(x => {
+      console.log('BALANCES', x)
+      return x
+    })
     .then(before =>
       Promise.all([
         other.blockchain.monitoring.asStream('ChannelSettled')
+          .do(x => console.log('Settled', x))
           .take(1)
           .mergeMap(balances)
           .toPromise(),
@@ -68,10 +79,12 @@ export const closeChannel = (opener: Client, other: Client, expectedTransfers: 0
         opener.engine.closeChannel(channelAddress),
         other.blockchain.monitoring.asStream('TransferUpdated')
           .mergeMapTo(other.blockchain.monitoring.blockNumbers())
-          .skip(1)
+          .do(x => console.log('B-NUM-HMM', x))
+          // .skip(1)
           .take(1)
           .switchMap(start =>
             other.blockchain.monitoring.blockNumbers()
+              .do(x => console.log('B-NUM', x))
               .filter(bn => bn.gt(start.add(other.engine.settleTimeout)))
           )
           .take(1)
