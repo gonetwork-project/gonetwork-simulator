@@ -1,6 +1,5 @@
 import { Engine, serviceCreate, setWaitForDefault, P2P, message, as, util,
   Millisecond, fakeStorage, CHAIN_ID } from 'go-network-framework'
-import { Buffer } from 'buffer'
 
 import * as cfgBase from './config'
 

@@ -1,8 +1,6 @@
-// import 'go-network-framework/src/types/eth.ts'
-// import * as E from 'eth-types'
+import * as E from 'eth-types'
 
 import { as, util, MonitoringConfig } from 'go-network-framework'
-import { Buffer } from 'buffer'
 
 const contractsRaw = {
   'gotToken': '0x5d4f988d08fd1388f64c4d01222e9669a3eb698f',
@@ -17,9 +15,9 @@ export const contracts = Object.keys(contractsRaw)
   }, {}) as any
 
 export type Account = {
-  privateKey: any,
+  privateKey: E.PrivateKey,
   privateKeyStr: string,
-  address: any,
+  address: E.Address,
   addressStr: string
 }
 
