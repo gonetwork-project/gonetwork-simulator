@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { View, Text } from 'react-native'
+import * as RN from 'react-native'
 import { Observable } from 'rxjs'
 
 import * as flowsOff from './flows-offchain'
@@ -9,9 +9,16 @@ import { as, message, Millisecond } from 'go-network-framework'
 
 import { setupClient, wait, expect } from './setup'
 
+const { View, Text } = RN
+
+console.log(RN)
+
 const run = () => {
+  const idx = 2
   const c1 = setupClient(0)
-  const c2 = setupClient(1)
+  const c2 = setupClient(idx)
+
+  console.log('Running', idx, c1, c2)
 
   const sub = Observable.from([c1, c2])
     .mergeMap((c, idx) => c.blockchain.monitoring.protocolErrors()
