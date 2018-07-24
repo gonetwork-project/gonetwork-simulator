@@ -13,29 +13,33 @@ const log = <T> (msg: string, logValue = false, ...rest: any[]) => (p: T): Promi
 export const createChannel = (c1: Client, add2: Address, amount: Wei) =>
   c1.txs.approve({ to: c1.contracts.gotToken },
     { _spender: c1.contracts.manager, _value: amount })
-    .then(() =>
-      c1.txs.newChannel({ to: c1.contracts.manager },
-        { partner: add2, settle_timeout: c1.engine.settleTimeout }))
+    .then(log('APPROVED'))
+    .then(() => {
+      console.log('CLIENT-1', c1) // todo: figure out why it started to fail
+      return c1.txs.newChannel({ to: c1.contracts.manager },
+        { partner: add2, settle_timeout: c1.engine.settleTimeout })
+    })
     .then(logs =>
       (logs.filter(x => x._type === 'ChannelNew')[0] as any).netting_channel)
+    .then(log('CREATED'))
 
 export const deposit = (from: Client, token: Address, channel: Address, amount: Wei) =>
   from.txs.approve({ to: token }, { _spender: channel, _value: amount })
     .then(() => from.txs.deposit({ to: channel }, { amount: amount }))
 
 export const createChannelAndDeposit = (from: Client, to: Client, amount: Wei) =>
-Promise.all([
-  from.blockchain.monitoring.asStream('ChannelNewBalance')
-    .take(1)
-    .delay(0)
-    .toPromise(),
-  createChannel(from, to.owner.address, amount)
-    .then(ch => deposit(from, from.contracts.testToken, ch, amount)
-      .then(() => ({ channel: ch }))
-      .then(log(`CREATED AND DEPOSITED ${amount.toString()}$ chan: 0x${ch.toString('hex')} from: 0x${from.owner.addressStr} to: 0x${to.owner.addressStr}`))
-    )
-])
-  .then(([_, x]) => x)
+  Promise.all([
+    from.blockchain.monitoring.asStream('ChannelNewBalance')
+      .take(1)
+      .delay(0)
+      .toPromise(),
+    createChannel(from, to.owner.address, amount)
+      .then(ch => deposit(from, from.contracts.testToken, ch, amount)
+        .then(() => ({ channel: ch }))
+        .then(log(`CREATED AND DEPOSITED ${amount.toString()}$ chan: 0x${ch.toString('hex')} from: 0x${from.owner.addressStr} to: 0x${to.owner.addressStr}`))
+      )
+  ])
+    .then(([_, x]) => x)
 
 export type Balances = { channel: Wei, opener: Wei, other: Wei }
 export const checkBalances = (openerToOtherNet: Wei, openerDeposit: Wei) =>
