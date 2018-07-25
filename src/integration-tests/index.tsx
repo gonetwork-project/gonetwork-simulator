@@ -15,7 +15,7 @@ const run = () => {
   setupClient()
     .then(c1 => setupClient(c1.contracts)
       .then(c2 => {
-        console.log('Running', c1, c2)
+        console.warn('Running', c1.owner.addressStr, c2.owner.addressStr, c1.contracts, c2.contracts)
 
         const sub = Observable.from([c1, c2])
           .mergeMap((c, idx) => c.blockchain.monitoring.protocolErrors()
@@ -78,6 +78,11 @@ const run = () => {
           .then(() => RN.Alert.alert('DONE'))
           .then(() => console.log('ALL_GOOD!!'))
           .catch(err => console.error('UNCAUGHT', err))
+          .then(() => {
+            sub.unsubscribe()
+            c1.blockchain.monitoring.dispose()
+            c2.blockchain.monitoring.dispose()
+          })
       }))
 }
 

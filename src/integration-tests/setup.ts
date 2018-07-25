@@ -15,7 +15,7 @@ generateSecureRandom(1024).then(randomBytes => {
 })
 
 // todo: load via qr-code / pass via input
-const coordinatorUrl = `http://192.168.1.66:5215`
+const coordinatorUrl = `http://192.168.1.71:5215`
 
 export interface Account {
   privateKey: PrivateKey
@@ -47,7 +47,7 @@ export const toAccount = (privateKeyStr: string,
   })
 
 export const monitoringConfig: Partial<MonitoringConfig> = {
-  logsInterval: 500,
+  logsInterval: 25,
   startBlock: 'latest'
 }
 
@@ -58,7 +58,7 @@ export const setupClient = (contracts?: Contracts) =>
         .then(r => r.json())
         .then((r: any) => {
           // TODO: not ideal mechanism - for test we increase block mining frequency
-          setWaitForDefault({ timeout: 10 * 1000, interval: cfg.blockTime / 2 })
+          setWaitForDefault({ timeout: 3000, interval: cfg.blockTime / 2 })
           const account = toAccount(r.privateKey.substring(2))
           contracts = contracts || toContracts(r.contracts)
 
