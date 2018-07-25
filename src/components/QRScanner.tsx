@@ -1,22 +1,20 @@
 import * as React from 'react'
 import { Modal, Button } from 'react-native'
-import { RNCamera, BarCodeType } from 'react-native-camera'
+import { RNCamera, BarCodeType } from 'react-native-camera/types'
 
 import * as util from 'ethereumjs-util'
-
-import * as T from '../typings'
 
 export type ScanStatus = 'cancel' | 'fail' | 'mis-match' | 'success'
 
 export interface Props {
-  scanFor?: T.KeyType // by-defualt it will look for both public and private keys
+  scanFor?: 'private' | 'public' // by-defualt it will look for both public and private keys
   onDone: (s: ScanStatus, k?: string) => void
 }
 
 export default class QRScan extends React.Component<Props> {
   // todo: cancel support and/or timeout
   onScan = (ev: { type: keyof BarCodeType, data: string }) => {
-    const scanFor: T.KeyType[] = this.props.scanFor ? [this.props.scanFor] : ['private', 'public']
+    const scanFor = this.props.scanFor ? [this.props.scanFor] : ['private', 'public']
     const maybeKey = util.toBuffer(ev.data)
     const valid = scanFor.map(k => {
       if (k === 'private') return util.isValidPrivate(maybeKey) && ev.data
