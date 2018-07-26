@@ -39,8 +39,7 @@ export default class Config extends React.Component<{}, State> {
 
   render () {
     if (!this.state) return null
-    const { url, config, error } = this.state
-    console.log(url)
+    const { url, config, accountWithContracts, error } = this.state
     return <View style={{ padding: 20 }}>
       <Text style={{ fontSize: 28, fontWeight: 'bold', flexDirection: 'row' }}>
         Configuration
@@ -78,6 +77,12 @@ export default class Config extends React.Component<{}, State> {
           barCodeTypes={[RNCamera.Constants.BarCodeType.qr]}
           onBarCodeRead={this.onScan}
           style={{ width: 300, height: 300 }} />
+      }
+
+      {
+        config && accountWithContracts ?
+        <Text style={{ color: 'green' }}>Contracts deployed</Text>
+        : <Text>...deploying contracts...</Text>
       }
 
     </View>

@@ -1,15 +1,6 @@
 import { Observable, BehaviorSubject } from 'rxjs'
 import { AsyncStorage } from 'react-native'
-
-// todo: expose it from server project
-export interface Config {
-  urls: {
-    coordinator: string
-    mqtt: string
-    eth: string
-  }
-  blockTime: number
-}
+import { api, Config, AccountWithContracts } from './api'
 
 export type Combined = typeof combined extends Observable<infer U> ? U : never
 
@@ -26,7 +17,7 @@ const defaultUrl: ServerUrl = {
 }
 
 const storageKey = 'gonetwork-server-url'
-AsyncStorage.removeItem(storageKey) // todo remove
+// AsyncStorage.removeItem(storageKey) // todo remove
 
 const urlSub = new BehaviorSubject<ServerUrl>(defaultUrl)
 const errorSub = new BehaviorSubject<string | undefined>(undefined)
@@ -50,10 +41,9 @@ export const serverUrl: Observable<ServerUrl> = Observable.merge(
 )
 
 export const config: Observable<Config | undefined> = serverUrl
-  .do(x => console.log('URL', x))
   .switchMap((u, idx) =>
     idx === 0 ? Observable.of(undefined) // 0-th / default - for sure wrong
-      : Observable.defer(() => fetch(`${urlToStr(u)}/config`).then(r => r.json()))
+      : Observable.defer((() => api.config(urlToStr(u))))
         .startWith(undefined)
         .timeout(500)
         .do(r => r && errorSub.next(undefined))
@@ -63,6 +53,11 @@ export const config: Observable<Config | undefined> = serverUrl
   )
   .shareReplay(1)
 
+export const accountWithContracts: Observable<undefined | AccountWithContracts> = config
+  .switchMap(c => !c ? Observable.of(undefined) :
+    Observable.defer(() => api['account-with-contracts'](c.urls.coordinator)) as Observable<any>)
+  .shareReplay(1)
+
 export const combined = Observable.combineLatest(
-  serverUrl, config, (url, config) => ({ url, config })
+  serverUrl, config, accountWithContracts, (url, config, accountWithContracts) => ({ url, config, accountWithContracts })
 )
