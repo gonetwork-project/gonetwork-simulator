@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Modal, Button } from 'react-native'
-import { RNCamera, BarCodeType } from 'react-native-camera'
+import { RNCamera, BarCodeType } from 'react-native-camera/types'
 
 import * as util from 'ethereumjs-util'
 

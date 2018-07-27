@@ -1,6 +1,6 @@
 import { Observable, BehaviorSubject } from 'rxjs'
 import { AsyncStorage } from 'react-native'
-import { api, Config, AccountWithContracts } from './api'
+import { api, Config, AccountWithContracts, Account } from './api'
 
 export type Combined = typeof combined extends Observable<infer U> ? U : never
 
@@ -16,9 +16,8 @@ const defaultUrl: ServerUrl = {
   port: 5215
 }
 
+export const accountsCount = 4
 const storageKey = 'gonetwork-server-url'
-// AsyncStorage.removeItem(storageKey) // todo remove
-
 const urlSub = new BehaviorSubject<ServerUrl>(defaultUrl)
 const errorSub = new BehaviorSubject<string | undefined>(undefined)
 
@@ -53,11 +52,24 @@ export const config: Observable<Config | undefined> = serverUrl
   )
   .shareReplay(1)
 
-export const accountWithContracts: Observable<undefined | AccountWithContracts> = config
+export const masterAccount: Observable<undefined | AccountWithContracts> = config
   .switchMap(c => !c ? Observable.of(undefined) :
-    Observable.defer(() => api['account-with-contracts'](c.urls.coordinator)) as Observable<any>)
+    Observable.defer(() => api.default_account(c.urls.coordinator)) as Observable<any>)
   .shareReplay(1)
 
+export const accounts: Observable<Account[]> =
+  Observable.combineLatest(
+    masterAccount, config
+  )
+    .switchMap(([ma, cfg]) =>
+      !(ma && cfg) ? Observable.of([] as Account[]) :
+        Observable.range(0, accountsCount - 1)
+          .concatMap(() => api.account(cfg.urls.coordinator))
+          .scan((acc, a) => acc.concat([a]), [])
+    )
+    .do(x => console.log('ACCOUNTS', x))
+    .shareReplay(1)
+
 export const combined = Observable.combineLatest(
-  serverUrl, config, accountWithContracts, (url, config, accountWithContracts) => ({ url, config, accountWithContracts })
+  serverUrl, config, masterAccount, accounts, (url, config, masterAccount, accounts) => ({ url, config, masterAccount, accounts })
 )

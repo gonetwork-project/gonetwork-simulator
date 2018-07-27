@@ -1,7 +1,7 @@
 // todo: expose it from server project or move server project to this repo
 
 import { PrivateKey, Address } from 'eth-types'
-import { util, as } from '../../node_modules/go-network-framework'
+import { util, as } from 'go-network-framework'
 
 export interface Config {
   urls: {
@@ -36,10 +36,11 @@ export type Command<In, Out> = [In, Out] // input, output
 export type ApiIO = {
   config: [void, Config]
   account: [void, Account]
-  'account-with-contracts': [void, AccountWithContracts]
+  default_account: [void, AccountWithContracts],
+  account_with_contracts: [void, AccountWithContracts]
 }
 
-export type ApiParse = {
+export type ParseResponse = {
   [K in keyof ApiIO]: (x: any) => ApiIO[K][1]
 }
 
@@ -66,15 +67,19 @@ export const toAccount = (acc: { privateKey: string }): Account => {
   }
 }
 
+export const toAccountWithContracts = (x: any) =>
+  Object.assign(toAccount(x), { contracts: toContracts(x.contracts) })
+
 const request = (path: string, parseFn = x => x) => (serverUrl: string, params?: any) =>
   fetch(`${serverUrl}/${path}`)
     .then(r => r.status === 200 ? r.json() : Promise.reject(r))
     .then(parseFn)
 
-const parse: ApiParse = {
+const parse: ParseResponse = {
   config: x => x,
   account: toAccount,
-  'account-with-contracts': x => Object.assign(toAccount(x), { contracts: toContracts(x.contracts) })
+  account_with_contracts: toAccountWithContracts,
+  default_account: toAccountWithContracts
 }
 
 export const api: Api =
