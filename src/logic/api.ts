@@ -1,9 +1,9 @@
 // todo: expose it from server project or move server project to this repo
-
 import { PrivateKey, Address } from 'eth-types'
 import { util, as } from 'go-network-framework'
 
 export interface Config {
+  runId: string
   urls: {
     coordinator: string
     mqtt: string
@@ -38,6 +38,7 @@ export type ApiIO = {
   account: [void, Account]
   default_account: [void, AccountWithContracts],
   account_with_contracts: [void, AccountWithContracts]
+  run_id: [void, string]
 }
 
 export type ParseResponse = {
@@ -47,6 +48,8 @@ export type ParseResponse = {
 export type Api = {
   [K in keyof ApiIO]: AsRequest<ApiIO[K][0], ApiIO[K][1]>
 }
+
+const id = x => x
 
 export const toContracts = (contractsRaw: any) =>
   Object.keys(contractsRaw)
@@ -76,7 +79,8 @@ const request = (path: string, parseFn = x => x) => (serverUrl: string, params?:
     .then(parseFn)
 
 const parse: ParseResponse = {
-  config: x => x,
+  config: id,
+  run_id: id,
   account: toAccount,
   account_with_contracts: toAccountWithContracts,
   default_account: toAccountWithContracts

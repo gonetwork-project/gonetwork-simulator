@@ -1,6 +1,7 @@
 import { Observable, BehaviorSubject } from 'rxjs'
 import { AsyncStorage } from 'react-native'
 import { api, Config, AccountWithContracts, Account } from './api'
+import { ifDefined } from './utils'
 
 export type Combined = typeof combined extends Observable<infer U> ? U : never
 
@@ -26,17 +27,20 @@ const urlToStr = (url: ServerUrl) => `${url.protocol}//${url.hostname}:${url.por
 export const setServerUrl = (url: ServerUrl) =>
   urlSub.next(Object.assign({}, urlSub.value, url))
 
+export const reset = () => setServerUrl({})
+
 export const error = errorSub.distinctUntilChanged()
 
 export const serverUrl: Observable<ServerUrl> = Observable.merge(
   urlSub
     .do(() => errorSub.next(undefined))
-    .distinctUntilChanged((a, b) => a.hostname === b.hostname && a.port === b.port)
+    // .distinctUntilChanged((a, b) => a.hostname === b.hostname && a.port === b.port)
     .shareReplay(1),
   Observable.defer(() => AsyncStorage.getItem(storageKey))
     .filter(Boolean)
     .map(x => JSON.parse(x))
     .do(setServerUrl)
+    .ignoreElements()
 )
 
 export const config: Observable<Config | undefined> = serverUrl
@@ -67,7 +71,6 @@ export const accounts: Observable<Account[]> =
           .concatMap(() => api.account(cfg.urls.coordinator))
           .scan((acc, a) => acc.concat([a]), [])
     )
-    .do(x => console.log('ACCOUNTS', x))
     .shareReplay(1)
 
 export const combined = Observable.combineLatest(

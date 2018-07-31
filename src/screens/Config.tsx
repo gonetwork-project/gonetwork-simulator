@@ -5,15 +5,19 @@ import { Subscription, Observable } from 'rxjs'
 
 import * as c from '../logic/config'
 import { checkP2P } from '../logic/check-p2p'
+import { setUnknownError } from '../global'
 
 type State = c.Combined & { error: boolean } & { p2pOk: boolean }
+interface Props {
+  onDone: () => void
+}
 
 const StepHeader = (p: { text: string }) =>
   <Text style={{ marginTop: 24, fontSize: 24, fontWeight: 'bold', flexDirection: 'row' }}>
     {p.text}
   </Text>
 
-export default class Config extends React.Component<{}, State> {
+export class Config extends React.Component<Props, State> {
   sub!: Subscription
 
   componentDidMount () {
@@ -26,7 +30,8 @@ export default class Config extends React.Component<{}, State> {
         .do(e => this.setState({ error: e }))
       )
       .merge(checkP2P.do(x => this.setState({ p2pOk: x })))
-      .subscribe()
+      // .merge(Observable.timer(2000).mergeMapTo(Observable.throw('Random error')))
+      .subscribe({ error: setUnknownError })
   }
 
   componentWillUnmount () {
@@ -67,7 +72,7 @@ export default class Config extends React.Component<{}, State> {
           }
         </View>
 
-        {accounts.length === 3 && <Button onPress={() => null} title='You are set up, press to continue' />}
+        {accounts.length === 3 && <Button onPress={this.props.onDone} title='You are set up, press to continue' />}
       </View > :
       <View>
         <Text>...initializing...</Text>
@@ -115,7 +120,7 @@ export default class Config extends React.Component<{}, State> {
         style={{ width: 300, height: 300 }} />}
 
       {config && <StepHeader text='mqtt/p2p check' />}
-      {config && this.state.p2pOk ? <Text style={{ color: 'green' }}>OK</Text> : <Text>...checking...</Text>}
+      {config && (this.state.p2pOk ? <Text style={{ color: 'green' }}>OK</Text> : <Text>...checking...</Text>)}
       {config && <Text>We needed it for all off-chain communication.</Text>}
 
       {config && <StepHeader text='ethereum setup' />}
