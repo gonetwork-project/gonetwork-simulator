@@ -56,14 +56,15 @@ export const config: Observable<Config | undefined> = serverUrl
   )
   .shareReplay(1)
 
-export const masterAccount = config
+export const contractsAccount = config
   .switchMap(passUndefined(c =>
     Observable.defer(() => api.contracts_account(c.urls.coordinator))))
+  .do(x => console.log('CONTRACTS-ACCOUNT', x))
   .shareReplay(1)
 
 export const accounts: Observable<Account[]> =
   Observable.combineLatest(
-    masterAccount, config
+    contractsAccount, config
   )
     .switchMap(([ma, cfg]) =>
       !(ma && cfg) ? Observable.of([] as Account[]) :
@@ -75,5 +76,7 @@ export const accounts: Observable<Account[]> =
     .shareReplay(1)
 
 export const combined = Observable.combineLatest(
-  serverUrl, config, masterAccount, accounts, (url, config, masterAccount, accounts) => ({ url, config, masterAccount, accounts })
+  serverUrl, config, contractsAccount, accounts,
+    (url, config, contractsAccount, accounts) =>
+      ({ url, config, contractsAccount, accounts, isConfigOk: contractsAccount && accounts.length > 0 })
 )

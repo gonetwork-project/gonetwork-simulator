@@ -12,7 +12,7 @@ import { checkP2PRaw } from '../logic/check-p2p'
   The underlying assumption is that after a critical error the application needs to re-initialize.
 */
 
-export type ErrorType = 'server-unreachable' | 'p2p-test-failed' | 'unknown'
+export type ErrorType = 'server-unreachable' | 'p2p-test-failed' | 'unknown' | 'restart'
 
 export const errorsConfig: { [K in ErrorType]: { header: string, message: string } } = {
   'p2p-test-failed': {
@@ -27,6 +27,11 @@ export const errorsConfig: { [K in ErrorType]: { header: string, message: string
   'unknown': {
     header: 'Unknown error',
     message: 'Oops - it should not happen...'
+  },
+  // technically that is not an error
+  'restart': {
+    header: '...restarting...',
+    message: ''
   }
 }
 
@@ -37,6 +42,21 @@ const clearError = () => errorsSub.next(undefined)
 
 export const errors = errorsSub.asObservable()
 export const setUnknownError = (error: Error) => errorsSub.next({ type: 'unknown', error })
+
+export const restart = () => {
+  config
+    .switchMap(ignoreUndefined(c =>
+      Observable.defer(() => api.restart(c.urls.coordinator))))
+    .do(() => setError('restart'))
+    .take(1)
+    .mergeMapTo(
+      Observable.timer(1000)
+        .do(clearError)
+    )
+    .subscribe({
+      error: err => console.log('RESTART-ERROR', err)
+    })
+}
 
 // #region monitoring
 export const monitorServer: Observable<ErrorType> = config

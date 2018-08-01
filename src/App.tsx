@@ -19,10 +19,12 @@ export default class App extends React.Component<{}, State> {
 
   componentDidMount () {
     this.sub = Observable.merge(
-      monitorErrors,
+      // monitorErrors,
       errors
         .do(e => !e && resetConfig())
         .do(e => e ? this.setState({ criticalError: e }) : this.setState({ criticalError: undefined, step: 'config' }))
+        .filter(x => !x)
+        .switchMapTo(monitorErrors)
     )
       .subscribe()
   }

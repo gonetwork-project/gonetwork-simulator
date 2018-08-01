@@ -38,8 +38,8 @@ export class Setup extends React.Component<Props, State> {
       // auto-continue action
       .merge(c.combined
         .switchMap((c) =>
-          Observable.timer(500).mapTo(c))
-        .filter(c => c.accounts.length > 0 && this.state.autoContinue)
+          Observable.timer(200).mapTo(c))
+        .filter(c => !!c.isConfigOk && this.state.autoContinue)
         .do(() => this.props.onDone())
       )
       // uncomment to imitate runtime exception
@@ -71,7 +71,7 @@ export class Setup extends React.Component<Props, State> {
       style={{ width: 300, height: 300 }} />
 
   renderAccounts = () => {
-    const { masterAccount: ma, accounts } = this.state
+    const { contractsAccount: ma, accounts, isConfigOk } = this.state
     return ma ?
       <View style={{ paddingLeft: 12 }}>
         <Text>Contracts:</Text>
@@ -90,10 +90,10 @@ export class Setup extends React.Component<Props, State> {
           }
         </View>
 
-        {accounts.length > 0 && <Button onPress={this.props.onDone} title='You are set up, tap to continue' />}
-        {accounts.length > 0 && <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12 }}>
+        {isConfigOk && <Button onPress={this.props.onDone} title='You are set up, tap to continue' />}
+        {isConfigOk && <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12 }}>
           <Switch value={this.state.autoContinue} onValueChange={this.setAutoContinue} />
-          <Text style={{ marginLeft: 20 }}>Continue automatically</Text>
+          <Text style={{ marginLeft: 20 }}>Next time, continue automatically</Text>
         </View>}
       </View > :
       <View>

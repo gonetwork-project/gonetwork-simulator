@@ -40,6 +40,7 @@ export type ApiIO = {
   start_accounts: [void, Account[]]
   // account_with_contracts: [void, AccountWithContracts]
   run_id: [void, string]
+  restart: [void, void]
 }
 
 export type ParseResponse = {
@@ -76,7 +77,7 @@ export const toAccountWithContracts = (x: any) =>
 
 const request = (path: string, parseFn = x => x) => (serverUrl: string, params?: any) =>
   fetch(`${serverUrl}/${path}`)
-    .then(r => r.status === 200 ? r.json() : Promise.reject(r))
+    .then(r => (r.status >= 200 && r.status < 300) ? r.json() : Promise.reject(r))
     .then(parseFn)
 
 const parse: ParseResponse = {
@@ -85,7 +86,8 @@ const parse: ParseResponse = {
   account: toAccount,
   // account_with_contracts: toAccountWithContracts,
   contracts_account: toAccountWithContracts,
-  start_accounts: xs => xs.map(toAccount)
+  start_accounts: xs => xs.map(toAccount),
+  restart: id
 }
 
 export const api: Api =
