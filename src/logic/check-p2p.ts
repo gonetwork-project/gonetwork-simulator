@@ -29,14 +29,9 @@ export const checkP2PRaw = (mqttUrl: string) => {
       return Observable.empty()
     })
   )
-    .timeout(2000)
+    .timeout(1000)
     .finally(() => {
       p1.dispose()
       p2.dispose()
-    }) as Observable<boolean>
+    }) as Observable<true>
 }
-
-export const checkP2P = config.switchMap(c => !c
-  ? Observable.of(false) :
-  checkP2PRaw(c.urls.mqtt).startWith(false)
-)

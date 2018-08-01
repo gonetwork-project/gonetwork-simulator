@@ -1,7 +1,7 @@
 import { Observable, BehaviorSubject } from 'rxjs'
 import { AsyncStorage } from 'react-native'
 import { api, Config, AccountWithContracts, Account } from './api'
-import { ifDefined } from './utils'
+import { ignoreUndefined, passUndefined } from './utils'
 
 export type Combined = typeof combined extends Observable<infer U> ? U : never
 
@@ -56,9 +56,9 @@ export const config: Observable<Config | undefined> = serverUrl
   )
   .shareReplay(1)
 
-export const masterAccount: Observable<undefined | AccountWithContracts> = config
-  .switchMap(c => !c ? Observable.of(undefined) :
-    Observable.defer(() => api.default_account(c.urls.coordinator)) as Observable<any>)
+export const masterAccount = config
+  .switchMap(passUndefined(c =>
+    Observable.defer(() => api.default_account(c.urls.coordinator))))
   .shareReplay(1)
 
 export const accounts: Observable<Account[]> =

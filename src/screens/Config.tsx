@@ -4,10 +4,9 @@ import { RNCamera, BarCodeType } from 'react-native-camera'
 import { Subscription, Observable } from 'rxjs'
 
 import * as c from '../logic/config'
-import { checkP2P } from '../logic/check-p2p'
-import { setUnknownError } from '../global'
+import { setUnknownError, checkP2P } from '../global'
 
-type State = c.Combined & { error: boolean } & { p2pOk: boolean }
+type State = c.Combined & { error: boolean } & { p2pOk?: boolean }
 interface Props {
   onDone: () => void
 }
