@@ -58,7 +58,7 @@ export const config: Observable<Config | undefined> = serverUrl
 
 export const masterAccount = config
   .switchMap(passUndefined(c =>
-    Observable.defer(() => api.default_account(c.urls.coordinator))))
+    Observable.defer(() => api.contracts_account(c.urls.coordinator))))
   .shareReplay(1)
 
 export const accounts: Observable<Account[]> =
@@ -67,9 +67,10 @@ export const accounts: Observable<Account[]> =
   )
     .switchMap(([ma, cfg]) =>
       !(ma && cfg) ? Observable.of([] as Account[]) :
-        Observable.range(0, accountsCount - 1)
-          .concatMap(() => api.account(cfg.urls.coordinator))
-          .scan((acc, a) => acc.concat([a]), [])
+        Observable.defer(() => api.start_accounts(cfg.urls.coordinator))
+        // Observable.range(0, accountsCount - 1)
+        //   .concatMap(() => api.account(cfg.urls.coordinator))
+        //   .scan((acc, a) => acc.concat([a]), [])
     )
     .shareReplay(1)
 

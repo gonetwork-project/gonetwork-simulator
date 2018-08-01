@@ -21,7 +21,6 @@ export default class App extends React.Component<{}, State> {
     this.sub = Observable.merge(
       monitorErrors,
       errors
-        .do(x => console.log('ERROR', x))
         .do(e => !e && resetConfig())
         .do(e => e ? this.setState({ criticalError: e }) : this.setState({ criticalError: undefined, step: 'config' }))
     )

@@ -36,8 +36,9 @@ export type Command<In, Out> = [In, Out] // input, output
 export type ApiIO = {
   config: [void, Config]
   account: [void, Account]
-  default_account: [void, AccountWithContracts],
-  account_with_contracts: [void, AccountWithContracts]
+  contracts_account: [void, AccountWithContracts],
+  start_accounts: [void, Account[]]
+  // account_with_contracts: [void, AccountWithContracts]
   run_id: [void, string]
 }
 
@@ -82,8 +83,9 @@ const parse: ParseResponse = {
   config: id,
   run_id: id,
   account: toAccount,
-  account_with_contracts: toAccountWithContracts,
-  default_account: toAccountWithContracts
+  // account_with_contracts: toAccountWithContracts,
+  contracts_account: toAccountWithContracts,
+  start_accounts: xs => xs.map(toAccount)
 }
 
 export const api: Api =

@@ -22,7 +22,6 @@ export class Setup extends React.Component<Props, State> {
   componentDidMount () {
     this.sub = c.combined
       .do(c => this.setState(c))
-      .do(c => c.accounts.length === 3 && this.state.autoContinue && this.props.onDone())
       .merge(c.error
         .map(e => !!e)
         .do(() => this.setState({ error: false }))
@@ -30,12 +29,21 @@ export class Setup extends React.Component<Props, State> {
         .do(e => this.setState({ error: e }))
       )
       .merge(checkP2P.do(x => this.setState({ p2pOk: x })))
+      // auto-continue - state
       .merge(
         Observable.defer(() => AsyncStorage.getItem('auto-continue'))
           .map(v => JSON.parse(v || 'false'))
           .do(v => this.setState({ autoContinue: v }))
       )
-      // .merge(Observable.timer(2000).mergeMapTo(Observable.throw('Random error')))
+      // auto-continue action
+      .merge(c.combined
+        .switchMap((c) =>
+          Observable.timer(500).mapTo(c))
+        .filter(c => c.accounts.length > 0 && this.state.autoContinue)
+        .do(() => this.props.onDone())
+      )
+      // uncomment to imitate runtime exception
+      // .merge(Observable.timer(2000).mergeMapTo(Observable.throw('runtime-error')))
       .subscribe({ error: setUnknownError })
   }
 
@@ -76,15 +84,17 @@ export class Setup extends React.Component<Props, State> {
         <View style={{ paddingLeft: 12 }}>
           <Text style={{ fontWeight: 'bold' }}>{`0x${ma.addressStr} -- master account`}</Text>
           {
-            [0, 1, 2] /* todo: should not be hardcoded */
-              .map(idx => {
-                const a = accounts[idx]
-                return <Text key={idx}>{(a && `0x${a.addressStr}`) || '...'}</Text>
-              })
+            accounts /* todo: should not be hardcoded */
+              .map((a, idx) =>
+                <Text key={idx}>{(a && `0x${a.addressStr}`) || '...'}</Text>)
           }
         </View>
 
-        {accounts.length === 3 && <Button onPress={this.props.onDone} title='You are set up, press to continue' />}
+        {accounts.length > 0 && <Button onPress={this.props.onDone} title='You are set up, tap to continue' />}
+        {accounts.length > 0 && <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12 }}>
+          <Switch value={this.state.autoContinue} onValueChange={this.setAutoContinue} />
+          <Text style={{ marginLeft: 20 }}>Continue automatically</Text>
+        </View>}
       </View > :
       <View>
         <Text>...initializing...</Text>
@@ -96,13 +106,8 @@ export class Setup extends React.Component<Props, State> {
     const { url, config, error } = this.state
     return <View style={{ padding: 20 }}>
       <Text style={{ fontSize: 28, fontWeight: 'bold', flexDirection: 'row' }}>
-        Configuration
+        Setup
       </Text>
-
-      <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12 }}>
-        <Switch value={this.state.autoContinue} onValueChange={this.setAutoContinue} />
-        <Text style={{ marginLeft: 20 }}>Continue automatically</Text>
-      </View>
 
       <StepHeader text='start services' />
       <Text>TODO: (link to) instructions or/and (link to) video </Text>

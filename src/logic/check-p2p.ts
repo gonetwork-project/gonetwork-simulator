@@ -29,7 +29,7 @@ export const checkP2PRaw = (mqttUrl: string) => {
       return Observable.empty()
     })
   )
-    .timeout(1000)
+    .timeout(1234)
     .finally(() => {
       p1.dispose()
       p2.dispose()
