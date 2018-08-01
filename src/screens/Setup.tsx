@@ -1,12 +1,12 @@
 import * as React from 'react'
-import { View, Text, TextInput, Button } from 'react-native'
+import { View, Text, TextInput, Button, AsyncStorage, Switch } from 'react-native'
 import { RNCamera, BarCodeType } from 'react-native-camera'
 import { Subscription, Observable } from 'rxjs'
 
 import * as c from '../logic/config'
 import { setUnknownError, checkP2P } from '../global'
 
-type State = c.Combined & { error: boolean } & { p2pOk?: boolean }
+type State = c.Combined & { error: boolean } & { p2pOk?: boolean } & { autoContinue: boolean }
 interface Props {
   onDone: () => void
 }
@@ -16,12 +16,13 @@ const StepHeader = (p: { text: string }) =>
     {p.text}
   </Text>
 
-export class Config extends React.Component<Props, State> {
+export class Setup extends React.Component<Props, State> {
   sub!: Subscription
 
   componentDidMount () {
     this.sub = c.combined
       .do(c => this.setState(c))
+      .do(c => c.accounts.length === 3 && this.state.autoContinue && this.props.onDone())
       .merge(c.error
         .map(e => !!e)
         .do(() => this.setState({ error: false }))
@@ -29,6 +30,11 @@ export class Config extends React.Component<Props, State> {
         .do(e => this.setState({ error: e }))
       )
       .merge(checkP2P.do(x => this.setState({ p2pOk: x })))
+      .merge(
+        Observable.defer(() => AsyncStorage.getItem('auto-continue'))
+          .map(v => JSON.parse(v || 'false'))
+          .do(v => this.setState({ autoContinue: v }))
+      )
       // .merge(Observable.timer(2000).mergeMapTo(Observable.throw('Random error')))
       .subscribe({ error: setUnknownError })
   }
@@ -41,6 +47,13 @@ export class Config extends React.Component<Props, State> {
     if (ev.data.includes('gonetworkServer')) {
       c.setServerUrl(JSON.parse(ev.data).gonetworkServer)
     }
+  }
+
+  setAutoContinue = (v: boolean) => {
+    this.setState({
+      autoContinue: v
+    })
+    AsyncStorage.setItem('auto-continue', JSON.stringify(v))
   }
 
   renderCamera = () =>
@@ -85,6 +98,11 @@ export class Config extends React.Component<Props, State> {
       <Text style={{ fontSize: 28, fontWeight: 'bold', flexDirection: 'row' }}>
         Configuration
       </Text>
+
+      <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12 }}>
+        <Switch value={this.state.autoContinue} onValueChange={this.setAutoContinue} />
+        <Text style={{ marginLeft: 20 }}>Continue automatically</Text>
+      </View>
 
       <StepHeader text='start services' />
       <Text>TODO: (link to) instructions or/and (link to) video </Text>

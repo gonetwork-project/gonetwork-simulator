@@ -3,7 +3,7 @@ import { View, Modal } from 'react-native'
 import { Observable, Subscription } from 'rxjs'
 
 import { Error, ErrorProps, monitorErrors, errors } from './global'
-import { Config, Main } from './screens'
+import { Setup, Main } from './screens'
 import { reset as resetConfig } from './logic/config'
 
 type Step = 'config' | 'main'
@@ -35,7 +35,7 @@ export default class App extends React.Component<{}, State> {
   renderContent = () => {
     switch (this.state.step) {
       case 'config':
-        return <Config onDone={() => this.setState({ step: 'main' })} />
+        return <Setup onDone={() => this.setState({ step: 'main' })} />
       case 'main':
         return <Main />
     }
