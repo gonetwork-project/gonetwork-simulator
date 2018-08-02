@@ -7,13 +7,18 @@ import { config } from '../logic/config'
 import { ignoreUndefined, passUndefined } from '../logic/utils'
 import { checkP2PRaw } from '../logic/check-p2p'
 
+// #region critical errors
+
 /*
   Singleton module for handling critical errors.
   The underlying assumption is that after a critical error the application needs to re-initialize.
 */
 
-export type ErrorType = 'server-unreachable' | 'p2p-test-failed' | 'unknown' | 'restart'
+export type ErrorType = 'server-unreachable' | 'p2p-test-failed' | 'unknown' | 'restart' | InvariantError
 
+export type InvariantError = 'invariant'
+
+const internal = 'Oops, we are sorry - it should not happen... This is an internal error - it requires additional investigation.'
 export const errorsConfig: { [K in ErrorType]: { header: string, message: string } } = {
   'p2p-test-failed': {
     header: 'MQTT server unreachable',
@@ -25,8 +30,12 @@ export const errorsConfig: { [K in ErrorType]: { header: string, message: string
     message: 'Server does not offer any persistence. The application must be re-initialized.'
   },
   'unknown': {
-    header: 'Unknown error',
-    message: 'Oops - it should not happen...'
+    header: 'Unknown / Runtime error',
+    message: internal
+  },
+  'invariant': {
+    header: 'Invariant broken',
+    message: internal
   },
   // technically that is not an error
   'restart': {
@@ -42,6 +51,11 @@ const clearError = () => errorsSub.next(undefined)
 
 export const errors = errorsSub.asObservable()
 export const setUnknownError = (error: Error) => errorsSub.next({ type: 'unknown', error })
+interface CheckInvariant {
+  <T> (check: (p: T) => boolean, msg?: string): (p: T) => void
+}
+export const invariant: CheckInvariant = (check, msg = 'Message not specified') => p =>
+  !check(p) && setError('invariant', new Error(msg)) || p
 
 export const restart = () => {
   config
@@ -57,13 +71,14 @@ export const restart = () => {
       error: err => console.log('RESTART-ERROR', err)
     })
 }
+// #endregion
 
 // #region monitoring
 export const monitorServer: Observable<ErrorType> = config
   .switchMap(ignoreUndefined(c =>
     Observable.interval(500)
       .switchMap(() => api.run_id(c.urls.coordinator))
-      .do(x => console.log('SERVER-MONITOR', x))
+      // .do(x => console.log('SERVER-MONITOR', x))
       .filter(Boolean)
       .distinctUntilChanged()
       .skip(1)
@@ -95,10 +110,18 @@ export interface ErrorProps {
   error?: Error
 }
 
-export const Error = (p: ErrorProps) =>
+export const CriticalError = (p: ErrorProps) =>
   <View style={{ padding: 20, backgroundColor: 'rgba(200, 20, 20, 0.2)' }}>
     <Text style={{ fontSize: 26, marginBottom: 20, fontWeight: 'bold', color: 'rgb(200,20,20)' }}>{errorsConfig[p.type].header}</Text>
     <Text style={{ fontSize: 14, marginBottom: 20, fontWeight: 'bold', color: 'rgba(200,20,20, 0.9)' }}>{errorsConfig[p.type].message}</Text>
+
+    {
+      p.error && p.error.message &&
+      <Text style={{ marginTop: 20, fontWeight: 'bold', fontSize: 20 }}>
+        {p.error.message}
+      </Text>
+    }
+
     {
       p.error &&
       <Text style={{ marginTop: 20 }}>

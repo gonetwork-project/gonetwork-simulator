@@ -1,2 +1,2 @@
 export * from './toasts'
-export * from './critical-errors'
+export * from './errors-and-checks'
