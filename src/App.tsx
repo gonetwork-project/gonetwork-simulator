@@ -2,7 +2,7 @@ import * as React from 'react'
 import { ScrollView, View, Modal } from 'react-native'
 import { Observable, Subscription } from 'rxjs'
 
-import { Error, ErrorProps, monitorErrors, errors } from './global'
+import { CriticalError, ErrorProps, monitorErrors, errors } from './global'
 import { Setup, Main } from './screens'
 import { reset as resetConfig } from './logic/config'
 
@@ -46,7 +46,7 @@ export default class App extends React.Component<{}, State> {
     // do not render anything else to force fresh mount on re-initialize
     if (this.state.criticalError) {
       return <Modal animationType='fade' >
-        <Error {...this.state.criticalError} />
+        <CriticalError {...this.state.criticalError} />
       </Modal>
     }
     return <ScrollView style={{ paddingTop: 24, paddingLeft: 12, paddingRight: 12 }}>

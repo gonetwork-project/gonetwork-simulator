@@ -1,10 +1,22 @@
 import * as React from 'react'
 import { View, Text, Button } from 'react-native'
+import { Observable, Subscription } from 'rxjs'
 
 import { clearStorage } from '../logic/utils'
+import { accounts } from '../logic/accounts'
 import { restart } from '../global'
 
 export class Main extends React.Component {
+
+  sub!: Subscription
+
+  componentDidMount () {
+    this.sub = accounts.subscribe()
+  }
+
+  componentWillUnmount () {
+    this.sub && this.sub.unsubscribe()
+  }
 
   render () {
     return <View>
