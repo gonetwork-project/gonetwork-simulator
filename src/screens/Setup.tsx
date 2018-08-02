@@ -113,27 +113,27 @@ export class Setup extends React.Component<Props, State> {
       <Text>TODO: (link to) instructions or/and (link to) video </Text>
 
       <StepHeader text='provide main service url' />
+      {error && <Text style={{ color: 'red' }}>Cannot connect</Text>}
+      {config && <Text style={{ color: 'green' }}>OK</Text>}
       <Text>You can scan qr code or provide it manually</Text>
       <View style={{ flexDirection: 'row', padding: 8 }}>
         <Text>http://</Text>
         <TextInput
-          style={{ width: 220, height: 20, backgroundColor: 'rgb(200,200,200)', padding: 4 }}
+          style={{ width: 160, height: 20, backgroundColor: 'rgb(200,200,200)', padding: 4 }}
           value={url.hostname}
           keyboardType='numeric'
-          placeholder='hostname, eg. 192.168.1.xx'
+          placeholder='hostname'
           onChangeText={t => c.setServerUrl({ hostname: t })}
         />
         <Text>:</Text>
         <TextInput
-          style={{ width: 100, height: 20, backgroundColor: 'rgb(200,200,200)', padding: 4 }}
+          style={{ width: 60, height: 20, backgroundColor: 'rgb(200,200,200)', padding: 4 }}
           keyboardType='number-pad'
-          placeholder='port, eg. 5215'
+          placeholder='port'
           maxLength={6}
           value={(url.port as any) && `${url.port}`}
           onChangeText={t => c.setServerUrl({ port: parseInt(t, 10) })}
         />
-        {error && <Text style={{ color: 'red' }}>Cannot connect</Text>}
-        {config && <Text style={{ color: 'green' }}>OK</Text>}
       </View>
 
       {!config && <RNCamera

@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { View, Modal } from 'react-native'
+import { ScrollView, View, Modal } from 'react-native'
 import { Observable, Subscription } from 'rxjs'
 
 import { Error, ErrorProps, monitorErrors, errors } from './global'
@@ -49,8 +49,9 @@ export default class App extends React.Component<{}, State> {
         <Error {...this.state.criticalError} />
       </Modal>
     }
-    return <View style={{ paddingTop: 50, paddingLeft: 20 }}>
+    return <ScrollView style={{ paddingTop: 24, paddingLeft: 12, paddingRight: 12 }}>
       {this.renderContent()}
-    </View>
+      <View style={{ height: 24 }} />
+    </ScrollView>
   }
 }

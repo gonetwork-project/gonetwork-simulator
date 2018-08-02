@@ -25,6 +25,7 @@ export const checkP2PRaw = (mqttUrl: string) => {
       .mapTo(true)
       .take(1),
     Observable.defer(() => {
+      // todo: looking into server logs seems the message is sent twice - seems to be an issue in p2p module
       p1.send(add2, msg)
       return Observable.empty()
     })
