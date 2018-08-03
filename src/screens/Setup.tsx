@@ -6,7 +6,7 @@ import { Subscription, Observable } from 'rxjs'
 import * as c from '../logic/config'
 import { setUnknownError, checkP2P } from '../global'
 
-type State = c.Combined & { error: boolean } & { p2pOk?: boolean } & { autoContinue: boolean }
+type State = c.Combined & { error: boolean } & { p2pOk?: boolean, cryptoInited?: boolean, autoContinue: boolean }
 interface Props {
   onDone: () => void
 }

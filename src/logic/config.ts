@@ -3,6 +3,16 @@ import { AsyncStorage } from 'react-native'
 import { api, Config, AccountWithContracts, Account } from './api'
 import { ignoreUndefined, passUndefined } from './utils'
 
+const sjcl = require('sjcl')
+import { generateSecureRandom } from 'react-native-securerandom'
+
+const addEntropyOk = Observable.defer(() => generateSecureRandom(1024))
+  .do((randomBytes: any) =>
+    sjcl.random.addEntropy(new Uint32Array(randomBytes.buffer), 1024, 'crypto.randomBytes')
+  )
+  .mapTo(true)
+  .startWith(false)
+
 export type Combined = typeof combined extends Observable<infer U> ? U : never
 
 export type ServerUrl = Partial<{
@@ -69,14 +79,14 @@ export const accounts: Observable<Account[]> =
     .switchMap(([ma, cfg]) =>
       !(ma && cfg) ? Observable.of([] as Account[]) :
         Observable.defer(() => api.start_accounts(cfg.urls.coordinator))
-        // Observable.range(0, accountsCount - 1)
-        //   .concatMap(() => api.account(cfg.urls.coordinator))
-        //   .scan((acc, a) => acc.concat([a]), [])
+      // Observable.range(0, accountsCount - 1)
+      //   .concatMap(() => api.account(cfg.urls.coordinator))
+      //   .scan((acc, a) => acc.concat([a]), [])
     )
     .shareReplay(1)
 
 export const combined = Observable.combineLatest(
-  serverUrl, config, contractsAccount, accounts,
-    (url, config, contractsAccount, accounts) =>
-      ({ url, config, contractsAccount, accounts, isConfigOk: contractsAccount && accounts.length > 0 })
+  serverUrl, config, contractsAccount, accounts, addEntropyOk,
+  (url, config, contractsAccount, accounts, addEntropyOk) =>
+    ({ url, config, contractsAccount, accounts, isConfigOk: addEntropyOk && contractsAccount && accounts.length > 0 })
 )
