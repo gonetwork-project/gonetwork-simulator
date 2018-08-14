@@ -1,16 +1,20 @@
 import * as React from 'react'
-import { View, Text, Button } from 'react-native'
+import { View, Text, Button, Alert } from 'react-native'
 import { Observable, Subscription } from 'rxjs'
 
 import { clearStorage } from '../logic/utils'
 import { accounts, balances, Account, AccountBalance } from '../logic/accounts'
 import { restart } from '../global'
 
+import { AccountShort } from '../components/AccountShort'
+import { AccountDetailed } from '../components/AccountDetailed'
+
 export type State = {
   accounts?: Account[]
   balances: {
     [K: string]: AccountBalance | undefined
   }
+  selectedAccount?: Account
 }
 
 export class Main extends React.Component<{}, State> {
@@ -31,26 +35,37 @@ export class Main extends React.Component<{}, State> {
     this.sub && this.sub.unsubscribe()
   }
 
-  renderAccounts = (accounts: Account[]) => {
-    return accounts.map((a, i) => {
-      const b = this.state.balances[a.owner.addressStr]
-      return <View key={i} style={{ padding: 20 }}>
-        <Text>Address: 0x{a.owner.addressStr}</Text>
-        <Text>{JSON.stringify(b, null, 4)}</Text>
-      </View>
-    })
-  }
+  renderAccounts = () => ([
+    <Text key='h' style={{ fontSize: 24, fontWeight: 'bold' }}>Accounts</Text>,
+    <View key='a' style={{ padding: 20 }}>
+      {
+        this.state.accounts ?
+          this.state.accounts.map((a, i) =>
+            <AccountShort
+              key={a.owner.addressStr}
+              account={a}
+              balance={this.state.balances[a.owner.addressStr]}
+              onSelected={() => this.setState({ selectedAccount: a })}
+            />) :
+          <Text>...initializig...</Text>
+      }
+    </View>
+  ])
 
   render () {
+    const selected = this.state.selectedAccount
     return <View>
 
-      <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Accounts</Text>
-      <View style={{ padding: 20 }}>
-        {
-          this.state.accounts ? this.renderAccounts(this.state.accounts) :
-            <Text>...initializig...</Text>
+      {!selected && this.renderAccounts()}
+      {selected && <AccountDetailed
+        account={selected}
+        balance={this.state.balances[selected.owner.addressStr]}
+        otherAccounts={this.state.accounts!
+          .filter(a => a !== selected)
+          .map(a => a.owner)
         }
-      </View>
+        onBack={() => this.setState({ selectedAccount: undefined })}
+      />}
 
       <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Dev Actions</Text>
       <View style={{ padding: 20, flexDirection: 'row' }}>
