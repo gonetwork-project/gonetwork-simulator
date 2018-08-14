@@ -70,10 +70,11 @@ export class Setup extends React.Component<Props, State> {
       onBarCodeRead={this.onScan}
       style={{ width: 300, height: 300 }} />
 
-  renderAccounts = () => {
+  renderAccounts = (blockTime) => {
     const { contractsAccount: ma, accounts, isConfigOk } = this.state
     return ma ?
       <View style={{ paddingLeft: 12 }}>
+        <Text>Block Time: {blockTime}ms</Text>
         <Text>Contracts:</Text>
         <View style={{ paddingLeft: 12 }}>
           {Object.keys(ma.contracts).map(k => <Text key={k}>
@@ -96,7 +97,8 @@ export class Setup extends React.Component<Props, State> {
           <Text style={{ marginLeft: 20 }}>Next time, continue automatically</Text>
         </View>}
       </View > :
-      <View>
+      <View style={{ paddingLeft: 12 }}>
+        <Text>Block Time: {blockTime}ms</Text>
         <Text>...initializing...</Text>
       </View>
   }
@@ -146,7 +148,7 @@ export class Setup extends React.Component<Props, State> {
       {config && <Text>We needed it for all off-chain communication.</Text>}
 
       {config && <StepHeader text='ethereum setup' />}
-      {config && this.renderAccounts()}
+      {config && this.renderAccounts(config.blockTime)}
     </View>
   }
 }
