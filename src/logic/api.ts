@@ -18,14 +18,14 @@ export interface Contracts {
   testToken: Address
 }
 
-export interface Account {
+export interface AccountBase {
   privateKey: PrivateKey
   privateKeyStr: string
   address: Address
   addressStr: string
 }
 
-export interface AccountWithContracts extends Account {
+export interface AccountWithContracts extends AccountBase {
   contracts: Contracts
 }
 
@@ -35,9 +35,9 @@ export type AsRequest<In, Out> = In extends void ?
 export type Command<In, Out> = [In, Out] // input, output
 export type ApiIO = {
   config: [void, Config]
-  account: [void, Account]
+  account: [void, AccountBase]
   contracts_account: [void, AccountWithContracts],
-  start_accounts: [void, Account[]]
+  start_accounts: [void, AccountBase[]]
   // account_with_contracts: [void, AccountWithContracts]
   run_id: [void, string]
   restart: [void, void]
@@ -60,7 +60,7 @@ export const toContracts = (contractsRaw: any) =>
       return acc
     }, {}) as Contracts
 
-export const toAccount = (acc: { privateKey: string }): Account => {
+export const toAccount = (acc: { privateKey: string }): AccountBase => {
   const privateKeyStr = util.stripHexPrefix(acc.privateKey)
   const privateKey = as.PrivateKey(new Buffer(privateKeyStr, 'hex'))
   const addressStr = util.privateToAddress(privateKey).toString('hex')

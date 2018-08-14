@@ -14,7 +14,7 @@
     "assert": "^1.4.1",
     "buffer": "^5.1.0",
     "ethereumjs-util": "^5.2.0",
-    "go-network-framework": "0.2.7",
+    "go-network-framework": "0.2.9",
     "node-libs-browser": "^2.1.0",
     "process": "^0.11.10",
     "react": "16.3.1",

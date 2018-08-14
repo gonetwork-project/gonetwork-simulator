@@ -1,6 +1,7 @@
 import { Observable, BehaviorSubject } from 'rxjs'
 import { AsyncStorage } from 'react-native'
-import { api, Config, AccountWithContracts, Account } from './api'
+
+import { api, Config, AccountWithContracts, AccountBase } from './api'
 import { ignoreUndefined, passUndefined } from './utils'
 
 const sjcl = require('sjcl')
@@ -72,12 +73,12 @@ export const contractsAccount = config
   .do(x => console.log('CONTRACTS-ACCOUNT', x))
   .shareReplay(1)
 
-export const accounts: Observable<Account[]> =
+export const accounts: Observable<AccountBase[]> =
   Observable.combineLatest(
     contractsAccount, config
   )
     .switchMap(([ma, cfg]) =>
-      !(ma && cfg) ? Observable.of([] as Account[]) :
+      !(ma && cfg) ? Observable.of([] as AccountBase[]) :
         Observable.defer(() => api.start_accounts(cfg.urls.coordinator))
       // Observable.range(0, accountsCount - 1)
       //   .concatMap(() => api.account(cfg.urls.coordinator))

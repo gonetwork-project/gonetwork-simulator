@@ -58,9 +58,11 @@ export const invariant: CheckInvariant = (check, msg = 'Message not specified') 
   !check(p) && setError('invariant', new Error(msg)) || p
 
 export const restart = () => {
+  // console.log('RESTARTING...')
   config
     .switchMap(ignoreUndefined(c =>
       Observable.defer(() => api.restart(c.urls.coordinator))))
+    // .do(x => console.log("RESTARTIRrr", x))
     .do(() => setError('restart'))
     .take(1)
     .mergeMapTo(
