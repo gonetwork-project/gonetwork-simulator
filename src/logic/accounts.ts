@@ -54,9 +54,14 @@ const initAccount = (contracts: Contracts, cfg: Config) => (account: AccountBase
     sign: (msg) => msg.sign(account.privateKey),
     send: (to, msg) => p2p.send(to.toString('hex'), message.serialize(msg)),
     blockchain: blockchain,
+    // todo: make if configurable
     settleTimeout: as.BlockNumber(6),
     revealTimeout: as.BlockNumber(3)
   })
+
+  // todo - it has to be disposed - probably it should be incorporated into engine
+  blockchain.monitoring.on('*', engine.onBlockchainEvent)
+  p2p.on('message-received', msg => engine.onMessage(message.deserializeAndDecode(msg) as any))
 
   return Observable.zip(
     Observable.fromEvent(p2p, 'status-changed')

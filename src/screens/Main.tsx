@@ -7,7 +7,7 @@ import { accounts, balances, Account, AccountBalance } from '../logic/accounts'
 import { restart } from '../global'
 
 import { AccountShort } from '../components/AccountShort'
-import { AccountDetailed } from '../components/AccountDetailed'
+import { AccountFull } from '../components/AccountFull'
 
 export type State = {
   accounts?: Account[]
@@ -57,7 +57,7 @@ export class Main extends React.Component<{}, State> {
     return <View>
 
       {!selected && this.renderAccounts()}
-      {selected && <AccountDetailed
+      {selected && <AccountFull
         account={selected}
         balance={this.state.balances[selected.owner.addressStr]}
         otherAccounts={this.state.accounts!
