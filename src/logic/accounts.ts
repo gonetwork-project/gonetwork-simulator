@@ -102,15 +102,17 @@ export const accounts = () => Observable.combineLatest(
   .do(x => console.log('ACC', x))
   .shareReplay(1)
 
-const isBalanceChanged = (a?: AccountBalance, b?: AccountBalance) =>
-  !!(a && b && (['gotToken', 'hsToken', 'wei'] as Array<keyof AccountBalance>).reduce((v, k) => v || a[k].eq(b[k]), false))
+const isBalanceChanged = (a: AccountBalance, b: AccountBalance) =>
+  !(['gotToken', 'hsToken', 'wei'] as Array<keyof AccountBalance>).reduce((v, k) => v || !a[k].eq(b[k]), false)
 
 export const balances = (accs: ReturnType<typeof accounts>) =>
   accs
     .mergeMap(x => x)
     .mergeMap(acc =>
-      acc.balance
+      (acc.balance
+        .filter(Boolean) as Observable<AccountBalance>)
         .distinctUntilChanged(isBalanceChanged)
+        .startWith(undefined)
         .map(b => ({ [acc.owner.addressStr]: b }))
     )
     .scan((bs, b) => Object.assign({}, bs, b), {})
