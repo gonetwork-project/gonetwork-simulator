@@ -54,16 +54,17 @@ export const setUnknownError = (error: Error) => errorsSub.next({ type: 'unknown
 interface CheckInvariant {
   <T> (check: (p: T) => boolean, msg?: string): (p: T) => void
 }
-export const invariant: CheckInvariant = (check, msg = 'Message not specified') => p =>
+export const invariant: CheckInvariant = (check, msg = '[More Info not specifed]') => p =>
   !check(p) && setError('invariant', new Error(msg)) || p
 
 export const restart = () => {
-  // console.log('RESTARTING...')
   config
     .switchMap(ignoreUndefined(c =>
       Observable.defer(() => api.restart(c.urls.coordinator))))
-    // .do(x => console.log("RESTARTIRrr", x))
-    .do(() => setError('restart'))
+    .mapTo('restart' as ErrorType)
+    // sometimes - the network request fails
+    .catch(() => Observable.of('server-unreachable' as ErrorType))
+    .do((s) => setError(s))
     .take(1)
     .mergeMapTo(
       Observable.timer(1000)

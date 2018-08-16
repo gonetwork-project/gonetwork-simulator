@@ -43,7 +43,7 @@ export class OpenChannel extends React.Component<Props, State> {
         Observable.defer(
           () => openChannelAndDeposit(this.props.account, s.amount, s.other.address)
         )
-          .do((x) => console.warn('OK', x))
+          // .do((x) => console.warn('OK', x))
           .mapTo('success' as Status)
           .catch(() => Observable.of('error' as Status))
           .mergeMap(s =>

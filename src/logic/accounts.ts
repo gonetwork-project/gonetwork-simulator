@@ -31,6 +31,7 @@ const balance = (blockchain: ReturnType<typeof serviceCreate>) =>
     .shareReplay(1)
 
 const initAccount = (contracts: Contracts, cfg: Config) => (account: AccountBase) => {
+  console.log('INITING-ACCOUNT', account.addressStr, cfg.runId)
   const p2p = new P2P({
     mqttUrl: cfg.urls.mqtt,
     address: account.addressStr,
@@ -44,7 +45,7 @@ const initAccount = (contracts: Contracts, cfg: Config) => (account: AccountBase
     signatureCb: (cb) => cb(account.privateKey),
     providerUrl: cfg.urls.eth,
     monitoringConfig: {
-      startBlock: 'latest',
+      startBlock: 'latest', // 'earliest' would be more appropraite to reconstruct the state, but then we need persitence
       logsInterval: cfg.blockTime // cfg.blockTime
     }
   })
@@ -54,12 +55,11 @@ const initAccount = (contracts: Contracts, cfg: Config) => (account: AccountBase
     sign: (msg) => msg.sign(account.privateKey),
     send: (to, msg) => p2p.send(to.toString('hex'), message.serialize(msg)),
     blockchain: blockchain,
-    // todo: make if configurable
+    // todo: make if configurable - another thing is that engine assumes single value for all contracts
     settleTimeout: as.BlockNumber(6),
     revealTimeout: as.BlockNumber(3)
   })
 
-  // todo - it has to be disposed - probably it should be incorporated into engine
   blockchain.monitoring.on('*', engine.onBlockchainEvent)
   p2p.on('message-received', msg => engine.onMessage(message.deserializeAndDecode(msg) as any))
 
@@ -74,19 +74,27 @@ const initAccount = (contracts: Contracts, cfg: Config) => (account: AccountBase
     Observable.defer(() => blockchain.rpc.getBalance({ address: account.address }))
       .do(x => console.log('BALANCE', x.toString(), account.addressStr))
   )
-    .mapTo({ contracts, p2p, engine, blockchain, owner: account, txs: blockchain.txs,
-      balance: balance(blockchain)
+    .mapTo({
+      contracts, p2p, engine, blockchain, owner: account, txs: blockchain.txs,
+      balance: balance(blockchain),
+      dispose: () => {
+        p2p.dispose()
+        blockchain.monitoring.dispose()
+      }
     })
 }
 
-export const accounts = Observable.combineLatest(
+export const accounts = () => Observable.combineLatest(
   c.accounts,
   c.contractsAccount,
   c.config.filter(Boolean).map(c => c!)
 )
-  .do(invariant(([ac, cs]) => ac.length >= 1 && !!cs, 'Contract account and at least 1 more other accounts expected'))
+  .debounceTime(0)
+  .do(invariant(([ac, cs]) => (ac.length > 0) && !!cs, 'Contract account and at least 1 more other accounts expected'))
   .do(x => setWaitForDefault({ interval: x[2].blockTime, timeout: 3000 }))
-  .switchMap(([ac, cs, cfg]) =>
+  .do(x => console.log('INITING', x))
+  .take(1)
+  .mergeMap(([ac, cs, cfg]) =>
     Observable.from([cs as AccountBase].concat([ac[0]])) // just one account
       .mergeMap(initAccount(cs!.contracts, cfg))
       .toArray()
@@ -97,12 +105,12 @@ export const accounts = Observable.combineLatest(
 const isBalanceChanged = (a?: AccountBalance, b?: AccountBalance) =>
   !!(a && b && (['gotToken', 'hsToken', 'wei'] as Array<keyof AccountBalance>).reduce((v, k) => v || a[k].eq(b[k]), false))
 
-export const balances = accounts
-  .mergeMap(x => x)
-  .mergeMap(acc =>
-    acc.balance
-      // .do(x => console.log('BALANCE', x))
-      .distinctUntilChanged(isBalanceChanged)
-      .map(b => ({ [acc.owner.addressStr]: b }))
-  )
-  .scan((bs, b) => Object.assign({}, bs, b), {})
+export const balances = (accs: ReturnType<typeof accounts>) =>
+  accs
+    .mergeMap(x => x)
+    .mergeMap(acc =>
+      acc.balance
+        .distinctUntilChanged(isBalanceChanged)
+        .map(b => ({ [acc.owner.addressStr]: b }))
+    )
+    .scan((bs, b) => Object.assign({}, bs, b), {})

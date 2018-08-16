@@ -28,7 +28,6 @@ export const openChannelAndDeposit = (account: Account, amount: Wei, other: Addr
       .take(1)
       .delay(0)
       .toPromise(),
-    // Promise.resolve(true),
     openChannel(account, amount, other)
       .then(ch => deposit(account, account.contracts.testToken, ch, amount)
         .then(() => ({ channel: ch }))

@@ -24,15 +24,20 @@ export class Main extends React.Component<{}, State> {
   sub!: Subscription
 
   componentDidMount () {
+    const accs = accounts()
     this.sub = Observable.merge(
-      accounts.do(acc => this.setState({ accounts: acc })),
-      balances.do(balances => this.setState({ balances }))
+      accs.do(acc => this.setState({ accounts: acc })),
+      balances(accs).do(balances => this.setState({ balances }))
     )
       .subscribe()
   }
 
   componentWillUnmount () {
     this.sub && this.sub.unsubscribe()
+    this.state.accounts && this.state.accounts.forEach(a => {
+      console.log('DISPOSING', a.owner.addressStr)
+      a.dispose()
+    })
   }
 
   renderAccounts = () => ([
