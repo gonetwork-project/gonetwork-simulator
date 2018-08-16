@@ -43,7 +43,9 @@ export class AccountFull extends React.Component<Props, State> {
     const cs = this.state.channels
     if (!cs) return <ActivityIndicator />
     if (cs.length === 0) return <Text>No openned channels.</Text>
-    return cs.map(ch => <ChannelShort key={ch.peerState.address.toString('hex')} channel={ch} onSelected={() => console.log('SELECTED')} />)
+    return cs.map(ch => <ChannelShort key={ch.peerState.address.toString('hex')}
+      account={this.props.account}
+      channel={ch} onSelected={() => console.log('SELECTED')} />)
   }
 
   render () {

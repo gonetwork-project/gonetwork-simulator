@@ -35,3 +35,5 @@ export const openChannelAndDeposit = (account: Account, amount: Wei, other: Addr
       )
   ])
     .then(([_, x]) => x)
+
+export const closeChannel = () => null
