@@ -1,7 +1,6 @@
 import { Observable } from 'rxjs'
 import {
-  Engine, serviceCreate, setWaitForDefault, P2P, message, as, util,
-  Millisecond, fakeStorage, CHAIN_ID, MonitoringConfig, BlockchainServiceConfig
+  Engine, serviceCreate, setWaitForDefault, P2P, message, as, DateMs, fakeStorage, CHAIN_ID, BN
 } from 'go-network-framework'
 
 import * as c from './config'
@@ -17,6 +16,13 @@ export type AccountBalance = {
   hsToken: Wei
 }
 
+export enum EventSource {
+  Blockchain = 1,
+  P2P
+}
+
+export interface Event { at: DateMs, source: EventSource, event: any, header: string, payload: string, short: string }
+
 const balance = (blockchain: ReturnType<typeof serviceCreate>) =>
   blockchain.monitoring.blockNumbers()
     .switchMap(bn =>
@@ -28,6 +34,12 @@ const balance = (blockchain: ReturnType<typeof serviceCreate>) =>
       ).take(1)
     )
     .startWith(undefined)
+    .shareReplay(1)
+
+const collectEvents = (evs: Observable<any>, name = 'N/A') =>
+  evs
+    // .do(x => console.log('EVENT', name, x))
+    .scan((a, e) => a.concat([e]), [])
     .shareReplay(1)
 
 const initAccount = (contracts: Contracts, cfg: Config) => (account: AccountBase) => {
@@ -60,6 +72,39 @@ const initAccount = (contracts: Contracts, cfg: Config) => (account: AccountBase
     revealTimeout: as.BlockNumber(3)
   })
 
+  const events = collectEvents(Observable.merge(
+    blockchain.monitoring.asStream('*').map(e => {
+      const payload = JSON.stringify(
+        Object.entries(e).reduce((acc, [k, v]) => {
+          acc[k] = Buffer.isBuffer(v) ? '0x' + v.toString('hex') :
+            BN.isBN(v) ? v.toString(10) : v
+          return acc
+        }, {}),
+        null, 4)
+      return {
+        at: Date.now(),
+        source: EventSource.Blockchain,
+        event: e,
+        header: e._type,
+        payload: payload,
+        short: payload
+      } as Event
+    }),
+    Observable.fromEvent(p2p, 'message-received').map(e => {
+      const payload = JSON.stringify(e, null, 4)
+      return {
+        at: Date.now(),
+        source: EventSource.P2P,
+        event: e,
+        header: 'P2P',
+        payload,
+        short: payload.split('\n').slice(0, 4).join('\n')
+      } as Event
+    })
+  ), 'EVENTS') as Observable<Array<Event>> // todo: improve typing
+
+  // do not loose any event
+  const eventsSub = events.subscribe()
   blockchain.monitoring.on('*', engine.onBlockchainEvent)
   p2p.on('message-received', msg => engine.onMessage(message.deserializeAndDecode(msg) as any))
 
@@ -77,9 +122,20 @@ const initAccount = (contracts: Contracts, cfg: Config) => (account: AccountBase
     .mapTo({
       contracts, p2p, engine, blockchain, owner: account, txs: blockchain.txs,
       balance: balance(blockchain),
+      events,
+      // events: {
+      //   blockchain: collectEvents(blockchain.monitoring.asStream('*'), 'BLOCKCHAIN'),
+      //   p2p: collectEvents(Observable.fromEvent(p2p, 'message-received'), 'P2P'),
+      //   all: collectEvents(Observable.merge(
+      //     blockchain.monitoring.asStream('*').map(e => ({ type: EventType.Blockchain, event: e })),
+      //     Observable.fromEvent(p2p, 'message-received').map(e => ({ type: EventType.P2P, event: e }))
+      //     ), 'ALL') as Observable<{ type: EventType, event: any }>, // todo: improve typing
+      //   engine: Observable.throw('TO-DO')
+      // },
       dispose: () => {
         p2p.dispose()
         blockchain.monitoring.dispose()
+        eventsSub.unsubscribe()
       }
     })
 }

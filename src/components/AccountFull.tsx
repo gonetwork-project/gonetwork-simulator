@@ -1,12 +1,13 @@
 import * as React from 'react'
-import { View, Text, Button, ActivityIndicator } from 'react-native'
+import { View, Text, Button, ActivityIndicator, Modal } from 'react-native'
 import { Subscription, Subject, Observable } from 'rxjs'
 
 import { Address } from 'eth-types'
 import { Channel } from 'go-network-framework/lib/state-channel/channel'
 import { Account, AccountBalance } from '../logic/accounts'
-import { OpenChannel } from '../components/OpenChannel'
+import { OpenChannel } from './OpenChannel'
 import { ChannelShort } from './ChannelShort'
+import { Events } from './Events'
 
 export interface Props {
   account: Account
@@ -18,6 +19,7 @@ export interface Props {
 export interface State {
   selectedChannel?: any
   channels?: Channel[]
+  showEvents?: boolean
 }
 
 export class AccountFull extends React.Component<Props, State> {
@@ -51,7 +53,15 @@ export class AccountFull extends React.Component<Props, State> {
   render () {
     const p = this.props
     return <View style={{ padding: 20 }}>
-      <Button title='back' onPress={p.onBack} />
+      <View style={{ padding: 12, flexDirection: 'row' }}>
+        <Button title='Back' onPress={p.onBack} />
+        <Button title='Show-Events' onPress={() => this.setState({ showEvents: true })} />
+      </View>
+
+      {this.state.showEvents && <Modal animationType='slide'>
+        <Events account={this.props.account} onClose={() => this.setState({ showEvents: false })} />
+      </Modal>}
+
       <Text style={{ fontSize: 22, fontWeight: 'bold' }}>0x{p.account.owner.addressStr}</Text>
       {
         !p.balance ?

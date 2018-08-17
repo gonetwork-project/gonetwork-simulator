@@ -1,11 +1,12 @@
 import * as React from 'react'
-import { View, Text, Button } from 'react-native'
+import { Subscription } from 'rxjs'
+import { View, Text, Button, Modal, Alert } from 'react-native'
 import { Channel } from 'go-network-framework/lib/state-channel/channel'
 import { as } from 'go-network-framework'
+import { Wei } from 'eth-types'
 
 import { sendDirect, sendMediated } from '../logic/offchain-actions'
 import { Account } from '../logic/accounts'
-import { Wei } from 'eth-types'
 
 export const State = (p: Channel['myState'] | Channel['peerState']) =>
   <View style={{ paddingLeft: 12 }}>
@@ -21,6 +22,7 @@ export interface Props {
 }
 
 export class ChannelShort extends React.Component<Props> {
+  sub?: Subscription
 
   sendDirect = () => {
     sendDirect(this.props.account, this.props.channel.peerState.address,
@@ -33,12 +35,16 @@ export class ChannelShort extends React.Component<Props> {
       .then(() => this.forceUpdate())
   }
 
+  close = () => {
+    Alert.alert('CLOSING')
+  }
+
   render () {
     const p = this.props
     const ch = p.channel
     return <View style={{ padding: 20 }}>
       <View style={{ flexDirection: 'row' }}>
-        <Button title='Select' onPress={p.onSelected} />
+        <Button title='Close' onPress={this.close} />
         <Button title='Send Direct (50)' onPress={this.sendDirect} />
         <Button title='Send Mediated (50)' onPress={this.sendMediated} />
       </View>

@@ -3,7 +3,7 @@ import { Observable } from 'rxjs'
 import { message, BN } from 'go-network-framework'
 import { Address, BlockNumber, Wei } from 'eth-types'
 
-import { Account } from '../logic/accounts'
+import { Account } from './accounts'
 
 const { GenerateRandomSecretHashPair } = message
 
