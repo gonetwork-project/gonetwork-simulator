@@ -1,8 +1,8 @@
 {
   "include": [
-    "./src/**/*",
-    "./node_modules/go-network-framework/lib/types/external.d.ts",
-    "./node_modules/go-network-framework/lib/types/eth.d.ts"
+    "./**/*",
+    "../../node_modules/go-network-framework/lib/types/external.d.ts",
+    "../../node_modules/go-network-framework/lib/types/eth.d.ts"
   ],
   "compilerOptions": {
     "target": "es6",
@@ -10,8 +10,7 @@
     "jsx": "react-native",
     "lib": ["es2015", "es2017"],
     "sourceMap": true,
-    "sourceRoot": "./src",
-    "outDir": "./lib",
+    "outDir": "../../build/app",
     "skipLibCheck": true,
     "strict": true,
     "noImplicitAny": false,

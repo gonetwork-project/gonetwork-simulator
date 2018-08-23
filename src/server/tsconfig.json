@@ -1,0 +1,12 @@
+{
+  "include": [
+    "./**/*"
+  ],
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "outDir": "../../build/server",
+    "skipLibCheck": true,
+    "strict": true
+  }
+}

@@ -1,20 +1,23 @@
 {
-  "name": "go-network-app",
+  "name": "go-network-simulator",
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "compile": "rm -rf lib/ && node_modules/typescript/bin/tsc --declaration",
     "start": "node node_modules/react-native/local-cli/cli.js start",
     "test": "jest",
     "lint": "node_modules/tslint/bin/tslint -c tslint.json 'src/**/*.ts'",
-    "lint-js": "node node_modules/standard/bin/cmd 'src/state-channel/**/*.js' 'test/**/*.js' 'demo/**/*.js'",
-    "watch": "rm -rf lib/ && node_modules/typescript/bin/tsc --watch"
+    "app-clear": "rm -rf build/app || true",
+    "app-compile": "yarn app-clear && node_modules/typescript/bin/tsc -p ./src/app --declaration",
+    "app-watch": "yarn app-clear && node_modules/typescript/bin/tsc -p ./src/app --watch",
+    "server-clear": "rm -rf build/server || true",
+    "server-compile": "yarn run server-clear && node_modules/.bin/tsc -p ./src/server/tsconfig.json",
+    "server": "yarn server-compile && node build/server"
   },
   "dependencies": {
     "assert": "^1.4.1",
     "buffer": "^5.1.0",
     "ethereumjs-util": "^5.2.0",
-    "go-network-framework": "0.2.9",
+    "go-network-framework": "^0.2.20",
     "node-libs-browser": "^2.1.0",
     "process": "^0.11.10",
     "react": "16.3.1",
@@ -27,16 +30,24 @@
     "rxjs": "^5.5.11"
   },
   "devDependencies": {
+    "@types/node": "^10.7.1",
     "@types/react": "^16.3.1",
     "@types/react-native": "^0.55.2",
     "babel-jest": "22.4.3",
     "babel-preset-react-native": "4.0.0",
+    "ethereumjs-wallet": "^0.6.2",
+    "ganache-core": "^2.2.1",
     "jest": "22.4.3",
+    "memdown": "^3.0.0",
+    "mqtt-connection": "^4.0.0",
+    "qrcode": "^1.2.2",
     "react-test-renderer": "16.3.1",
+    "truffle-contract": "^3.0.6",
     "tslint": "^5.10.0",
     "tslint-config-standard": "^7.0.0",
     "types-ethereumjs-util": "0.0.8",
-    "typescript": "^3.0.1"
+    "typescript": "^3.0.1",
+    "web3": "^1.0.0-beta.35"
   },
   "jest": {
     "preset": "react-native"
