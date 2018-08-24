@@ -1,8 +1,6 @@
 import { P2P, fakeStorage } from 'go-network-framework'
 import { Observable } from 'rxjs'
 
-import { config } from './config'
-
 export const checkP2PRaw = (mqttUrl: string) => {
   const msg = 'TEST-MESSAGE-' + Date.now()
   const add2 = 'TEST-2-' + Date.now()

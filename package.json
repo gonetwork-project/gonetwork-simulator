@@ -10,7 +10,7 @@
     "app-compile": "yarn app-clear && node_modules/typescript/bin/tsc -p ./src/app --declaration",
     "app-watch": "yarn app-clear && node_modules/typescript/bin/tsc -p ./src/app --watch",
     "server-clear": "rm -rf build/server || true",
-    "server-compile": "yarn run server-clear && node_modules/.bin/tsc -p ./src/server/tsconfig.json",
+    "server-compile": "yarn run server-clear && node_modules/.bin/tsc -b ./src/server/tsconfig.json --watch",
     "server": "yarn server-compile && node build/server"
   },
   "dependencies": {

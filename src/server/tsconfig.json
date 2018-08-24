@@ -1,6 +1,8 @@
 {
   "include": [
-    "./**/*"
+    "./**/*",
+    "../../node_modules/go-network-framework/lib/types/external.d.ts",
+    "../../node_modules/go-network-framework/lib/types/eth.d.ts"
   ],
   "compilerOptions": {
     "target": "es6",
@@ -8,5 +10,8 @@
     "outDir": "../../build/server",
     "skipLibCheck": true,
     "strict": true
-  }
+  },
+  "references": [{
+    "path": "../protocol"
+  }]
 }
