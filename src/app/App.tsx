@@ -2,12 +2,14 @@ import * as React from 'react'
 import { ScrollView, View, Modal } from 'react-native'
 import { Observable, Subscription } from 'rxjs'
 
-import { CriticalError, ErrorProps, monitorErrors, errors } from './global'
+import { CriticalError, ErrorProps, errors } from './global'
 import { Setup, Main } from './screens'
-import { reset as resetConfig } from './logic/config'
-import './logic/communication'
 
-type Step = 'config' | 'main'
+// Side-Effects
+// todo: it is not ideal as, in theory, it may fail
+import './logic/init'
+
+type Step = 'setup' | 'main'
 
 export interface State {
   criticalError?: ErrorProps
@@ -15,17 +17,14 @@ export interface State {
 }
 
 export default class App extends React.Component<{}, State> {
-  state: State = { step: 'config' }
+  state: State = { step: 'setup' }
   sub!: Subscription
 
   componentDidMount () {
     this.sub = Observable.merge(
-      // monitorErrors,
       errors
-        .do(e => !e && resetConfig())
-        .do(e => e ? this.setState({ criticalError: e }) : this.setState({ criticalError: undefined, step: 'config' }))
+        .do(e => e ? this.setState({ criticalError: e }) : this.setState({ criticalError: undefined, step: 'setup' }))
         .filter(x => !x)
-        .switchMapTo(monitorErrors)
     )
       .subscribe()
   }
@@ -36,7 +35,7 @@ export default class App extends React.Component<{}, State> {
 
   renderContent = () => {
     switch (this.state.step) {
-      case 'config':
+      case 'setup':
         return <Setup onDone={() => this.setState({ step: 'main' })} />
       case 'main':
         return <Main />

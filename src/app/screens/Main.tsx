@@ -4,7 +4,6 @@ import { Observable, Subscription } from 'rxjs'
 
 import { clearStorage } from '../logic/utils'
 import { accounts, balances, Account, AccountBalance } from '../logic/accounts'
-import { restart } from '../global'
 
 import { AccountShort } from '../components/AccountShort'
 import { AccountFull } from '../components/AccountFull'
@@ -75,7 +74,6 @@ export class Main extends React.Component<{}, State> {
       <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Dev Actions</Text>
       <View style={{ padding: 20, flexDirection: 'row' }}>
         <Button onPress={clearStorage} title='Clear-Cache' />
-        <Button onPress={restart} title='Restart' />
       </View>
 
     </View>

@@ -2,9 +2,8 @@ import { BehaviorSubject, Observable } from 'rxjs'
 import { View, Text, Button } from 'react-native'
 import * as React from 'react'
 
-import { api } from '../logic/api'
 import { config } from '../logic/config'
-import { ignoreUndefined, passUndefined } from '../logic/utils'
+import { ignoreUndefined } from '../logic/utils'
 import { checkP2PRaw } from '../logic/check-p2p'
 
 // #region critical errors
@@ -14,7 +13,7 @@ import { checkP2PRaw } from '../logic/check-p2p'
   The underlying assumption is that after a critical error the application needs to re-initialize.
 */
 
-export type ErrorType = 'server-unreachable' | 'p2p-test-failed' | 'unknown' | 'restart' | InvariantError
+export type ErrorType = 'p2p-test-failed' | 'connection-lost' | 'unknown' | InvariantError
 
 export type InvariantError = 'invariant'
 
@@ -24,10 +23,9 @@ export const errorsConfig: { [K in ErrorType]: { header: string, message: string
     header: 'MQTT server unreachable',
     message: 'MQTT server should be started automatically. It requires a websocket connection. Test uses url provided by main service, so connection with main service was successful.'
   },
-
-  'server-unreachable': {
-    header: 'Server Unreachable',
-    message: 'Server does not offer any persistence. The application must be re-initialized.'
+  'connection-lost': {
+    header: 'Connection to Simulator Server lost',
+    message: 'You will need to reconnect and most likely all state has been lost'
   },
   'unknown': {
     header: 'Unknown / Runtime error',
@@ -36,11 +34,6 @@ export const errorsConfig: { [K in ErrorType]: { header: string, message: string
   'invariant': {
     header: 'Invariant broken',
     message: internal
-  },
-  // technically that is not an error
-  'restart': {
-    header: '...restarting...',
-    message: ''
   }
 }
 
@@ -56,46 +49,6 @@ interface CheckInvariant {
 }
 export const invariant: CheckInvariant = (check, msg = '[More Info not specifed]') => p =>
   !check(p) && setError('invariant', new Error(msg)) || p
-
-export const restart = () => {
-  config
-    .switchMap(ignoreUndefined(c =>
-      Observable.defer(() => api.restart(c.urls.coordinator))))
-    .mapTo('restart' as ErrorType)
-    // sometimes - the network request fails
-    .catch(() => Observable.of('server-unreachable' as ErrorType))
-    .do((s) => setError(s))
-    .take(1)
-    .mergeMapTo(
-      Observable.timer(1000)
-        .do(clearError)
-    )
-    .subscribe({
-      error: err => console.log('RESTART-ERROR', err)
-    })
-}
-// #endregion
-
-// #region monitoring
-export const monitorServer: Observable<ErrorType> = config
-  .switchMap(ignoreUndefined(c =>
-    Observable.interval(500)
-      .switchMap(() => api.run_id(c.urls.coordinator))
-      // .do(x => console.log('SERVER-MONITOR', x))
-      .filter(Boolean)
-      .distinctUntilChanged()
-      .skip(1)
-      .catch(() => Observable.of(true))
-      .mapTo('server-unreachable' as ErrorType)
-  ))
-
-export const monitorErrors = Observable.merge(
-  monitorServer
-)
-  // .do(x => console.warn('CRITICAL_ERROR', x))
-  .do(setError)
-  .takeUntil(errors.filter(Boolean)) // upon error all monitoring stopped
-// #endregion
 
 // #region checks
 export const checkP2P = config.switchMap(
