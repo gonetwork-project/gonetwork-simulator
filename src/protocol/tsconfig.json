@@ -1,0 +1,17 @@
+{
+  "include": [
+    "./**/*"
+  ],
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "lib": ["es2015", "es2017"],
+    "sourceMap": true,
+    "outDir": "../../build/protocol",
+    "skipLibCheck": true,
+    "strict": true,
+    "noImplicitAny": false,
+    "composite": true,
+    "declaration": true
+  }
+}
