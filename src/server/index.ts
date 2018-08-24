@@ -1,15 +1,32 @@
-/// <reference path="../../node_modules/go-network-framework/build-dev/external-types.d.ts" />
-/// <reference path="../../node_modules/go-network-framework/build-dev/index.d.ts" />
+import * as WebSocket from 'ws'
+import { hostname, port } from './config'
 
-import { ganache, mqtt, execIfScript } from 'go-network-framework/build-dev'
-
-import { configFromArgv } from './config'
-import { serve as coordinator } from './coordinator'
+import { execIfScript } from 'go-network-framework/build-dev'
 
 const serve = () => {
-  const c = configFromArgv()
-  console.log(c)
-  const toDispose = [mqtt(c), ganache(c), coordinator(c)]
-  return () => toDispose.forEach(d => d())
+  const wss = new WebSocket.Server({
+    host: hostname,
+    port: port
+  })
+
+  wss.on('connection', ws => {
+    console.log('connection')
+  })
+
+  wss.on('listening', () => {
+    console.log(`Simulator Server listening on ws://${hostname}:${port}`)
+  })
+
+  wss.on('error', (error) => {
+    console.error('CRITICAL ERROR')
+    console.error(error)
+    process.exit(1)
+  })
+
+  return () => {
+    console.log('Closing Simulator Server')
+    wss.close()
+  }
 }
+
 execIfScript(serve, !module.parent)

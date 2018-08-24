@@ -9,7 +9,7 @@ import * as wallet from 'ethereumjs-wallet'
 import * as Web3 from 'Web3'
 
 import { execIfScript } from 'go-network-framework/build-dev'
-import { Config, accounts } from './config'
+import { accounts } from './config'
 
 (global as any).fetch = require('node-fetch')
 
@@ -63,7 +63,7 @@ const account = (ethUrl: string, w3: any, acc: any) => {
       .then(() => acc))
 }
 
-export const serve = (cfg: Config) => {
+export const serve = (cfg: any) => {
   // there is no persistence right now, so on new start new clients need to re-initialize
   const runId = `run_${Date.now()}`
 

@@ -8,19 +8,27 @@ import { Contracts } from '../protocol'
 
 import rpcCreate from 'go-network-framework/lib/blockchain/rpc'
 import contractsProxy from 'go-network-framework/lib/blockchain/contracts-proxy'
-import { as } from 'go-network-framework'
+import { as, Millisecond } from 'go-network-framework'
 
-import { Config, accounts as cfgAccounts } from './config'
+import { accounts as cfgAccounts } from './config'
+
+interface GanacheInfo {
+  dbPath: string
+  url: string
+}
+
+interface Config {
+  port: number
+  hostname: string
+  blockTime: Millisecond
+}
 
 (global as any).fetch = require('node-fetch')
 const exec = Observable.bindNodeCallback(cp.exec)
 
 const tempDir = path.resolve(__dirname, '../../temp')
 const snapDir = path.resolve(tempDir, 'db-snap')
-const sessionsDir = path.resolve(tempDir, 'db-sessions');
-
-[tempDir, sessionsDir].forEach(p => !fs.existsSync(p) && fs.mkdirSync(p))
-
+const sessionsDir = path.resolve(tempDir, 'db-sessions')
 const deployScriptPath = path.resolve(__dirname, '../../node_modules/go-network-framework/build-dev/scripts/deploy-contracts.js')
 
 const masterAccount = cfgAccounts[0]
@@ -28,7 +36,10 @@ const accounts = cfgAccounts.slice(1)
   .map(acc => ({
     privateKey: acc.secretKey,
     address: acc.address.toString('hex')
-  }))
+  }));
+
+// create directories if missing
+[tempDir, sessionsDir].forEach(p => !fs.existsSync(p) && fs.mkdirSync(p))
 
 const stripHex = (o: { [P: string]: string }) =>
   Object.keys(o).reduce((acc: typeof o, k) => {
@@ -42,22 +53,17 @@ const deployContracts = (ethUrl: string) =>
       return stripHex(JSON.parse(r[0])) as Contracts
     })
 
-interface GanacheInfo {
-  dbPath: string
-  url: string
-}
-
 export const start = (c: Config, ignoreSnap = false, dbPath = path.resolve(sessionsDir, `${Date.now()}.db`)):
   Observable<GanacheInfo> =>
   Observable.concat(
     ignoreSnap || fs.existsSync(snapDir) ?
       Observable.empty() :
-      createSnap({ ethPort: 1884, hostname: 'localhost', blockTime: 1000 })
+      createSnap({ port: 1884, hostname: 'localhost', blockTime: 1000 })
         .ignoreElements() as any,
     exec(`cp -r ${snapDir} ${dbPath}`).ignoreElements(),
     Observable.create((obs: Observer<GanacheInfo>) => {
       const options = {
-        port: c.ethPort,
+        port: c.port,
         hostname: c.hostname,
 
         blockTime: c.blockTime / 1000,
@@ -124,7 +130,7 @@ const saveSnap = (dbPath: string) => Observable.concat(
   exec(`rm -rf ${dbPath}`)
 )
 
-export const createSnap = (c: Pick<Config, 'hostname' | 'ethPort' | 'blockTime'>) => {
+export const createSnap = (c: Config) => {
   console.log('create snap')
   return start(c as any, true)
     .mergeMap(i =>

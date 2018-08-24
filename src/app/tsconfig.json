@@ -14,5 +14,8 @@
     "skipLibCheck": true,
     "strict": true,
     "noImplicitAny": false,
-  }
+  },
+  "references": [{
+    "path": "../protocol"
+  }]
 }

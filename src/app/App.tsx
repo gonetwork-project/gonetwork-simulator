@@ -5,6 +5,7 @@ import { Observable, Subscription } from 'rxjs'
 import { CriticalError, ErrorProps, monitorErrors, errors } from './global'
 import { Setup, Main } from './screens'
 import { reset as resetConfig } from './logic/config'
+import './logic/communication'
 
 type Step = 'config' | 'main'
 
