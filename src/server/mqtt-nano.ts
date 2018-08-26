@@ -6,9 +6,6 @@ import * as ws from 'ws'
 import * as Connection from 'mqtt-connection'
 
 import { Observable, Observer } from 'rxjs'
-
-import { execIfScript } from 'go-network-framework/build-dev'
-
 export interface Config {
   hostname: string
   port: number

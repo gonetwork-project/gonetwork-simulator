@@ -115,19 +115,23 @@ const serve = () => {
     }
     inCreation = inCreation.concat(s)
     const sub = Observable.zip(
-      subprocess(c, ganache).do(g => {
-        s.contracts = g.contracts
-        s.blockTime = c.blockTime
-        s.mqttUrl = g.url
-      })
+      subprocess(Object.assign({ blockTime: 1000 }, c), ganache)
+        .do(g => {
+          s.contracts = g.contracts
+          s.blockTime = c.blockTime
+          s.ethUrl = g.url
+        })
         .do(() => updateGeneral()),
       subprocess({}, mqtt)
         .do(c => s.mqttUrl = c.url)
         .do(() => updateGeneral())
     )
       .do(() => joinSession(ws, s as any as P.Session, 2))
-      .subscribe()
-
+      .subscribe({
+        next: s => console.log('SESSION-CREATED', s),
+        error: err => console.error(err)
+      })
+    console.log('CREATE-UPDATE')
     updateGeneral()
     const meta: SessionMeta = {
       subscription: sub,
@@ -146,10 +150,11 @@ const serve = () => {
 
     // todo: fix types
     ws.on('message', (data: any) => {
-      console.log('MSG', data)
-      switch (data.type as P.ClientAction) {
+      const msg = JSON.parse(data)
+      console.log('msg', msg)
+      switch (msg.type as P.ClientAction) {
         case 'create-session':
-          return createSession(ws, data.payload)
+          return createSession(ws, msg.payload || { blockTime: 1000 })
         case 'leave-session':
           return leaveSession(ws)
       }
