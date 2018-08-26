@@ -1,5 +1,6 @@
 import * as WebSocket from 'ws'
 import { execIfScript } from 'go-network-framework/build-dev'
+import { start } from './ganache'
 
 import * as P from '../protocol'
 
@@ -38,6 +39,10 @@ const serve = () => {
       wsToSessions.delete(ws)
     }
     updateGeneral([ws])
+  }
+
+  const startSession = () => {
+    const s: Partial<P.Session> = {}
   }
 
   wss.on('connection', ws => {

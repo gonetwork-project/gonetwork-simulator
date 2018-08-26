@@ -15,6 +15,7 @@ import { accounts as cfgAccounts } from './config'
 interface GanacheInfo {
   dbPath: string
   url: string
+  contracts: Contracts
 }
 
 interface Config {
@@ -29,6 +30,8 @@ const exec = Observable.bindNodeCallback(cp.exec)
 const tempDir = path.resolve(__dirname, '../../temp')
 const snapDir = path.resolve(tempDir, 'db-snap')
 const sessionsDir = path.resolve(tempDir, 'db-sessions')
+const contractsPath = path.resolve(snapDir, 'contracts.json')
+
 const deployScriptPath = path.resolve(__dirname, '../../node_modules/go-network-framework/build-dev/scripts/deploy-contracts.js')
 
 const masterAccount = cfgAccounts[0]
@@ -56,11 +59,11 @@ const deployContracts = (ethUrl: string) =>
 export const start = (c: Config, ignoreSnap = false, dbPath = path.resolve(sessionsDir, `${Date.now()}.db`)):
   Observable<GanacheInfo> =>
   Observable.concat(
-    ignoreSnap || fs.existsSync(snapDir) ?
-      Observable.empty() :
-      createSnap({ port: 1884, hostname: 'localhost', blockTime: 1000 })
-        .ignoreElements() as any,
-    exec(`cp -r ${snapDir} ${dbPath}`).ignoreElements(),
+    !ignoreSnap && fs.existsSync(snapDir) && fs.existsSync(contractsPath) ?
+      exec(`cp -r ${snapDir} ${dbPath}`).ignoreElements() : // todo - check if path exists
+      ignoreSnap ? Observable.empty() :
+        createSnap({ port: 1884, hostname: 'localhost', blockTime: 200 })
+          .ignoreElements() as any,
     Observable.create((obs: Observer<GanacheInfo>) => {
       const options = {
         port: c.port,
@@ -69,7 +72,7 @@ export const start = (c: Config, ignoreSnap = false, dbPath = path.resolve(sessi
         blockTime: c.blockTime / 1000,
         db_path: dbPath,
 
-        logger: console,
+        // logger: console,
         locked: false,
         // mnemonic: 'dignity upset visa worry warrior donate record enforce time pledge ladder drop',
         accounts: cfgAccounts,
@@ -79,7 +82,8 @@ export const start = (c: Config, ignoreSnap = false, dbPath = path.resolve(sessi
 
       const info: GanacheInfo = {
         dbPath,
-        url: `http://${options.hostname}:${options.port}`
+        url: `http://${options.hostname}:${options.port}`,
+        contracts: ignoreSnap ? {} as any : JSON.parse(fs.readFileSync(contractsPath, 'utf8'))
       }
 
       const srv = new server(options)
@@ -125,21 +129,26 @@ const distributeTokens = (url: string, contracts: Contracts) => {
     .last()
 }
 
-const saveSnap = (dbPath: string) => Observable.concat(
-  exec(`cp -rf ${dbPath} ${snapDir}`),
-  exec(`rm -rf ${dbPath}`)
-)
-
 export const createSnap = (c: Config) => {
   console.log('create snap')
-  return start(c as any, true)
+  return (Observable.concat(
+    exec(`rm -rf ${snapDir}`).catch(() => Observable.empty()).ignoreElements(),
+    exec(`mkdir ${snapDir}`).ignoreElements(),
+    start(c as any, true, snapDir)
+  ) as Observable<GanacheInfo>)
     .mergeMap(i =>
       deployContracts(i.url)
         .do(x => console.log('contracts deployed', x))
+        .do(cs => fs.writeFileSync(contractsPath, JSON.stringify(cs), 'utf8'))
+        .do(x => console.log('contracts saved', x))
         .mergeMap(cs => distributeTokens(i.url, cs))
-        .take(1)
-        .mapTo(i.dbPath)
     )
-    .mergeMap(saveSnap)
+    .take(1)
     .do(() => console.log('snap created'))
+}
+
+if (!module.parent) {
+  start({ hostname: 'localhost', port: 1884, blockTime: 500 })
+    .do(x => console.log('V', x))
+    .subscribe()
 }

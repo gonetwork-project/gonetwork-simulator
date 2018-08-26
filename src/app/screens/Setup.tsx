@@ -60,7 +60,7 @@ export class Setup extends React.Component<Props, State> {
     return <View style={{ padding: 20, backgroundColor: 'rgba(128, 128, 128, 0.2)' }}>
       <Text>Connected: {i.connected}</Text>
       <Text>Sessions: {i.active.length}</Text>
-      <Text>Session-in-creation: {i.inCreation.length}</Text>
+      <Text>Sessions-in-creation: {i.inCreation.length}</Text>
       <Button title='New Session' onPress={() => console.log('new session')} />
     </View>
   }
