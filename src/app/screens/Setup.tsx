@@ -4,9 +4,16 @@ import { RNCamera, BarCodeType } from 'react-native-camera'
 import { Subscription, Observable } from 'rxjs'
 
 import { setUnknownError } from '../global'
+import { GeneralInfo } from '../../protocol'
 import * as setup from '../logic/setup'
 
-type State = { url: setup.Url, connection: setup.ConnectionWithStatus, cryptoInited?: boolean, autoContinue: boolean }
+type State = {
+  url: setup.Url,
+  connection: setup.ConnectionWithStatus,
+  cryptoInited?: boolean,
+  autoContinue: boolean,
+  generalInfo?: GeneralInfo
+}
 interface Props {
   onDone: () => void
 }
@@ -22,7 +29,8 @@ export class Setup extends React.Component<Props, State> {
   componentDidMount () {
     this.sub = (Observable.merge(
       setup.url.map(u => ({ url: u })),
-      setup.connectionWithStatus.map(c => ({ connection: c }))
+      setup.connectionWithStatus.map(c => ({ connection: c })),
+      setup.generalInfo.map(g => ({ generalInfo: g }))
     ) as Observable<State>)
       .do(c => this.setState(c))
       // uncomment to imitate runtime exception
@@ -45,6 +53,17 @@ export class Setup extends React.Component<Props, State> {
       barCodeTypes={[RNCamera.Constants.BarCodeType.qr]}
       onBarCodeRead={this.onScan}
       style={{ width: 300, height: 300 }} />
+
+  renderInfo = () => {
+    const i = this.state.generalInfo
+    if (!i) return null
+    return <View style={{ padding: 20, backgroundColor: 'rgba(128, 128, 128, 0.2)' }}>
+      <Text>Connected: {i.connected}</Text>
+      <Text>Sessions: {i.active.length}</Text>
+      <Text>Session-in-creation: {i.inCreation.length}</Text>
+      <Button title='New Session' onPress={() => console.log('new session')} />
+    </View>
+  }
 
   render () {
     if (!this.state) return null
@@ -86,6 +105,8 @@ export class Setup extends React.Component<Props, State> {
         barCodeTypes={[RNCamera.Constants.BarCodeType.qr]}
         onBarCodeRead={this.onScan}
         style={{ width: 300, height: 300 }} />}
+
+      {this.renderInfo()}
     </View>
   }
 }

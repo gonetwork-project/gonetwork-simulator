@@ -1,7 +1,8 @@
 import { Observable, BehaviorSubject } from 'rxjs'
 import { AsyncStorage } from 'react-native'
 
-import * as pr from '../../protocol'
+import { ServerMessage, GeneralInfo, Session } from '../../protocol'
+import { passUndefined } from './utils'
 
 export interface Url {
   protocol: 'ws:' // todo: wss:
@@ -61,3 +62,24 @@ export const connectionWithStatus: Observable<ConnectionWithStatus> = url
 export const connection: Observable<WebSocket | undefined> =
   connectionWithStatus
     .map(c => typeof c === 'string' ? undefined : c)
+
+export const messages = connection
+  .switchMap(passUndefined(c =>
+    Observable.fromEvent(c, 'message')
+      .map((m: any) => JSON.parse(m.data))
+      .do(x => console.log('MSG', x)))
+  ).shareReplay(1) as Observable<undefined | ServerMessage>
+
+export const generalInfo: Observable<GeneralInfo | undefined> = messages
+  .switchMap(passUndefined(m =>
+    m.type === 'general' ? Observable.of(m.payload) : Observable.of(undefined)
+  ))
+  .do(x => console.log('GENERAL', x))
+  .shareReplay(1)
+
+export const session: Observable<Session | undefined> = messages
+  .switchMap(passUndefined(m =>
+    m.type === 'session' ? Observable.of(m.payload) : Observable.of(undefined)
+  ))
+  .do(x => console.log('SESSION', x))
+  .shareReplay(1)

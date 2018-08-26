@@ -8,6 +8,7 @@ import { Setup, Main } from './screens'
 // Side-Effects
 // todo: it is not ideal as, in theory, it may fail
 import './logic/init'
+import * as setup from './logic/setup'
 
 type Step = 'setup' | 'main'
 
@@ -24,7 +25,9 @@ export default class App extends React.Component<{}, State> {
     this.sub = Observable.merge(
       errors
         .do(e => e ? this.setState({ criticalError: e }) : this.setState({ criticalError: undefined, step: 'setup' }))
-        .filter(x => !x)
+        .filter(x => !x),
+      setup.session
+        .do(s => this.setState({ step: s ? 'main' : 'setup' }))
     )
       .subscribe()
   }

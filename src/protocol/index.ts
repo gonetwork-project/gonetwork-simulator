@@ -1,46 +1,43 @@
 type Exhaust<K extends string, V extends { [P in K]: any }> = V
-type WithStatus<V extends {}> = {
-  [P in keyof V]: (V[P] & { status: 'success' }) | { status: 'error', reason?: string }
-}
-type WithSecret<V extends {}> = {
-  [P in keyof V]: V & { secret?: string }
-}
 
 export type SessionId = string
-export type User = string
+// export type UserName = string
 
-export type Action = 'create-session' | 'join-session' | 'leave-session' | 'create-account'
+export type ClientAction = 'create-session' | 'join-session' | 'leave-session' | 'create-account'
 
-export type Requests = WithSecret<Exhaust<Action, {
-  'create-session': ConfigClient & { user: string }
-  'join-session': { sessionId: SessionId, user: string }
+export type ClientRequests = Exhaust<ClientAction, {
+  'create-session': SessionConfigClient
+  'join-session': { sessionId: SessionId }
   'leave-session': { sessionId: SessionId }
   'create-account': { sessionId: SessionId }
-}>>
+}>
 
-export type Responses = WithStatus<Exhaust<Action, {
-  'create-session': boolean
-  'join-session': boolean
-  'leave-session': any
-  'create-account': any
-}>>
+export type ServerMessage = { type: 'general', payload: GeneralInfo } | { type: 'session', payload: UserSession }
 
-export interface ConfigClient {
+export interface Session extends SessionConfig {
+  id: SessionId
+  created: number // milliseconds
+  addresses: string[] // other addresses
+}
+
+export interface UserSession extends Session {
+  userAccounts: Account[]
+}
+
+export type GeneralInfo = {
+  connected: number
+  active: Session[]
+  inCreation: Array<Partial<Session>>
+}
+
+export interface SessionConfigClient {
   blockTime: number
 }
 
-export interface ConfigServer extends ConfigClient {
+export interface SessionConfig extends SessionConfigClient {
   contracts: Contracts
   mqttUrl: string
   ethUrl: string
-}
-
-export interface Config {
-  urls: {
-    mqtt: string
-    eth: string
-  }
-  blockTime: number
 }
 
 export interface Contracts {
@@ -49,7 +46,7 @@ export interface Contracts {
   testToken: string
 }
 
-export interface AccountBase {
+export interface Account {
   privateKey: string
   address: string
 }
