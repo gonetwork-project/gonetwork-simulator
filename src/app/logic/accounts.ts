@@ -1,12 +1,26 @@
 import { Observable } from 'rxjs'
 import {
-  Engine, serviceCreate, setWaitForDefault, P2P, message, as, DateMs, fakeStorage, CHAIN_ID, BN
+  Engine, serviceCreate, setWaitForDefault, P2P, message, as, DateMs, fakeStorage, CHAIN_ID, BN, util
 } from 'go-network-framework'
 
-import * as c from './config'
-import { invariant } from '../global'
-import { AccountBase, Contracts, Config } from './api'
-import { Wei, BlockNumber } from 'eth-types'
+import { UserSession } from '../../protocol'
+
+import { session } from './setup'
+
+import { Wei, BlockNumber, Address, PrivateKey } from 'eth-types'
+
+export interface Contracts {
+  manager: Address
+  gotToken: Address
+  testToken: Address
+}
+
+export interface AccountBase {
+  privateKey: PrivateKey
+  privateKeyStr: string
+  address: Address
+  addressStr: string
+}
 
 export type Account = ReturnType<ReturnType<typeof initAccount>> extends Observable<infer U> ? U : never
 export type AccountBalance = {
@@ -22,6 +36,25 @@ export enum EventSource {
 }
 
 export interface Event { at: DateMs, source: EventSource, event: any, header: string, payload: string, short: string }
+
+export const toContracts = (contractsRaw: any) =>
+  Object.keys(contractsRaw)
+    .reduce((acc, k) => {
+      acc[k] = as.Address(new Buffer(contractsRaw[k], 'hex'))
+      return acc
+    }, {}) as Contracts
+
+export const toAccount = (acc: { privateKey: string }): AccountBase => {
+  const privateKeyStr = util.stripHexPrefix(acc.privateKey)
+  const privateKey = as.PrivateKey(new Buffer(privateKeyStr, 'hex'))
+  const addressStr = util.privateToAddress(privateKey).toString('hex')
+  return {
+    addressStr,
+    privateKeyStr,
+    address: as.Address(new Buffer(addressStr, 'hex')),
+    privateKey
+  }
+}
 
 const balance = (blockchain: ReturnType<typeof serviceCreate>) =>
   blockchain.monitoring.blockNumbers()
@@ -42,10 +75,9 @@ const collectEvents = (evs: Observable<any>, name = 'N/A') =>
     .scan((a, e) => a.concat([e]), [])
     .shareReplay(1)
 
-const initAccount = (contracts: Contracts, cfg: Config) => (account: AccountBase) => {
-  console.log('INITING-ACCOUNT', account.addressStr, cfg.runId)
+const initAccount = (cfg: UserSession, contracts: Contracts) => (account: AccountBase) => {
   const p2p = new P2P({
-    mqttUrl: cfg.urls.mqtt,
+    mqttUrl: cfg.mqttUrl,
     address: account.addressStr,
     storage: fakeStorage()
   })
@@ -55,7 +87,7 @@ const initAccount = (contracts: Contracts, cfg: Config) => (account: AccountBase
     chainId: CHAIN_ID.GETH_PRIVATE_CHAINS,
     owner: account.address,
     signatureCb: (cb) => cb(account.privateKey),
-    providerUrl: cfg.urls.eth,
+    providerUrl: cfg.ethUrl,
     monitoringConfig: {
       startBlock: 'latest', // 'earliest' would be more appropraite to reconstruct the state, but then we need persitence
       logsInterval: cfg.blockTime // cfg.blockTime
@@ -140,19 +172,16 @@ const initAccount = (contracts: Contracts, cfg: Config) => (account: AccountBase
     })
 }
 
-export const accounts = () => Observable.combineLatest(
-  c.accounts,
-  c.contractsAccount,
-  c.config.filter(Boolean).map(c => c!)
-)
-  .debounceTime(0)
-  .do(invariant(([ac, cs]) => (ac.length > 0) && !!cs, 'Contract account and at least 1 more other accounts expected'))
-  .do(x => setWaitForDefault({ interval: x[2].blockTime, timeout: 3000 }))
+export const accounts = () => (session
+  .filter(Boolean) as Observable<UserSession>)
+  // .debounceTime(0)
+  // .do(invariant(([ac, cs]) => (ac.length > 0) && !!cs, 'Contract account and at least 1 more other accounts expected'))
+  .do(x => setWaitForDefault({ interval: x.blockTime, timeout: 3000 }))
   .do(x => console.log('INITING', x))
   .take(1)
-  .mergeMap(([ac, cs, cfg]) =>
-    Observable.from([cs as AccountBase].concat([ac[0]])) // just one account
-      .mergeMap(initAccount(cs!.contracts, cfg))
+  .switchMap((cfg) =>
+    Observable.from(cfg.userAccounts.map(a => toAccount(a))) // just one account
+      .mergeMap(initAccount(cfg, toContracts(cfg.contracts)))
       .toArray()
   )
   .do(x => console.log('ACC', x))

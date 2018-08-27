@@ -28,7 +28,9 @@ export class Main extends React.Component<{}, State> {
       accs.do(acc => this.setState({ accounts: acc })),
       balances(accs).do(balances => this.setState({ balances }))
     )
-      .subscribe()
+      .subscribe({
+        error: err => console.warn(err)
+      })
   }
 
   componentWillUnmount () {

@@ -1,7 +1,7 @@
 import { Observable, BehaviorSubject } from 'rxjs'
 import { AsyncStorage } from 'react-native'
 
-import { ServerMessage, GeneralInfo, Session } from '../../protocol'
+import { ServerMessage, GeneralInfo, UserSession } from '../../protocol'
 import { passUndefined } from './utils'
 
 export interface Url {
@@ -51,8 +51,8 @@ export const connectionWithStatus: Observable<ConnectionWithStatus> = url
       : Observable.defer((() => connect(urlToStr(u))))
         .startWith('connecting')
         .do(r => r && AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(u)))
-        .catch((err) => {
-          console.warn(err)
+        .catch(() => {
+          // console.warn(err)
           return Observable.of('failed')
         })
         .repeatWhen(es => es.delay(2500))
@@ -77,7 +77,7 @@ export const generalInfo: Observable<GeneralInfo | undefined> = messages
   .do(x => console.log('GENERAL', x))
   .shareReplay(1)
 
-export const session: Observable<Session | undefined> = messages
+export const session: Observable<UserSession | undefined> = messages
   .switchMap(passUndefined(m =>
     m.type === 'session' ? Observable.of(m.payload) : Observable.of(undefined)
   ))
