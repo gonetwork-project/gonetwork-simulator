@@ -9,6 +9,7 @@ import { start as mqtt } from './mqtt-nano'
 import { hostname, port, accounts } from './config'
 
 interface SessionMeta {
+  createdBy: WebSocket
   subscription: Subscription
   users: Map<WebSocket, P.Account[]>
   accountsPool: P.Account[]
@@ -25,6 +26,7 @@ const freePort = () => {
 }
 
 let sessionId = 0
+const PINGING_INTERVAL = 1000
 
 const subprocess = <C extends { port: number, hostname: string }, T> (cfg: any, pr: (c: C) => Observable<T>): Observable<T> =>
   Observable.race(
@@ -33,6 +35,19 @@ const subprocess = <C extends { port: number, hostname: string }, T> (cfg: any, 
   )
     .retryWhen(es => es.switchMap(e => e === 'FAILED' ?
       Observable.of(true) : Observable.throw(e)))
+
+const pinging = (wss: WebSocket.Server) => Observable.interval(PINGING_INTERVAL)
+  .do(() =>
+    wss.clients
+      .forEach(ws => {
+        // console.log('ALIVE', (ws as any).alive)
+        if (!(ws as any).alive) {
+          ws.terminate()
+        }
+        (ws as any).alive = false
+        ws.readyState === ws.OPEN && ws.ping()
+      })
+  )
 
 const send = (msg: P.ServerMessage) => (ws: WebSocket): boolean => {
   const data = JSON.stringify(msg)
@@ -49,6 +64,8 @@ const serve = () => {
     host: hostname,
     port: port
   })
+
+  const jobsSub = pinging(wss).subscribe()
 
   const updateGeneral = (clients?: WebSocket[]) => {
     const state: P.GeneralInfo = {
@@ -77,9 +94,11 @@ const serve = () => {
     })
   }
 
-  const leaveSession = (ws: WebSocket, s = wsToSessions.get(ws)) => () => {
+  const leaveSession = (ws: WebSocket) => {
+    const s = wsToSessions.get(ws)
     if (s) {
       wsToSessions.delete(ws)
+      active = active.filter(a => a !== s)
       const meta = sessionsToMeta.get(s)!
       if (meta.users.size === 0) {
         sessionsToMeta.delete(s)
@@ -89,9 +108,11 @@ const serve = () => {
     updateGeneral([ws])
   }
 
-  const joinSession = (ws: WebSocket, session: P.Session, accounts = 1) => {
-    inCreation = inCreation.filter(s => s !== session)
+  const joinSession = (ws: WebSocket, sessionId: P.SessionId, accounts = 1) => {
+    const session = inCreation.find(s => s.id === sessionId) as P.Session
+    inCreation = inCreation.filter(s => s.id !== sessionId)
     active.push(session)
+
     const meta = sessionsToMeta.get(session)
 
     // todo - improve
@@ -106,13 +127,20 @@ const serve = () => {
 
     updateGeneral()
     updateSession(session)
+    console.log('JOINED', wsToSessions.size, sessionsToMeta.size)
   }
 
   const createSession = (ws: WebSocket, c: P.SessionConfigClient) => {
+    if ([...sessionsToMeta.values()].find(m => m.createdBy === ws)) {
+      console.log('Already in session')
+      return
+    }
+
     const s: Partial<P.Session> = {
       id: `${++sessionId}`,
       created: Date.now()
     }
+
     inCreation = inCreation.concat(s)
     const sub = Observable.zip(
       subprocess(Object.assign({ blockTime: 1000 }, c), ganache)
@@ -126,27 +154,40 @@ const serve = () => {
         .do(c => s.mqttUrl = c.url)
         .do(() => updateGeneral())
     )
-      .do(() => joinSession(ws, s as any as P.Session, 2))
+      .do(() => joinSession(ws, s.id!, 2))
+      .finally(() => console.log('SESSION-ENDED', s.id))
       .subscribe({
         next: s => console.log('SESSION-CREATED', s),
         error: err => console.error(err)
       })
+
     console.log('CREATE-UPDATE')
     updateGeneral()
     const meta: SessionMeta = {
+      createdBy: ws,
       subscription: sub,
-      accountsPool: accounts.slice(2).map(a => ({ privateKey: a.secretKey, address: a.address.toString('hex') })),
+      accountsPool: accounts.slice(2).map(a => ({ privateKey: a.secretKey.substring(2), address: a.address.toString('hex') })),
       users: new Map()
     }
 
-    wsToSessions.set(ws, s)
     sessionsToMeta.set(s, meta)
   }
 
   wss.on('connection', ws => {
-    updateGeneral()
+    updateGeneral();
 
-    ws.on('close', () => updateGeneral())
+    (ws as any).alive = true
+    ws.on('pong', () => (ws as any).alive = true)
+
+    ws.on('close', () => {
+      console.log('SOCKET-CLOSE')
+      leaveSession(ws)
+    })
+
+    ws.on('error', () => {
+      console.log('SOCKET-ERROR')
+      leaveSession(ws)
+    })
 
     // todo: fix types
     ws.on('message', (data: any) => {
@@ -157,6 +198,10 @@ const serve = () => {
           return createSession(ws, msg.payload || { blockTime: 1000 })
         case 'leave-session':
           return leaveSession(ws)
+        case 'join-session':
+          return joinSession(ws, msg.payload)
+        case 'create-account':
+          return console.log('CREATE-ACCOUNT-TODO', msg)
       }
     })
   })
@@ -173,6 +218,7 @@ const serve = () => {
 
   return () => {
     console.log('Closing Simulator Server')
+    jobsSub.unsubscribe()
     wss.close()
   }
 }
