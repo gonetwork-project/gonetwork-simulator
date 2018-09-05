@@ -40,7 +40,6 @@ const pinging = (wss: WebSocket.Server) => Observable.interval(PINGING_INTERVAL)
   .do(() =>
     wss.clients
       .forEach(ws => {
-        // console.log('ALIVE', (ws as any).alive)
         if (!(ws as any).alive) {
           ws.terminate()
         }

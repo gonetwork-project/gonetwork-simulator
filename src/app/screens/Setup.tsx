@@ -58,7 +58,7 @@ export class Setup extends React.Component<Props, State> {
     const i = this.state.generalInfo
     if (!i) return null
     return <View style={{ padding: 20, backgroundColor: 'rgba(128, 128, 128, 0.2)' }}>
-      <Button title='New Session' onPress={() => (this.state.connection as WebSocket).send(JSON.stringify({ type: 'create-session' }))} />
+      <Button title='New Session' onPress={() => (this.state.connection as WebSocket).send(JSON.stringify({ type: 'create-session', payload: { blockTime: 50 } }))} />
       <Text>Connected: {i.connected}</Text>
       <Text>Sessions: {i.active.length}</Text>
       <Text>Sessions-in-creation: {i.inCreation.length}</Text>

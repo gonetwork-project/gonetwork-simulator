@@ -66,8 +66,8 @@ export const connection: Observable<WebSocket | undefined> =
 export const messages = connection
   .switchMap(passUndefined(c =>
     Observable.fromEvent(c, 'message')
-      .map((m: any) => JSON.parse(m.data))
-      .do(x => console.log('MSG', x)))
+      .map((m: any) => JSON.parse(m.data)))
+      // .do(x => console.log('MSG', x)))
   ).shareReplay(1) as Observable<undefined | ServerMessage>
 
 export const generalInfo: Observable<GeneralInfo | undefined> = messages
@@ -81,5 +81,5 @@ export const session: Observable<UserSession | undefined> = messages
   .switchMap(passUndefined(m =>
     m.type === 'session' ? Observable.of(m.payload) : Observable.of(undefined)
   ))
-  .do(x => console.log('SESSION', x))
+  // .do(x => console.log('SESSION', x))
   .shareReplay(1)

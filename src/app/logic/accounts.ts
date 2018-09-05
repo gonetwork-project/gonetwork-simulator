@@ -140,6 +140,11 @@ const initAccount = (cfg: UserSession, contracts: Contracts) => (account: Accoun
   blockchain.monitoring.on('*', engine.onBlockchainEvent)
   p2p.on('message-received', msg => engine.onMessage(message.deserializeAndDecode(msg) as any))
 
+  p2p.on('message-received', msg => {
+    const m = message.deserializeAndDecode(msg) as any
+    console.log('p2p', account.addressStr, m.classType, engine.channels)
+  })
+
   return Observable.zip(
     Observable.fromEvent(p2p, 'status-changed')
       .filter(s => s === 'connected')

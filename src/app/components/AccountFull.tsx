@@ -30,7 +30,7 @@ export class AccountFull extends React.Component<Props, State> {
   componentDidMount () {
     this.sub = this.props.account.blockchain.monitoring
       .asStream('*')
-      .startWith(true)
+      .startWith(true as any)
       .do(() => this.setState({
         channels: Object.values(this.props.account.engine.channels)
       }))

@@ -42,7 +42,7 @@ export const sendMediated = (from: Account, to: Address, amount: Wei) => {
     })
     .delayWhen(() =>
       Observable.fromEvent(from.p2p, 'message-received')
-        .do(x => console.log('MEDIATED', x))
+        // .do(x => console.log('MEDIATED', x))
         .skip(1)
         .take(1)
         .delay(100) // allow processing by engine
