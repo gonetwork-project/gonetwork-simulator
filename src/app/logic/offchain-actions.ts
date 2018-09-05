@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs'
 
-import { message, BN } from 'go-network-framework'
+import { message, as } from 'go-network-framework'
 import { Address, BlockNumber, Wei } from 'eth-types'
 
 import { Account } from './accounts'
@@ -35,7 +35,7 @@ export const sendMediated = (from: Account, to: Address, amount: Wei) => {
         to,
         to,
         amount,
-        currentBlock.add(from.engine.revealTimeout).add(new BN(1)) as BlockNumber,
+        currentBlock.add(from.engine.revealTimeout).add(as.BlockNumber(100)) as BlockNumber,
         secretHashPair.secret as any, // FIXME
         secretHashPair.hash
       )

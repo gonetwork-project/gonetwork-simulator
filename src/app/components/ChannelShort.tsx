@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Subscription } from 'rxjs'
-import { View, Text, Button, Modal, Alert } from 'react-native'
+import { View, Text, Button, Alert, ActivityIndicator } from 'react-native'
 import { Channel } from 'go-network-framework/lib/state-channel/channel'
 import { as } from 'go-network-framework'
 import { Wei } from 'eth-types'
@@ -35,8 +35,32 @@ export class ChannelShort extends React.Component<Props> {
       .then(() => this.forceUpdate())
   }
 
-  close = () => {
-    Alert.alert('CLOSING')
+  close = () =>
+    this.props.account.engine.closeChannel(this.props.channel.channelAddress)
+      .then(x => console.log('CLOSED', x))
+
+  withdraw = () =>
+    this.props.account.engine.withdrawPeerOpenLocks(this.props.channel.channelAddress)
+      .then(() => Alert.alert('Open Locks withdrawn - success'))
+
+  settle = () =>
+    this.props.account.engine.settleChannel(this.props.channel.channelAddress)
+
+  renderActions = () => {
+    switch (this.props.channel.state) {
+      case 'opened': return [
+        <Button key='c' title='Close' onPress={this.close} />,
+        <Button key='d' title='Send Direct (50)' onPress={this.sendDirect} />,
+        <Button key='m' title='Send Mediated (50)' onPress={this.sendMediated} />
+      ]
+      case 'closed': return [
+        <Button key='w' title='Withdraw Peer Open Locks' onPress={this.withdraw} />,
+        <Button key='s' title='Settle' onPress={this.settle} />
+      ]
+      case 'settled': return <Text>Settled - no more actions available</Text>
+      default:
+        return <ActivityIndicator />
+    }
   }
 
   render () {
@@ -44,10 +68,9 @@ export class ChannelShort extends React.Component<Props> {
     const ch = p.channel
     return <View style={{ padding: 20 }}>
       <View style={{ flexDirection: 'row' }}>
-        <Button title='Close' onPress={this.close} />
-        <Button title='Send Direct (50)' onPress={this.sendDirect} />
-        <Button title='Send Mediated (50)' onPress={this.sendMediated} />
+        {this.renderActions()}
       </View>
+      <Text>State: {ch.state}</Text>
       <Text>Channel Address: 0x{ch.channelAddress.toString('hex')}</Text>
       <Text>Peer Address: 0x{ch.peerState.address.toString('hex')}</Text>
       <Text>State: {ch.state}</Text>
@@ -55,6 +78,7 @@ export class ChannelShort extends React.Component<Props> {
 
       <Text style={{ fontWeight: 'bold' }}>Peer State</Text>
       {State(ch.peerState)}
+      <Text>Open Locks Count: {Object.values(ch.peerState.openLocks).length}</Text>
 
       <Text style={{ fontWeight: 'bold' }}>Account State</Text>
       {State(ch.myState)}

@@ -30,7 +30,9 @@ export class Setup extends React.Component<Props, State> {
     this.sub = (Observable.merge(
       setup.url.map(u => ({ url: u })),
       setup.connectionWithStatus.map(c => ({ connection: c })),
-      setup.generalInfo.map(g => ({ generalInfo: g }))
+      setup.generalInfo
+        .do(g => g && this.createSession()) // TODO remove / allow automatic creation in UI
+        .map(g => ({ generalInfo: g }))
     ) as Observable<State>)
       .do(c => this.setState(c))
       // uncomment to imitate runtime exception
@@ -41,6 +43,10 @@ export class Setup extends React.Component<Props, State> {
   componentWillUnmount () {
     this.sub && this.sub.unsubscribe()
   }
+
+  createSession = () =>
+    (this.state.connection as WebSocket).send(
+      JSON.stringify({ type: 'create-session', payload: { blockTime: 250 } }))
 
   onScan = (ev: { type: keyof BarCodeType, data: string }) => {
     if (ev.data.includes('gonetworkServer')) {
@@ -58,7 +64,7 @@ export class Setup extends React.Component<Props, State> {
     const i = this.state.generalInfo
     if (!i) return null
     return <View style={{ padding: 20, backgroundColor: 'rgba(128, 128, 128, 0.2)' }}>
-      <Button title='New Session' onPress={() => (this.state.connection as WebSocket).send(JSON.stringify({ type: 'create-session', payload: { blockTime: 50 } }))} />
+      <Button title='New Session' onPress={this.createSession} />
       <Text>Connected: {i.connected}</Text>
       <Text>Sessions: {i.active.length}</Text>
       <Text>Sessions-in-creation: {i.inCreation.length}</Text>

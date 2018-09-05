@@ -7,8 +7,10 @@ import { accounts, balances, Account, AccountBalance } from '../logic/accounts'
 
 import { AccountShort } from '../components/AccountShort'
 import { AccountFull } from '../components/AccountFull'
+import { BlockNumber } from 'eth-types'
 
 export type State = {
+  currentBlock?: BlockNumber
   accounts?: Account[]
   balances: {
     [K: string]: AccountBalance | undefined
@@ -25,8 +27,15 @@ export class Main extends React.Component<{}, State> {
   componentDidMount () {
     const accs = accounts()
     this.sub = Observable.merge(
-      accs.do(acc => this.setState({ accounts: acc })),
-      balances(accs).do(balances => this.setState({ balances }))
+      accs
+        .do(acc => this.setState({
+          selectedAccount: acc[0], // TODO comment out
+          accounts: acc
+        })),
+      balances(accs).do(balances => this.setState({ balances })),
+      accs
+        .mergeMap(as => as[0].blockchain.monitoring.blockNumbers())
+        .do(b => this.setState({ currentBlock: b }))
     )
       .subscribe({
         error: err => console.warn(err)
@@ -42,6 +51,7 @@ export class Main extends React.Component<{}, State> {
   }
 
   renderAccounts = () => ([
+    <Text key='b'>Current Block: {this.state.currentBlock && this.state.currentBlock.toString(10) || '...'}</Text>,
     <Text key='h' style={{ fontSize: 24, fontWeight: 'bold' }}>Accounts</Text>,
     <View key='a' style={{ padding: 20 }}>
       {
@@ -61,7 +71,6 @@ export class Main extends React.Component<{}, State> {
   render () {
     const selected = this.state.selectedAccount
     return <View>
-
       {!selected && this.renderAccounts()}
       {selected && <AccountFull
         account={selected}

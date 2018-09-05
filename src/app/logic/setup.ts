@@ -74,7 +74,7 @@ export const generalInfo: Observable<GeneralInfo | undefined> = messages
   .switchMap(passUndefined(m =>
     m.type === 'general' ? Observable.of(m.payload) : Observable.of(undefined)
   ))
-  .do(x => console.log('GENERAL', x))
+  // .do(x => console.log('GENERAL', x))
   .shareReplay(1)
 
 export const session: Observable<UserSession | undefined> = messages

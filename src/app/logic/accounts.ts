@@ -1,4 +1,4 @@
-import { Observable } from 'rxjs'
+import { Observable, BehaviorSubject } from 'rxjs'
 import {
   Engine, serviceCreate, setWaitForDefault, P2P, message, as, DateMs, fakeStorage, CHAIN_ID, BN, util
 } from 'go-network-framework'
@@ -76,6 +76,8 @@ const collectEvents = (evs: Observable<any>, name = 'N/A') =>
     .shareReplay(1)
 
 const initAccount = (cfg: UserSession, contracts: Contracts) => (account: AccountBase) => {
+  const ignoreSecretToProof = new BehaviorSubject(true)
+
   const p2p = new P2P({
     mqttUrl: cfg.mqttUrl,
     address: account.addressStr,
@@ -97,11 +99,17 @@ const initAccount = (cfg: UserSession, contracts: Contracts) => (account: Accoun
   const engine = new Engine({
     address: account.address,
     sign: (msg) => msg.sign(account.privateKey),
-    send: (to, msg) => p2p.send(to.toString('hex'), message.serialize(msg)),
+    send: (to, msg) => {
+      if (ignoreSecretToProof.value && msg.classType === 'SecretToProof') {
+        console.log('IGNORED', account.addressStr, '-->', to.toString('hex'), msg.classType)
+        return Promise.resolve(true)
+      }
+      return p2p.send(to.toString('hex'), message.serialize(msg))
+    },
     blockchain: blockchain,
     // todo: make if configurable - another thing is that engine assumes single value for all contracts
-    settleTimeout: as.BlockNumber(6),
-    revealTimeout: as.BlockNumber(3)
+    settleTimeout: as.BlockNumber(200),
+    revealTimeout: as.BlockNumber(50)
   })
 
   const events = collectEvents(Observable.merge(
@@ -157,6 +165,8 @@ const initAccount = (cfg: UserSession, contracts: Contracts) => (account: Accoun
       .do(x => console.log('BALANCE', x.toString(), account.addressStr))
   )
     .mapTo({
+      setIgnoreSecretToProof: (v: boolean) => ignoreSecretToProof.next(v),
+      ignoreSecretToProof: ignoreSecretToProof,
       contracts, p2p, engine, blockchain, owner: account, txs: blockchain.txs,
       balance: balance(blockchain),
       events,
@@ -179,9 +189,7 @@ const initAccount = (cfg: UserSession, contracts: Contracts) => (account: Accoun
 
 export const accounts = () => (session
   .filter(Boolean) as Observable<UserSession>)
-  // .debounceTime(0)
-  // .do(invariant(([ac, cs]) => (ac.length > 0) && !!cs, 'Contract account and at least 1 more other accounts expected'))
-  .do(x => setWaitForDefault({ interval: x.blockTime, timeout: 3000 }))
+  .do(x => setWaitForDefault({ interval: x.blockTime / 2, timeout: 3000 }))
   .do(x => console.log('INITING', x))
   .take(1)
   .switchMap((cfg) =>

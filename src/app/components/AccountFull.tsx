@@ -1,6 +1,6 @@
 import * as React from 'react'
-import { View, Text, Button, ActivityIndicator, Modal } from 'react-native'
-import { Subscription, Subject, Observable } from 'rxjs'
+import { View, Text, Button, ActivityIndicator, Modal, Switch } from 'react-native'
+import { Subscription, Observable } from 'rxjs'
 
 import { Address } from 'eth-types'
 import { Channel } from 'go-network-framework/lib/state-channel/channel'
@@ -17,23 +17,30 @@ export interface Props {
 }
 
 export interface State {
+  ignoreSecretToProof: boolean
   selectedChannel?: any
   channels?: Channel[]
   showEvents?: boolean
 }
 
 export class AccountFull extends React.Component<Props, State> {
-  state: State = {}
+  state: State = {
+    ignoreSecretToProof: false
+  }
 
   sub?: Subscription
 
   componentDidMount () {
-    this.sub = this.props.account.blockchain.monitoring
-      .asStream('*')
-      .startWith(true as any)
-      .do(() => this.setState({
-        channels: Object.values(this.props.account.engine.channels)
-      }))
+    this.sub = Observable.merge(
+      this.props.account.blockchain.monitoring
+        .asStream('*')
+        .startWith(true as any)
+        .do(() => this.setState({
+          channels: Object.values(this.props.account.engine.channels)
+        })),
+      this.props.account.ignoreSecretToProof
+        .do(v => this.setState({ ignoreSecretToProof: v }))
+    )
       .subscribe()
   }
 
@@ -68,6 +75,11 @@ export class AccountFull extends React.Component<Props, State> {
           <ActivityIndicator size='small' /> :
           <Text>{JSON.stringify(p.balance, null, 4)}</Text>
       }
+
+      <View style={{ flexDirection: 'row', padding: 8, alignItems: 'center' }}>
+        <Switch value={this.state.ignoreSecretToProof} onValueChange={this.props.account.setIgnoreSecretToProof} />
+        <Text style={{ marginLeft: 8 }}>ignore 'SecretToProof' (allows testing broken protocol)</Text>
+      </View>
 
       <Text style={{ fontSize: 20, fontWeight: 'bold', marginTop: 12 }}>Open Netting Channels</Text>
       {!this.props.balance ?
