@@ -39,10 +39,18 @@ const accounts = cfgAccounts.slice(1)
   .map(acc => ({
     privateKey: acc.secretKey,
     address: acc.address.toString('hex')
-  }));
+  }))
 
-// create directories if missing
-[tempDir, sessionsDir].forEach(p => !fs.existsSync(p) && fs.mkdirSync(p))
+!fs.existsSync(tempDir) && fs.mkdirSync(tempDir)
+if (fs.existsSync(sessionsDir)) {
+  console.log('removing old sessions')
+  Observable.from(fs.readdirSync(sessionsDir))
+    .mergeMap(p => exec(`rm -rf ${sessionsDir}/${p}`), 3)
+    .subscribe({
+      complete: () => console.log('old sessions removed')
+    })
+}
+!fs.existsSync(sessionsDir) && fs.mkdirSync(sessionsDir)
 
 const stripHex = (o: { [P: string]: string }) =>
   Object.keys(o).reduce((acc: typeof o, k) => {
