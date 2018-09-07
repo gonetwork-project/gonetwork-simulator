@@ -5,6 +5,7 @@ import { Address, Wei } from 'eth-types'
 import { as } from 'go-network-framework'
 import { Subject, Subscription, Observable } from 'rxjs'
 
+import { Channel } from 'go-network-framework/lib/state-channel/channel'
 import { Account, AccountBalance } from '../logic/accounts'
 import { openChannelAndDeposit } from '../logic/onchain-actions'
 
@@ -13,7 +14,7 @@ type Status = 'active' | 'in-progress' | 'error' | 'success'
 export interface Props {
   account: Account
   balance: AccountBalance
-  otherAccounts: Array<{ address: Address, addressStr: string }>
+  accountsWithoutChannel: Array<{ address: Address, addressStr: string }>
 }
 
 export interface State {
@@ -32,7 +33,7 @@ export class OpenChannel extends React.Component<Props, State> {
     this.state = {
       status: 'active',
       amount: as.Wei(1000),
-      other: p.otherAccounts[0] // assumption at least one account present
+      other: p.accountsWithoutChannel[0] // assumption at least one account present
     }
   }
 
@@ -72,6 +73,12 @@ export class OpenChannel extends React.Component<Props, State> {
   }
 
   render () {
+    const without = this.props.accountsWithoutChannel
+
+    if (without.length === 0) {
+      return <Text>No accounts without openned channel found.</Text>
+    }
+
     if (!this.canOpen()) {
       return <Text>You need to have some tokens to be able to open new netting channel. Please use a master account instead.</Text>
     }

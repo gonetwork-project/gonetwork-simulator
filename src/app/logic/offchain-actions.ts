@@ -4,6 +4,7 @@ import { message, as } from 'go-network-framework'
 import { Address, BlockNumber, Wei } from 'eth-types'
 
 import { Account } from './accounts'
+import { timeouts } from './setup'
 
 const { GenerateRandomSecretHashPair } = message
 
@@ -35,7 +36,7 @@ export const sendMediated = (from: Account, to: Address, amount: Wei) => {
         to,
         to,
         amount,
-        currentBlock.add(from.engine.revealTimeout).add(as.BlockNumber(100)) as BlockNumber,
+        currentBlock.add(from.engine.revealTimeout).add(timeouts.collateral) as BlockNumber,
         secretHashPair.secret as any, // FIXME
         secretHashPair.hash
       )

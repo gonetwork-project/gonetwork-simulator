@@ -73,6 +73,7 @@ export class Main extends React.Component<{}, State> {
     return <View>
       {!selected && this.renderAccounts()}
       {selected && <AccountFull
+        currentBlock={this.state.currentBlock!}
         account={selected}
         balance={this.state.balances[selected.owner.addressStr]}
         otherAccounts={this.state.accounts!

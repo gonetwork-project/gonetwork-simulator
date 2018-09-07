@@ -5,7 +5,7 @@ import {
 
 import { UserSession } from '../../protocol'
 
-import { session } from './setup'
+import { session, timeouts } from './setup'
 
 import { Wei, BlockNumber, Address, PrivateKey } from 'eth-types'
 
@@ -23,11 +23,16 @@ export interface AccountBase {
 }
 
 export type Account = ReturnType<ReturnType<typeof initAccount>> extends Observable<infer U> ? U : never
-export type AccountBalance = {
+export interface AccountBalance {
   blockNumber: BlockNumber
   wei: Wei
   gotToken: Wei
   hsToken: Wei
+}
+
+export interface OtherAccount {
+  addressStr: string
+  address: Address
 }
 
 export enum EventSource {
@@ -108,8 +113,8 @@ const initAccount = (cfg: UserSession, contracts: Contracts) => (account: Accoun
     },
     blockchain: blockchain,
     // todo: make if configurable - another thing is that engine assumes single value for all contracts
-    settleTimeout: as.BlockNumber(200),
-    revealTimeout: as.BlockNumber(50)
+    settleTimeout: timeouts.settle,
+    revealTimeout: timeouts.reveal
   })
 
   const events = collectEvents(Observable.merge(

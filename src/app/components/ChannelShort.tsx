@@ -3,7 +3,7 @@ import { Subscription } from 'rxjs'
 import { View, Text, Button, Alert, ActivityIndicator } from 'react-native'
 import { Channel } from 'go-network-framework/lib/state-channel/channel'
 import { as } from 'go-network-framework'
-import { Wei } from 'eth-types'
+import { Wei, BlockNumber } from 'eth-types'
 
 import { sendDirect, sendMediated } from '../logic/offchain-actions'
 import { Account } from '../logic/accounts'
@@ -16,6 +16,7 @@ export const State = (p: Channel['myState'] | Channel['peerState']) =>
   </View>
 
 export interface Props {
+  currentBlock: BlockNumber
   account: Account
   channel: Channel
   onSelected: () => void
@@ -47,7 +48,13 @@ export class ChannelShort extends React.Component<Props> {
     this.props.account.engine.settleChannel(this.props.channel.channelAddress)
 
   renderActions = () => {
-    switch (this.props.channel.state) {
+    const ch = this.props.channel
+
+    if (ch.peerState.depositBalance.toNumber() === 0 && ch.myState.depositBalance.toNumber() === 0) {
+      return <Text>...waiting for deposit...</Text>
+    }
+
+    switch (ch.state) {
       case 'opened': return [
         <Button key='c' title='Close' onPress={this.close} />,
         <Button key='d' title='Send Direct (50)' onPress={this.sendDirect} />,
@@ -73,7 +80,6 @@ export class ChannelShort extends React.Component<Props> {
       <Text>State: {ch.state}</Text>
       <Text>Channel Address: 0x{ch.channelAddress.toString('hex')}</Text>
       <Text>Peer Address: 0x{ch.peerState.address.toString('hex')}</Text>
-      <Text>State: {ch.state}</Text>
       <Text>Opened Block: {ch.openedBlock.toString(10)}</Text>
 
       <Text style={{ fontWeight: 'bold' }}>Peer State</Text>

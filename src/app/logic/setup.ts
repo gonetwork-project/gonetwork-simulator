@@ -3,6 +3,7 @@ import { AsyncStorage } from 'react-native'
 
 import { ServerMessage, GeneralInfo, UserSession, SessionConfigClient } from '../../protocol'
 import { passUndefined } from './utils'
+import { as } from 'go-network-framework'
 
 export interface Url {
   protocol: 'ws:' // todo: wss:
@@ -11,6 +12,14 @@ export interface Url {
 }
 
 export type ConnectionWithStatus = WebSocket | 'idle' | 'connecting' | 'failed'
+
+export const defaultBlockTime = 500
+export const minBlockTime = 100
+export const timeouts = {
+  settle: as.BlockNumber(30),
+  reveal: as.BlockNumber(20),
+  collateral: as.BlockNumber(10)
+}
 
 const defaultUrl: Readonly<Url> = {
   protocol: 'ws:',
@@ -33,8 +42,6 @@ const connect = (url: string) =>
     return () => ws.close()
   }) as Observable<any>
 
-export const defaultBlockTime = 500
-export const minBlockTime = 100
 const sessionConfigSub = new BehaviorSubject<SessionConfigClient>({ blockTime: defaultBlockTime })
 export const setSessionConfig = (c: Partial<SessionConfigClient>) => sessionConfigSub.next(Object.assign({}, sessionConfigSub.value, c))
 export const sessionConfig = sessionConfigSub.asObservable()
