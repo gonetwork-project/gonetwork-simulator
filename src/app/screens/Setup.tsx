@@ -4,15 +4,16 @@ import { RNCamera, BarCodeType } from 'react-native-camera'
 import { Subscription, Observable } from 'rxjs'
 
 import { setUnknownError } from '../global'
-import { GeneralInfo } from '../../protocol'
+import { GeneralInfo, SessionConfigClient } from '../../protocol'
 import * as setup from '../logic/setup'
 
 type State = {
   url: setup.Url,
-  connection: setup.ConnectionWithStatus,
-  cryptoInited?: boolean,
-  autoContinue: boolean,
+  connection: setup.ConnectionWithStatus
+  cryptoInited?: boolean
+  autoContinue: boolean
   generalInfo?: GeneralInfo
+  sessionConfig: SessionConfigClient
 }
 interface Props {
   onDone: () => void
@@ -29,12 +30,23 @@ export class Setup extends React.Component<Props, State> {
   componentDidMount () {
     this.sub = (Observable.merge(
       setup.url.map(u => ({ url: u })),
+      setup.sessionConfig.map(s => ({ sessionConfig: s })),
       setup.connectionWithStatus.map(c => ({ connection: c })),
       setup.generalInfo
-        .do(g => g && this.createSession()) // TODO remove / allow automatic creation in UI
+        // .do(g => g && this.createSession()) // TODO remove / allow automatic creation in UI
         .map(g => ({ generalInfo: g }))
     ) as Observable<State>)
       .do(c => this.setState(c))
+      .merge(
+        setup.sessionConfig
+          .switchMap(c =>
+            c.blockTime >= 100 ?
+              Observable.empty() :
+              Observable.of(Object.assign({}, c, { blockTime: setup.defaultBlockTime }))
+                .delay(2000)
+          )
+          .do(setup.setSessionConfig)
+      )
       // uncomment to imitate runtime exception
       // .merge(Observable.timer(2000).mergeMapTo(Observable.throw('runtime-error')))
       .subscribe({ error: setUnknownError })
@@ -46,7 +58,7 @@ export class Setup extends React.Component<Props, State> {
 
   createSession = () =>
     (this.state.connection as WebSocket).send(
-      JSON.stringify({ type: 'create-session', payload: { blockTime: 250 } }))
+      JSON.stringify({ type: 'create-session', payload: this.state.sessionConfig }))
 
   onScan = (ev: { type: keyof BarCodeType, data: string }) => {
     if (ev.data.includes('gonetworkServer')) {
@@ -63,8 +75,24 @@ export class Setup extends React.Component<Props, State> {
   renderInfo = () => {
     const i = this.state.generalInfo
     if (!i) return null
+    const cfg = this.state.sessionConfig
+    const wrongBlockTime = !cfg.blockTime || cfg.blockTime < setup.minBlockTime
     return <View style={{ padding: 20, backgroundColor: 'rgba(128, 128, 128, 0.2)' }}>
-      <Button title='New Session' onPress={this.createSession} />
+
+      <View style={{ flexDirection: 'row', alignItems: 'center', padding: 4 }}>
+        <Text>Block time in ms:</Text>
+        <TextInput
+          style={{ width: 60, height: 20, backgroundColor: 'rgb(200,200,200)', padding: 4, margin: 4 }}
+          keyboardType='number-pad'
+          maxLength={6}
+          value={(cfg.blockTime as any) && `${cfg.blockTime}`}
+          onChangeText={t => setup.setSessionConfig({ blockTime: parseInt(t, 10) })}
+        />
+        {wrongBlockTime && <Text style={{ color: 'red' }}>Block time has to be at least {setup.minBlockTime} ms</Text>}
+      </View>
+
+      <Button title='New Session' disabled={wrongBlockTime} onPress={this.createSession} />
+
       <Text>Connected: {i.connected}</Text>
       <Text>Sessions: {i.active.length}</Text>
       <Text>Sessions-in-creation: {i.inCreation.length}</Text>

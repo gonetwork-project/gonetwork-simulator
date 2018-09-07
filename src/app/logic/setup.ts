@@ -1,7 +1,7 @@
 import { Observable, BehaviorSubject } from 'rxjs'
 import { AsyncStorage } from 'react-native'
 
-import { ServerMessage, GeneralInfo, UserSession } from '../../protocol'
+import { ServerMessage, GeneralInfo, UserSession, SessionConfigClient } from '../../protocol'
 import { passUndefined } from './utils'
 
 export interface Url {
@@ -18,7 +18,7 @@ const defaultUrl: Readonly<Url> = {
   port: 5215
 }
 
-const STORAGE_KEY = 'gonetwork-server-url'
+const STORAGE_KEY_URL = 'setup::gonetwork-server-url'
 
 const urlToStr = (url: Url) => `${url.protocol}//${url.hostname}:${url.port}`
 
@@ -33,12 +33,17 @@ const connect = (url: string) =>
     return () => ws.close()
   }) as Observable<any>
 
+export const defaultBlockTime = 500
+export const minBlockTime = 100
+const sessionConfigSub = new BehaviorSubject<SessionConfigClient>({ blockTime: defaultBlockTime })
+export const setSessionConfig = (c: Partial<SessionConfigClient>) => sessionConfigSub.next(Object.assign({}, sessionConfigSub.value, c))
+export const sessionConfig = sessionConfigSub.asObservable()
+
 const urlSub = new BehaviorSubject<Url>(defaultUrl)
 export const setUrl = (url: Partial<Url>) => urlSub.next(Object.assign({}, urlSub.value, url))
-
 export const url: Observable<Url> = Observable.merge(
   urlSub,
-  Observable.defer(() => AsyncStorage.getItem(STORAGE_KEY))
+  Observable.defer(() => AsyncStorage.getItem(STORAGE_KEY_URL))
     .filter(Boolean)
     .map(x => JSON.parse(x))
     .do(setUrl)
@@ -50,7 +55,7 @@ export const connectionWithStatus: Observable<ConnectionWithStatus> = url
     idx === 0 ? Observable.of('idle') // 0-th / default - for sure wrong
       : Observable.defer((() => connect(urlToStr(u))))
         .startWith('connecting')
-        .do(r => r && AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(u)))
+        .do(r => r && AsyncStorage.setItem(STORAGE_KEY_URL, JSON.stringify(u)))
         .catch(() => {
           // console.warn(err)
           return Observable.of('failed')
