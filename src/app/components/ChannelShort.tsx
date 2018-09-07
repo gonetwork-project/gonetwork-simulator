@@ -8,11 +8,27 @@ import { Wei, BlockNumber } from 'eth-types'
 import { sendDirect, sendMediated } from '../logic/offchain-actions'
 import { Account } from '../logic/accounts'
 
-export const State = (p: Channel['myState'] | Channel['peerState']) =>
+interface Lock {
+  expiration: BlockNumber
+  amount: Wei
+  secret: string
+  hashLock: Buffer
+}
+
+export const OpenLock = (lock: Lock, index: number) =>
+  <View key={lock.secret} style={{ paddingLeft: 4 }}>
+    <Text style={{ fontWeight: 'bold' }}>{index}.</Text>
+    <Text>Expiration: {lock.expiration.toString(10)}</Text>
+    <Text>Amount: {lock.amount.toString(10)}</Text>
+  </View>
+
+export const State = (p: Channel['myState'] | Channel['peerState'], openLocks?: any[]) =>
   <View style={{ paddingLeft: 12 }}>
     <Text>Initial Deposit: {p.depositBalance.toString(10)}</Text>
     <Text>Transferred Amount: {p.transferredAmount.toString(10)}</Text>
     <Text>Nonce: {p.nonce.toString(10)}</Text>
+    {openLocks && <Text>Open Locks (total: {openLocks.length})</Text>}
+    {openLocks && openLocks.map((l, i) => OpenLock(l, i))}
   </View>
 
 export interface Props {
@@ -73,6 +89,7 @@ export class ChannelShort extends React.Component<Props> {
   render () {
     const p = this.props
     const ch = p.channel
+    const openLocks = Object.values(ch.peerState.openLocks)
     return <View style={{ padding: 20 }}>
       <View style={{ flexDirection: 'row' }}>
         {this.renderActions()}
@@ -83,8 +100,7 @@ export class ChannelShort extends React.Component<Props> {
       <Text>Opened Block: {ch.openedBlock.toString(10)}</Text>
 
       <Text style={{ fontWeight: 'bold' }}>Peer State</Text>
-      {State(ch.peerState)}
-      <Text>Open Locks Count: {Object.values(ch.peerState.openLocks).length}</Text>
+      {State(ch.peerState, openLocks)}
 
       <Text style={{ fontWeight: 'bold' }}>Account State</Text>
       {State(ch.myState)}

@@ -149,7 +149,12 @@ const initAccount = (cfg: UserSession, contracts: Contracts) => (account: Accoun
   ), 'EVENTS') as Observable<Array<Event>> // todo: improve typing
 
   // do not loose any event
-  const eventsSub = events.subscribe()
+  const sub = events.subscribe()
+  sub.add(blockchain.monitoring.blockNumbers()
+    .do(bn => engine.onBlock(bn))
+    .subscribe()
+  )
+
   blockchain.monitoring.on('*', engine.onBlockchainEvent)
   p2p.on('message-received', msg => engine.onMessage(message.deserializeAndDecode(msg) as any))
 
@@ -187,7 +192,7 @@ const initAccount = (cfg: UserSession, contracts: Contracts) => (account: Accoun
       dispose: () => {
         p2p.dispose()
         blockchain.monitoring.dispose()
-        eventsSub.unsubscribe()
+        sub.unsubscribe()
       }
     })
 }
