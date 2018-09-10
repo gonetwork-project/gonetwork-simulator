@@ -2,7 +2,6 @@ import { BehaviorSubject, Observable } from 'rxjs'
 import { View, Text, Button } from 'react-native'
 import * as React from 'react'
 
-import { config } from '../logic/config'
 import { ignoreUndefined } from '../logic/utils'
 import { checkP2PRaw } from '../logic/check-p2p'
 
@@ -51,12 +50,12 @@ export const invariant: CheckInvariant = (check, msg = '[More Info not specifed]
   !check(p) && setError('invariant', new Error(msg)) || p
 
 // #region checks
-export const checkP2P = config.switchMap(
-  ignoreUndefined(c => checkP2PRaw(c.urls.mqtt)))
-  .catch(() => Observable.of(false)
-    .do(() => setError('p2p-test-failed'))
-  )
-  .startWith(false)
+export const checkP2P = (url: string) =>
+  checkP2PRaw(url)
+    .catch(() => Observable.of(false)
+      .do(() => setError('p2p-test-failed'))
+    )
+    .startWith(false)
 
 // #endregion
 
