@@ -6,7 +6,7 @@ import { Address, BlockNumber } from 'eth-types'
 import { Channel } from 'go-network-framework/lib/state-channel/channel'
 import { Account, AccountBalance, OtherAccount } from '../logic/accounts'
 import { OpenChannel } from './OpenChannel'
-import { ChannelShort } from './ChannelShort'
+import { ChannelShort } from './Channel'
 import { Events } from './Events'
 
 export interface Props {
