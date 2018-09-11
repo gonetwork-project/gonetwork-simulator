@@ -83,12 +83,17 @@ const serve = () => {
     const meta = sessionsToMeta.get(session)!
 
     // todo - improve - critical error anyway
-    // if (!meta) return
+    if (!meta) {
+      console.log('SESSION-NOT-FOUND')
+      return
+    }
 
-    const accounts = [...meta.users.values()].reduce((a, v) => a.concat(v), [])
-    const s: P.Session = Object.assign({ accounts }, session)
+    const addresses = [...meta.users.values()].reduce((a, v) => a.concat(v.map(x => x.address)), [] as string[])
     meta.users.forEach((userAccounts, ws) => {
-      const m: P.UserSession = Object.assign({ userAccounts }, s)
+      const m: P.UserSession = Object.assign({
+        userAccounts,
+        addresses: addresses.filter(ad => !userAccounts.find(a => a.address === ad))
+      }, session)
       send({ type: 'session', payload: m })(ws)
     })
   }
@@ -109,18 +114,29 @@ const serve = () => {
   }
 
   const joinSession = (ws: WebSocket, sessionId: P.SessionId, accounts = 1) => {
-    const session = inCreation.find(s => s.id === sessionId) as P.Session
-    inCreation = inCreation.filter(s => s.id !== sessionId)
-    active.push(session)
+    const session = active.find(s => s.id === sessionId)
+
+    if (!session) {
+      console.log('Session not found', sessionId)
+      updateGeneral()
+      return
+    }
 
     const meta = sessionsToMeta.get(session)
 
     // todo - improve
-    if (!meta || meta.users.has(ws)) return
+    if (!meta || meta.users.has(ws)) {
+      console.log('Already joined')
+      return
+    }
 
-    const userAccounts = meta.accountsPool.slice(2).filter(Boolean)
+    // console.log(meta, accounts)
+    const userAccounts = meta.accountsPool.splice(0, accounts).filter(Boolean)
     // todo - discuss - block UI action or create new account
-    if (userAccounts.length !== accounts) return
+    if (userAccounts.length !== accounts) {
+      console.log('No more accounts')
+      return
+    }
 
     meta.users.set(ws, userAccounts)
     wsToSessions.set(ws, session)
@@ -154,6 +170,11 @@ const serve = () => {
         .do(c => s.mqttUrl = c.url)
         .do(() => updateGeneral())
     )
+      .do(() => {
+        const session = inCreation.find(_s => _s === s) as P.Session
+        inCreation = inCreation.filter(_s => _s !== s)
+        active.push(session)
+      })
       .do(() => joinSession(ws, s.id!, 2))
       .finally(() => console.log('SESSION-ENDED', s.id))
       .subscribe({
@@ -199,7 +220,7 @@ const serve = () => {
         case 'leave-session':
           return leaveSession(ws)
         case 'join-session':
-          return joinSession(ws, msg.payload)
+          return joinSession(ws, msg.payload.sessionId)
         case 'create-account':
           return console.log('CREATE-ACCOUNT-TODO', msg)
       }

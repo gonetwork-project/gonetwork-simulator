@@ -197,17 +197,35 @@ const initAccount = (cfg: UserSession, contracts: Contracts) => (account: Accoun
     })
 }
 
-export const accounts = () => (session
+const userSession = () => (session
   .filter(Boolean) as Observable<UserSession>)
+  .takeUntil(session.filter(x => !x))
   .do(x => setWaitForDefault({ interval: x.blockTime / 2, timeout: 3000 }))
-  .do(x => console.log('INITING', x))
-  .take(1)
-  .switchMap((cfg) =>
-    Observable.from(cfg.userAccounts.map(a => toAccount(a))) // just one account
-      .mergeMap(initAccount(cfg, toContracts(cfg.contracts)))
-      .toArray()
-  )
-  .do(x => console.log('ACC', x))
+  .do(x => console.log('config', x))
+  .shareReplay(1)
+
+export const accounts = () => {
+  const inited: Account[] = []
+  return userSession()
+    .switchMap((cfg) =>
+      Observable.from(cfg.userAccounts
+          .filter(a => !inited.find(i => i.owner.addressStr === a.address))
+          .map(a => toAccount(a)))
+        .mergeMap(initAccount(cfg, toContracts(cfg.contracts)))
+        .do(a => inited.push(a))
+        .merge(Observable.from(inited))
+        .toArray()
+    )
+    // .do(x => console.log('USER-ACCOUNTS', x))
+    .shareReplay(1)
+}
+
+export const otherAccounts = () => userSession()
+  .map(s => (s.addresses || []).map(a => ({
+    address: new Buffer(a, 'hex'),
+    addressStr: a
+  } as OtherAccount)))
+  // .do(x => console.log('OTHER-ADDRESSES', x))
   .shareReplay(1)
 
 const isBalanceChanged = (a: AccountBalance, b: AccountBalance) =>

@@ -20,20 +20,18 @@ export interface Props {
 export interface State {
   status: Status
   amount: Wei
-  other: { address: Address, addressStr: string }
 }
 
 export class OpenChannel extends React.Component<Props, State> {
   state: State
-  openSub: Subject<State> = new Subject<State>()
+  openSub = new Subject<State & { other: Address }>()
   sub?: Subscription
 
   constructor (p: Props) {
     super(p)
     this.state = {
       status: 'active',
-      amount: as.Wei(1000),
-      other: p.accountsWithoutChannel[0] // assumption at least one account present
+      amount: as.Wei(1000)
     }
   }
 
@@ -42,7 +40,7 @@ export class OpenChannel extends React.Component<Props, State> {
       .do(() => this.setState({ status: 'in-progress' }))
       .exhaustMap(s =>
         Observable.defer(
-          () => openChannelAndDeposit(this.props.account, s.amount, s.other.address)
+          () => openChannelAndDeposit(this.props.account, s.amount, s.other)
         )
           // .do((x) => console.warn('OK', x))
           .mapTo('success' as Status)
@@ -64,7 +62,7 @@ export class OpenChannel extends React.Component<Props, State> {
 
   // todo: improve 1. fee should be obtained from contract
   canOpen = () => this.props.balance.hsToken.gt(as.Wei(0)) && this.props.balance.gotToken.gt(as.Wei(500))
-  onOpen = () => this.openSub.next(this.state)
+  onOpen = (other: Address) => this.openSub.next(Object.assign({ other }, this.state))
 
   updateAmount = (v: string) => {
     this.setState({
@@ -85,8 +83,6 @@ export class OpenChannel extends React.Component<Props, State> {
 
     switch (this.state.status) {
       case 'active': return <View>
-        <Text>Other: (todo - allow selection)</Text>
-        <Text>0x{this.state.other.addressStr}</Text>
         <Text>Amount: (todo - limit to balance)</Text>
         <TextInput
           style={{ width: 240, height: 32, backgroundColor: 'rgb(200,200,200)', padding: 8 }}
@@ -94,7 +90,12 @@ export class OpenChannel extends React.Component<Props, State> {
           onChangeText={this.updateAmount}
           keyboardType='number-pad'
         />
-        <Button title='Open' onPress={this.onOpen} />
+        {without.map(w =>
+          <View key={w.addressStr} style={{ padding: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' }}>
+            <Button title='Open' onPress={() => this.onOpen(w.address)} />
+            <Text style={{ fontWeight: 'bold' }}>0x{w.addressStr.substring(0, 10)}</Text>
+          </View>
+        )}
       </View>
       case 'in-progress': return <ActivityIndicator />
       case 'success': return <Text style={{ color: 'green' }}>Channel Opened Successfully!</Text>

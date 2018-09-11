@@ -3,7 +3,7 @@ import { View, Text, Button, Alert } from 'react-native'
 import { Observable, Subscription } from 'rxjs'
 
 import { clearStorage } from '../logic/utils'
-import { accounts, balances, Account, AccountBalance } from '../logic/accounts'
+import { accounts, otherAccounts, balances, Account, AccountBalance, OtherAccount } from '../logic/accounts'
 
 import { AccountShort } from '../components/AccountShort'
 import { AccountFull } from '../components/AccountFull'
@@ -12,6 +12,7 @@ import { BlockNumber } from 'eth-types'
 export type State = {
   currentBlock?: BlockNumber
   accounts?: Account[]
+  otherAccounts?: OtherAccount[]
   balances: {
     [K: string]: AccountBalance | undefined
   }
@@ -32,6 +33,8 @@ export class Main extends React.Component<{}, State> {
           selectedAccount: acc[0], // TODO comment out
           accounts: acc
         })),
+      otherAccounts()
+        .do(acc => this.setState({ otherAccounts: acc })),
       balances(accs).do(balances => this.setState({ balances })),
       accs
         .mergeMap(as => as[0].blockchain.monitoring.blockNumbers())
@@ -78,7 +81,8 @@ export class Main extends React.Component<{}, State> {
         balance={this.state.balances[selected.owner.addressStr]}
         otherAccounts={this.state.accounts!
           .filter(a => a !== selected)
-          .map(a => a.owner)
+          .map(a => a.owner as OtherAccount) // more info passed than needed
+          .concat(this.state.otherAccounts || [])
         }
         onBack={() => this.setState({ selectedAccount: undefined })}
       />}

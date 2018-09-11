@@ -1,10 +1,10 @@
 import * as React from 'react'
-import { View, Text, TextInput, Button, AsyncStorage, Switch } from 'react-native'
+import { View, Text, TextInput, Button } from 'react-native'
 import { RNCamera, BarCodeType } from 'react-native-camera'
 import { Subscription, Observable } from 'rxjs'
 
 import { setUnknownError } from '../global'
-import { GeneralInfo, SessionConfigClient } from '../../protocol'
+import { GeneralInfo, SessionConfigClient, SessionId } from '../../protocol'
 import * as setup from '../logic/setup'
 
 type State = {
@@ -33,7 +33,7 @@ export class Setup extends React.Component<Props, State> {
       setup.sessionConfig.map(s => ({ sessionConfig: s })),
       setup.connectionWithStatus.map(c => ({ connection: c })),
       setup.generalInfo
-        .do(g => g && this.createSession()) // TODO remove / allow automatic creation in UI
+        // .do(g => g && this.createSession()) // TODO remove / allow automatic creation in UI
         .map(g => ({ generalInfo: g }))
     ) as Observable<State>)
       .do(c => this.setState(c))
@@ -60,6 +60,10 @@ export class Setup extends React.Component<Props, State> {
     (this.state.connection as WebSocket).send(
       JSON.stringify({ type: 'create-session', payload: this.state.sessionConfig }))
 
+  joinSession = (sessionId: SessionId) =>
+    (this.state.connection as WebSocket).send(
+      JSON.stringify({ type: 'join-session', payload: { sessionId } }))
+
   onScan = (ev: { type: keyof BarCodeType, data: string }) => {
     if (ev.data.includes('gonetworkServer')) {
       setup.setUrl(JSON.parse(ev.data).gonetworkServer)
@@ -68,9 +72,25 @@ export class Setup extends React.Component<Props, State> {
 
   renderCamera = () =>
     <RNCamera
+      onMountError={err => console.warn('CAMERA-NOT-SUPPORTED', err)}
       barCodeTypes={[RNCamera.Constants.BarCodeType.qr]}
       onBarCodeRead={this.onScan}
-      style={{ width: 300, height: 300 }} />
+      style={{ width: 300, height: 300 }}
+    />
+
+  renderSessions = (i: GeneralInfo) => {
+    if (i.active.length === 0) return null
+
+    return <View style={{ padding: 20 }}>
+      {i.active.map(s =>
+        <View key={s.id} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', padding: 8 }}>
+          <Text style={{ fontWeight: 'bold' }}>id: {s.id}</Text>
+          <Text>Block time: {s.blockTime}</Text>
+          <Button onPress={() => this.joinSession(s.id)} title='join' />
+        </View>
+      )}
+    </View>
+  }
 
   renderInfo = () => {
     const i = this.state.generalInfo
@@ -96,7 +116,8 @@ export class Setup extends React.Component<Props, State> {
       <Text>Connected: {i.connected}</Text>
       <Text>Sessions: {i.active.length}</Text>
       <Text>Sessions-in-creation: {i.inCreation.length}</Text>
-      {JSON.stringify(i, null, 4)}
+
+      {this.renderSessions(i)}
     </View>
   }
 

@@ -2,7 +2,7 @@ import * as React from 'react'
 import { View, Text, Button, ActivityIndicator, Modal, Switch } from 'react-native'
 import { Subscription, Observable } from 'rxjs'
 
-import { Address, BlockNumber } from 'eth-types'
+import { BlockNumber } from 'eth-types'
 import { Channel } from 'go-network-framework/lib/state-channel/channel'
 import { Account, AccountBalance, OtherAccount } from '../logic/accounts'
 import { OpenChannel } from './OpenChannel'
