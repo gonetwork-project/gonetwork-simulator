@@ -66,14 +66,14 @@ const serve = () => {
 
   const jobsSub = pinging(wss).subscribe()
 
-  const updateGeneral = (clients?: WebSocket[]) => {
+  const updateGeneral = () => {
     const state: P.GeneralInfo = {
       connected: wss.clients.size,
       active: active,
       inCreation: inCreation
     }
     const _send = send({ type: 'general', payload: state });
-    (clients || wss.clients as any as WebSocket[])
+    (wss.clients as any as WebSocket[])
       .forEach(ws => !wsToSessions.has(ws) && _send(ws))
 
     console.log('UPDATE conn: ', state.connected, ' act: ', state.active.length, ' cre: ', state.inCreation.length)
@@ -126,7 +126,7 @@ const serve = () => {
         updateSession(s as P.Session)
       }
     }
-    updateGeneral([ws])
+    updateGeneral()
   }
 
   const joinSession = (ws: WebSocket, sessionId: P.SessionId, accounts = 1) => {
