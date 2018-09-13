@@ -9,11 +9,13 @@ import { Setup, Main } from './screens'
 // todo: it is not ideal as, in theory, it may fail
 import './logic/init'
 import * as setup from './logic/setup'
+import { SessionId } from '../protocol'
 
 type Step = 'setup' | 'main'
 
 export interface State {
   criticalError?: ErrorProps
+  sessionId?: SessionId
   step: Step
 }
 
@@ -27,7 +29,10 @@ export default class App extends React.Component<{}, State> {
         .do(e => e ? this.setState({ criticalError: e }) : this.setState({ criticalError: undefined, step: 'setup' }))
         .filter(x => !x),
       setup.session
-        .do(s => this.setState({ step: s ? 'main' : 'setup' }))
+        .do(s => this.setState({
+          sessionId: s ? s.id : undefined,
+          step: s ? 'main' : 'setup'
+        }))
     )
       .subscribe()
   }
@@ -41,7 +46,7 @@ export default class App extends React.Component<{}, State> {
       case 'setup':
         return <Setup onDone={() => this.setState({ step: 'main' })} />
       case 'main':
-        return <Main />
+        return <Main sessionId={this.state.sessionId!} />
     }
   }
 

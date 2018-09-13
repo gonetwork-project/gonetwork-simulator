@@ -1,7 +1,7 @@
 import { Observable, BehaviorSubject } from 'rxjs'
 import { AsyncStorage } from 'react-native'
 
-import { ServerMessage, GeneralInfo, UserSession, SessionConfigClient } from '../../protocol'
+import { ServerMessage, GeneralInfo, UserSession, SessionConfigClient, ClientRequests } from '../../protocol'
 import { passUndefined } from './utils'
 import { as } from 'go-network-framework'
 
@@ -75,11 +75,17 @@ export const connection: Observable<WebSocket | undefined> =
   connectionWithStatus
     .map(c => typeof c === 'string' ? undefined : c)
 
+export const send = <A extends keyof ClientRequests> (action: A, payload: ClientRequests[A]) =>
+  connection
+    .take(1)
+    .do(ws => ws && ws.send(JSON.stringify({ type: action, payload })))
+    .subscribe()
+
 export const messages = connection
   .switchMap(passUndefined(c =>
     Observable.fromEvent(c, 'message')
       .map((m: any) => JSON.parse(m.data)))
-      // .do(x => console.log('MSG', x)))
+    // .do(x => console.log('MSG', x)))
   ).shareReplay(1) as Observable<undefined | ServerMessage>
 
 export const generalInfo: Observable<GeneralInfo | undefined> = messages

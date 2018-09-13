@@ -4,12 +4,17 @@ import { Observable, Subscription } from 'rxjs'
 
 import { clearStorage } from '../logic/utils'
 import { accounts, otherAccounts, balances, Account, AccountBalance, OtherAccount } from '../logic/accounts'
+import { send } from '../logic/setup'
 
 import { AccountShort } from '../components/AccountShort'
 import { AccountFull } from '../components/AccountFull'
 import { BlockNumber } from 'eth-types'
 
-export type State = {
+export interface Props {
+  sessionId: string
+}
+
+export interface State {
   currentBlock?: BlockNumber
   accounts?: Account[]
   otherAccounts?: OtherAccount[]
@@ -19,7 +24,7 @@ export type State = {
   selectedAccount?: Account
 }
 
-export class Main extends React.Component<{}, State> {
+export class Main extends React.Component<Props, State> {
   state: State = {
     balances: {}
   }
@@ -53,7 +58,10 @@ export class Main extends React.Component<{}, State> {
     })
   }
 
+  leaveSession = () => send('leave-session', { sessionId: this.props.sessionId })
+
   renderAccounts = () => ([
+    <Button key='l' title='Leave Session' onPress={this.leaveSession} />,
     <Text key='b'>Current Block: {this.state.currentBlock && this.state.currentBlock.toString(10) || '...'}</Text>,
     <Text key='h' style={{ fontSize: 24, fontWeight: 'bold' }}>Accounts</Text>,
     <View key='a' style={{ padding: 20 }}>

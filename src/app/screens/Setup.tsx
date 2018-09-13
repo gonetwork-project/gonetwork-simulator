@@ -57,12 +57,10 @@ export class Setup extends React.Component<Props, State> {
   }
 
   createSession = () =>
-    (this.state.connection as WebSocket).send(
-      JSON.stringify({ type: 'create-session', payload: this.state.sessionConfig }))
+    setup.send('create-session', this.state.sessionConfig)
 
   joinSession = (sessionId: SessionId) =>
-    (this.state.connection as WebSocket).send(
-      JSON.stringify({ type: 'join-session', payload: { sessionId } }))
+    setup.send('join-session', { sessionId })
 
   onScan = (ev: { type: keyof BarCodeType, data: string }) => {
     if (ev.data.includes('gonetworkServer')) {

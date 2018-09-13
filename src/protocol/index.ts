@@ -1,5 +1,9 @@
 type Exhaust<K extends string, V extends { [P in K]: any }> = V
 
+export type Protocol = {
+  [K in keyof ClientRequests]: (payload: ClientRequests[K]) => void
+}
+
 export type SessionId = string
 // export type UserName = string
 

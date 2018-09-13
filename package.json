@@ -8,7 +8,7 @@
     "lint": "node_modules/tslint/bin/tslint -c tslint.json 'src/**/*.ts'",
     "app-clear": "rm -rf build/app || true",
     "app-compile": "yarn app-clear && node_modules/typescript/bin/tsc -b ./src/app --declaration",
-    "app-watch": "yarn app-clear && node_modules/typescript/bin/tsc -b ./src/app --watch",
+    "app-watch": "yarn app-clear && node_modules/typescript/bin/tsc -b ./src/app --watch --listFiles",
     "server-clear": "rm -rf build/server || true",
     "server-compile": "yarn run server-clear && node_modules/.bin/tsc -b ./src/server/tsconfig.json",
     "server": "yarn server-compile && node build/server"
