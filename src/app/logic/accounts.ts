@@ -200,7 +200,7 @@ const initAccount = (cfg: UserSession, contracts: Contracts) => (account: Accoun
 const userSession = () => (session
   .filter(Boolean) as Observable<UserSession>)
   .takeUntil(session.filter(x => !x))
-  .do(x => setWaitForDefault({ interval: x.blockTime / 2, timeout: 3000 }))
+  .do(x => setWaitForDefault({ interval: Math.min(x.blockTime / 2, 1000), timeout: Math.max(3000, x.blockTime * 3) }))
   .do(x => console.log('config', x))
   .shareReplay(1)
 

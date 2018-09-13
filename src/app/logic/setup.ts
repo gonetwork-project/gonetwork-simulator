@@ -16,9 +16,9 @@ export type ConnectionWithStatus = WebSocket | 'idle' | 'connecting' | 'failed'
 export const defaultBlockTime = 500
 export const minBlockTime = 100
 export const timeouts = {
-  settle: as.BlockNumber(30),
-  reveal: as.BlockNumber(20),
-  collateral: as.BlockNumber(10)
+  settle: as.BlockNumber(51),
+  reveal: as.BlockNumber(50),
+  collateral: as.BlockNumber(50)
 }
 
 const defaultUrl: Readonly<Url> = {
