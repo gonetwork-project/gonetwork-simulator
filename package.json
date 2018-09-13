@@ -8,7 +8,7 @@
     "lint": "node_modules/tslint/bin/tslint -c tslint.json 'src/**/*.ts'",
     "app-clear": "rm -rf build/app || true",
     "app-compile": "yarn app-clear && node_modules/typescript/bin/tsc -b ./src/app --declaration",
-    "app-watch": "yarn app-clear && node_modules/typescript/bin/tsc -b ./src/app --watch --listFiles",
+    "app-watch": "yarn app-clear && node_modules/typescript/bin/tsc -b ./src/app --watch --verbose",
     "server-clear": "rm -rf build/server || true",
     "server-compile": "yarn run server-clear && node_modules/.bin/tsc -b ./src/server/tsconfig.json",
     "server": "yarn server-compile && node build/server"
@@ -50,7 +50,7 @@
     "tslint": "^5.10.0",
     "tslint-config-standard": "^7.0.0",
     "types-ethereumjs-util": "0.0.8",
-    "typescript": "^3.0.3",
+    "typescript": "^3.1.0-dev.20180913",
     "web3": "^1.0.0-beta.35"
   },
   "jest": {
