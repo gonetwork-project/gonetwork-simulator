@@ -116,10 +116,10 @@ const serve = () => {
     const s = wsToSessions.get(ws)
     if (s) {
       wsToSessions.delete(ws)
-      active = active.filter(a => a !== s)
       const meta = sessionsToMeta.get(s)!
       meta.users.delete(ws)
       if (meta.users.size === 0) {
+        active = active.filter(a => a !== s)
         sessionsToMeta.delete(s)
         meta.subscription.unsubscribe()
       } else {
