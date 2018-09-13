@@ -1,9 +1,5 @@
 type Exhaust<K extends string, V extends { [P in K]: any }> = V
 
-export type Protocol = {
-  [K in keyof ClientRequests]: (payload: ClientRequests[K]) => void
-}
-
 export type SessionId = string
 // export type UserName = string
 
@@ -12,8 +8,9 @@ export type ClientAction = 'create-session' | 'join-session' | 'leave-session' |
 export type ClientRequests = Exhaust<ClientAction, {
   'create-session': SessionConfigClient
   'join-session': { sessionId: SessionId }
-  'leave-session': { sessionId: SessionId }
-  'create-account': { sessionId: SessionId }
+  // user needs to be in a session to perform these actions
+  'leave-session': void
+  'create-account': void
 }>
 
 export type ServerMessage = { type: 'general', payload: GeneralInfo } | { type: 'session', payload: UserSession }
@@ -22,6 +19,7 @@ export interface Session extends SessionConfig {
   id: SessionId
   created: number // milliseconds
   addresses: string[] // other addresses
+  canCreateAccount: boolean
 }
 
 export interface UserSession extends Session {

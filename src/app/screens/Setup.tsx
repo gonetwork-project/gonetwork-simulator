@@ -84,7 +84,7 @@ export class Setup extends React.Component<Props, State> {
         <View key={s.id} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', padding: 8 }}>
           <Text style={{ fontWeight: 'bold' }}>id: {s.id}</Text>
           <Text>Block time: {s.blockTime}</Text>
-          <Button onPress={() => this.joinSession(s.id)} title='join' />
+          <Button disabled={!s.canCreateAccount} onPress={() => this.joinSession(s.id)} title='join' />
         </View>
       )}
     </View>

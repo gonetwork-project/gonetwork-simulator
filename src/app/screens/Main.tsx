@@ -4,19 +4,17 @@ import { Observable, Subscription } from 'rxjs'
 
 import { clearStorage } from '../logic/utils'
 import { accounts, otherAccounts, balances, Account, AccountBalance, OtherAccount } from '../logic/accounts'
-import { send } from '../logic/setup'
+import { send, session } from '../logic/setup'
 
 import { AccountShort } from '../components/AccountShort'
 import { AccountFull } from '../components/AccountFull'
 import { BlockNumber } from 'eth-types'
-
-export interface Props {
-  sessionId: string
-}
+import { UserSession } from '../../protocol'
 
 export interface State {
   currentBlock?: BlockNumber
   accounts?: Account[]
+  session?: UserSession,
   otherAccounts?: OtherAccount[]
   balances: {
     [K: string]: AccountBalance | undefined
@@ -24,7 +22,7 @@ export interface State {
   selectedAccount?: Account
 }
 
-export class Main extends React.Component<Props, State> {
+export class Main extends React.Component<{}, State> {
   state: State = {
     balances: {}
   }
@@ -35,11 +33,12 @@ export class Main extends React.Component<Props, State> {
     this.sub = Observable.merge(
       accs
         .do(acc => this.setState({
-          selectedAccount: acc[0], // TODO comment out
+          // selectedAccount: acc[0], // TODO comment out
           accounts: acc
         })),
       otherAccounts()
         .do(acc => this.setState({ otherAccounts: acc })),
+      session.do(s => this.setState({ session: s })),
       balances(accs).do(balances => this.setState({ balances })),
       accs
         .mergeMap(as => as[0].blockchain.monitoring.blockNumbers())
@@ -58,7 +57,12 @@ export class Main extends React.Component<Props, State> {
     })
   }
 
-  leaveSession = () => send('leave-session', { sessionId: this.props.sessionId })
+  leaveSession = () => send('leave-session', undefined)
+
+  addAccount = () => send('create-account', undefined)
+
+  canAddAccount = (s?: UserSession, accounts?: Account[]) =>
+    s && accounts && s.canCreateAccount && accounts.length < 4
 
   renderAccounts = () => ([
     <Button key='l' title='Leave Session' onPress={this.leaveSession} />,
@@ -76,7 +80,10 @@ export class Main extends React.Component<Props, State> {
             />) :
           <Text>...initializig...</Text>
       }
-    </View>
+    </View>,
+    <Button key='+' disabled={!this.canAddAccount(this.state.session, this.state.accounts)} title='Add Account'
+      onPress={this.addAccount}
+    />
   ])
 
   render () {

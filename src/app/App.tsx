@@ -30,7 +30,6 @@ export default class App extends React.Component<{}, State> {
         .filter(x => !x),
       setup.session
         .do(s => this.setState({
-          sessionId: s ? s.id : undefined,
           step: s ? 'main' : 'setup'
         }))
     )
@@ -46,7 +45,7 @@ export default class App extends React.Component<{}, State> {
       case 'setup':
         return <Setup onDone={() => this.setState({ step: 'main' })} />
       case 'main':
-        return <Main sessionId={this.state.sessionId!} />
+        return <Main />
     }
   }
 

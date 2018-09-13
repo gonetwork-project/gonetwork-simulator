@@ -50,7 +50,7 @@ const pinging = (wss: WebSocket.Server) => Observable.interval(PINGING_INTERVAL)
 
 const send = (msg: P.ServerMessage) => (ws: WebSocket): boolean => {
   const data = JSON.stringify(msg)
-  return ws.readyState === WebSocket.OPEN && (ws.send(data) || true)
+  return (ws.readyState === WebSocket.OPEN) && (ws.send(data) as any || true)
 }
 
 const serve = () => {
@@ -98,6 +98,20 @@ const serve = () => {
     })
   }
 
+  const createAccount = (ws: WebSocket) => {
+    const session = wsToSessions.get(ws)
+    const meta = sessionsToMeta.get(session!)
+    if (session && meta && session.canCreateAccount) {
+      const accounts = meta.users.get(ws)!.concat(meta.accountsPool.splice(0, 1))
+      meta.users.set(ws, accounts)
+
+      session.canCreateAccount = meta.accountsPool.length > 0
+      updateSession(session as P.Session)
+      updateGeneral()
+    }
+
+  }
+
   const leaveSession = (ws: WebSocket) => {
     const s = wsToSessions.get(ws)
     if (s) {
@@ -108,6 +122,8 @@ const serve = () => {
       if (meta.users.size === 0) {
         sessionsToMeta.delete(s)
         meta.subscription.unsubscribe()
+      } else {
+        updateSession(s as P.Session)
       }
     }
     updateGeneral([ws])
@@ -119,6 +135,11 @@ const serve = () => {
     if (!session) {
       console.log('Session not found', sessionId)
       updateGeneral()
+      return
+    }
+
+    if (!session.canCreateAccount) {
+      console.log('No more accounts')
       return
     }
 
@@ -138,6 +159,8 @@ const serve = () => {
       return
     }
 
+    session.canCreateAccount = meta.accountsPool.length > 0
+
     meta.users.set(ws, userAccounts)
     wsToSessions.set(ws, session)
 
@@ -154,7 +177,8 @@ const serve = () => {
 
     const s: Partial<P.Session> = {
       id: `${++sessionId}`,
-      created: Date.now()
+      created: Date.now(),
+      canCreateAccount: true
     }
 
     inCreation = inCreation.concat(s)
@@ -216,13 +240,13 @@ const serve = () => {
       console.log('msg', msg)
       switch (msg.type as P.ClientAction) {
         case 'create-session':
-          return createSession(ws, msg.payload || { blockTime: 1000 })
+          return createSession(ws, (msg.payload as P.ClientRequests['create-session']))
+        case 'join-session':
+          return joinSession(ws, (msg.payload as P.ClientRequests['join-session']).sessionId)
         case 'leave-session':
           return leaveSession(ws)
-        case 'join-session':
-          return joinSession(ws, msg.payload.sessionId)
         case 'create-account':
-          return console.log('CREATE-ACCOUNT-TODO', msg)
+          return createAccount(ws)
       }
     })
   })
