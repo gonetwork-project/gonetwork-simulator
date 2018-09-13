@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { View, Text, Button, Alert } from 'react-native'
+import { View, Text, Button, Alert, ActivityIndicator } from 'react-native'
 import { Observable, Subscription } from 'rxjs'
 
 import { clearStorage } from '../logic/utils'
@@ -18,13 +18,15 @@ export interface State {
   otherAccounts?: OtherAccount[]
   balances: {
     [K: string]: AccountBalance | undefined
-  }
+  },
+  isAddingAccount: boolean
   selectedAccount?: Account
 }
 
 export class Main extends React.Component<{}, State> {
   state: State = {
-    balances: {}
+    balances: {},
+    isAddingAccount: false
   }
   sub!: Subscription
 
@@ -37,7 +39,7 @@ export class Main extends React.Component<{}, State> {
           accounts: acc
         })),
       otherAccounts()
-        .do(acc => this.setState({ otherAccounts: acc })),
+        .do(acc => this.setState({ otherAccounts: acc, isAddingAccount: false })),
       session.do(s => this.setState({ session: s })),
       balances(accs).do(balances => this.setState({ balances })),
       accs
@@ -59,7 +61,10 @@ export class Main extends React.Component<{}, State> {
 
   leaveSession = () => send('leave-session', undefined)
 
-  addAccount = () => send('create-account', undefined)
+  addAccount = () => {
+    this.setState({ isAddingAccount: true })
+    send('create-account', undefined)
+  }
 
   canAddAccount = (s?: UserSession, accounts?: Account[]) =>
     s && accounts && s.canCreateAccount && accounts.length < 4
@@ -81,9 +86,11 @@ export class Main extends React.Component<{}, State> {
           <Text>...initializig...</Text>
       }
     </View>,
-    <Button key='+' disabled={!this.canAddAccount(this.state.session, this.state.accounts)} title='Add Account'
-      onPress={this.addAccount}
-    />
+    this.state.isAddingAccount ?
+      <ActivityIndicator key='.' /> :
+      <Button key='+' disabled={!this.canAddAccount(this.state.session, this.state.accounts)} title='Add Account'
+        onPress={this.addAccount}
+      />
   ])
 
   render () {
