@@ -7,7 +7,6 @@ import { start as ganache } from './ganache'
 import { start as mqtt } from './mqtt-nano'
 import { hostname, port, accounts } from './config'
 import { execIfScript } from './utils'
-
 interface SessionMeta {
   createdBy: WebSocket
   subscription: Subscription
@@ -28,10 +27,10 @@ const freePort = () => {
 let sessionId = 0
 const PINGING_INTERVAL = 1000
 
-const subprocess = <C extends { port: number, hostname: string }, T> (cfg: any, pr: (c: C) => Observable<T>): Observable<T> =>
+const subprocess = <C extends { port: number, hostname: string }, T> (cfg: Partial<C>, pr: (c: C) => Observable<T>): Observable<T> =>
   Observable.race(
     Observable.timer(500).mergeMapTo(Observable.throw('FAILED')),
-    pr(Object.assign(cfg, { port: freePort(), hostname }))
+    pr(Object.assign(cfg as C, { port: freePort(), hostname }))
   )
     .retryWhen(es => es.switchMap(e => e === 'FAILED' ?
       Observable.of(true) : Observable.throw(e)))

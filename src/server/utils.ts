@@ -1,4 +1,12 @@
 import * as os from 'os'
+import * as cp from 'child_process'
+import * as fs from 'fs'
+
+import { Observable } from 'rxjs'
+
+import { tempDir, sessionsDir } from './config'
+
+export const exec = Observable.bindNodeCallback(cp.exec)
 
 // very simple mechanism to get address of ip in local network
 // based on: https://stackoverflow.com/questions/3653065/get-local-ip-address-in-node-js
@@ -43,4 +51,17 @@ export const execIfScript = (serve: () => () => void, isScript: boolean) => {
       dispose = autoDispose(serve())
     })
   }
+}
+
+export const initTemp = () => {
+  !fs.existsSync(tempDir) && fs.mkdirSync(tempDir)
+  if (fs.existsSync(sessionsDir)) {
+    console.log('removing old sessions')
+    Observable.from(fs.readdirSync(sessionsDir))
+      .mergeMap(p => exec(`rm -rf ${sessionsDir}/${p}`), 3)
+      .subscribe({
+        complete: () => console.log('old sessions removed')
+      })
+  }
+  !fs.existsSync(sessionsDir) && fs.mkdirSync(sessionsDir)
 }
