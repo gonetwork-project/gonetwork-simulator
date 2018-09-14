@@ -32,7 +32,7 @@ const snapDir = path.resolve(tempDir, 'db-snap')
 const sessionsDir = path.resolve(tempDir, 'db-sessions')
 const contractsPath = path.resolve(snapDir, 'contracts.json')
 
-const deployScriptPath = path.resolve(__dirname, '../../node_modules/go-network-framework/build-dev/scripts/deploy-contracts.js')
+const deployScriptPath = path.resolve(__dirname, './scripts/deploy-contracts.js')
 
 const masterAccount = cfgAccounts[0]
 const accounts = cfgAccounts.slice(1)

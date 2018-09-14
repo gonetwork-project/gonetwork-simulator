@@ -1,5 +1,5 @@
 
-import { localIP } from 'go-network-framework/build-dev'
+import { localIP } from './utils'
 
 const [hostnameArg, portArg] = process.argv.slice(2)
 

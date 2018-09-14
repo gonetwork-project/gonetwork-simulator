@@ -1,12 +1,12 @@
 import { Observable, Subscription } from 'rxjs'
 import * as WebSocket from 'ws'
-import { execIfScript } from 'go-network-framework/build-dev'
 
 import * as P from '../protocol'
 
 import { start as ganache } from './ganache'
 import { start as mqtt } from './mqtt-nano'
 import { hostname, port, accounts } from './config'
+import { execIfScript } from './utils'
 
 interface SessionMeta {
   createdBy: WebSocket
