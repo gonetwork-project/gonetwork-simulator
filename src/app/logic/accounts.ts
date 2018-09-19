@@ -8,6 +8,7 @@ import { UserSession } from '../../protocol'
 import { session, timeouts } from './setup'
 
 import { Wei, BlockNumber, Address, PrivateKey } from 'eth-types'
+import { AsyncStorage } from 'react-native' // FIXME remove
 
 export interface Contracts {
   manager: Address
@@ -81,7 +82,7 @@ const collectEvents = (evs: Observable<any>, name = 'N/A') =>
     .shareReplay(1)
 
 const initAccount = (cfg: UserSession, contracts: Contracts) => (account: AccountBase) => {
-  const ignoreSecretToProof = new BehaviorSubject(true)
+  const ignoreSecretToProof = new BehaviorSubject(false)
 
   const p2p = new P2P({
     mqttUrl: cfg.mqttUrl,
@@ -149,7 +150,10 @@ const initAccount = (cfg: UserSession, contracts: Contracts) => (account: Accoun
   ), 'EVENTS') as Observable<Array<Event>> // todo: improve typing
 
   // do not loose any event
-  const sub = events.subscribe()
+  const sub = events
+    // FIXME: remove below and AsyncStorage import
+    .do(x => AsyncStorage.setItem(`EVENTS-${account.addressStr}`, JSON.stringify(x)))
+    .subscribe()
   sub.add(blockchain.monitoring.blockNumbers()
     .do(bn => engine.onBlock(bn))
     .subscribe()
@@ -209,8 +213,8 @@ export const accounts = () => {
   return userSession()
     .switchMap((cfg) =>
       Observable.from(cfg.userAccounts
-          .filter(a => !inited.find(i => i.owner.addressStr === a.address))
-          .map(a => toAccount(a)))
+        .filter(a => !inited.find(i => i.owner.addressStr === a.address))
+        .map(a => toAccount(a)))
         .mergeMap(initAccount(cfg, toContracts(cfg.contracts)))
         .do(a => inited.push(a))
         .merge(Observable.from(inited))

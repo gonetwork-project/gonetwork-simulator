@@ -3,7 +3,7 @@ import { ScrollView, View, Modal } from 'react-native'
 import { Observable, Subscription } from 'rxjs'
 
 import { CriticalError, ErrorProps, errors } from './global'
-import { Setup, Main } from './screens'
+import { Setup, Main, EventsVis } from './screens'
 
 // Side-Effects
 // todo: it is not ideal as, in theory, it may fail
@@ -11,7 +11,7 @@ import './logic/init'
 import * as setup from './logic/setup'
 import { SessionId } from '../protocol'
 
-type Step = 'setup' | 'main'
+type Step = 'setup' | 'main' | 'events-vis'
 
 export interface State {
   criticalError?: ErrorProps
@@ -29,8 +29,9 @@ export default class App extends React.Component<{}, State> {
         .do(e => e ? this.setState({ criticalError: e }) : this.setState({ criticalError: undefined, step: 'setup' }))
         .filter(x => !x),
       setup.session
+        .distinctUntilChanged()
         .do(s => this.setState({
-          step: s ? 'main' : 'setup'
+          step: s ? 'main' : 'events-vis' // 'setup' FIXME
         }))
     )
       .subscribe()
@@ -46,6 +47,8 @@ export default class App extends React.Component<{}, State> {
         return <Setup onDone={() => this.setState({ step: 'main' })} />
       case 'main':
         return <Main />
+      case 'events-vis':
+        return <EventsVis />
     }
   }
 
