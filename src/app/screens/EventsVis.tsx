@@ -3,7 +3,7 @@ import { Event, EventSource } from '../logic/accounts'
 import { Observable } from 'rxjs'
 
 import { Container, Header, Footer, Text, Content, Card, H3, View } from 'native-base'
-import { AsyncStorage, Dimensions } from 'react-native'
+import { AsyncStorage, Dimensions, ART } from 'react-native'
 
 const color1 = 'rgba(0, 200, 0, 0.1)'
 const color2 = 'rgba(0, 0, 200, 0.1)'

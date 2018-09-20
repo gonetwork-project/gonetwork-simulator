@@ -3,7 +3,7 @@ import { ScrollView, View, Modal } from 'react-native'
 import { Observable, Subscription } from 'rxjs'
 
 import { CriticalError, ErrorProps, errors } from './global'
-import { Setup, Main, EventsVis } from './screens'
+import { Setup, Main, EventsVis, WebVis } from './screens'
 
 // Side-Effects
 // todo: it is not ideal as, in theory, it may fail
@@ -11,7 +11,7 @@ import './logic/init'
 import * as setup from './logic/setup'
 import { SessionId } from '../protocol'
 
-type Step = 'setup' | 'main' | 'events-vis'
+type Step = 'setup' | 'main' | 'events-vis' | 'web-vis'
 
 export interface State {
   criticalError?: ErrorProps
@@ -31,7 +31,7 @@ export default class App extends React.Component<{}, State> {
       setup.session
         .distinctUntilChanged()
         .do(s => this.setState({
-          step: s ? 'main' : 'events-vis' // 'setup' FIXME
+          step: s ? 'main' : 'web-vis' // : 'events-vis' // 'setup' FIXME
         }))
     )
       .subscribe()
@@ -49,6 +49,8 @@ export default class App extends React.Component<{}, State> {
         return <Main />
       case 'events-vis':
         return <EventsVis />
+      case 'web-vis':
+        return <WebVis />
     }
   }
 

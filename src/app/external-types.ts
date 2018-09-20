@@ -1,3 +1,5 @@
+declare module '*.html'
+
 // #region WEBSOCKET
 
 // copied and adjusted from: https://github.com/Microsoft/TypeScript/blob/master/lib/lib.dom.d.ts
