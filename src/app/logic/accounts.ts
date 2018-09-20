@@ -38,7 +38,8 @@ export interface OtherAccount {
 
 export enum EventSource {
   Blockchain = 1,
-  P2P
+  P2P,
+  BlockNumber
 }
 
 export interface Event { at: DateMs, source: EventSource, event: any, header: string, payload: string, short: string }
@@ -146,13 +147,21 @@ const initAccount = (cfg: UserSession, contracts: Contracts) => (account: Accoun
         payload,
         short: payload.split('\n').slice(0, 4).join('\n')
       } as Event
-    })
+    }),
+    // FIXME - remove
+    blockchain.monitoring.blockNumbers()
+      .map(bn => ({
+        at: Date.now(),
+        source: EventSource.P2P,
+        event: bn.toString(10)
+      } as any))
   ), 'EVENTS') as Observable<Array<Event>> // todo: improve typing
 
   // do not loose any event
   const sub = events
     // FIXME: remove below and AsyncStorage import
-    .do(x => AsyncStorage.setItem(`EVENTS-${account.addressStr}`, JSON.stringify(x)))
+    // .do(x => AsyncStorage.setItem(`EVENTS-${account.addressStr}`, JSON.stringify(x)))
+    // .do(x => console.log(JSON.stringify(x)))
     .subscribe()
   sub.add(blockchain.monitoring.blockNumbers()
     .do(bn => engine.onBlock(bn))

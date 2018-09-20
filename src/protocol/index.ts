@@ -3,7 +3,7 @@ type Exhaust<K extends string, V extends { [P in K]: any }> = V
 export type SessionId = string
 // export type UserName = string
 
-export type ClientAction = 'create-session' | 'join-session' | 'leave-session' | 'create-account'
+export type ClientAction = 'create-session' | 'join-session' | 'leave-session' | 'create-account' | 'save-events'
 
 export type ClientRequests = Exhaust<ClientAction, {
   'create-session': SessionConfigClient
@@ -11,6 +11,7 @@ export type ClientRequests = Exhaust<ClientAction, {
   // user needs to be in a session to perform these actions
   'leave-session': void
   'create-account': void
+  'save-events': { account: string, events: any[] }
 }>
 
 export type ServerMessage = { type: 'general', payload: GeneralInfo } | { type: 'session', payload: UserSession }

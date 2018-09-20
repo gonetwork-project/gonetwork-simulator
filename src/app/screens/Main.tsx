@@ -66,6 +66,16 @@ export class Main extends React.Component<{}, State> {
     send('create-account', undefined)
   }
 
+  sendEvents = () => {
+    Observable.from(this.state.accounts!
+      .map(a => ({ account: a.owner.addressStr, events: a.events })))
+      .mergeMap(({ account, events }) =>
+        events.take(1)
+          .do(es => send('save-events', { account, events: es }))
+      )
+      .toPromise()
+  }
+
   canAddAccount = (s?: UserSession, accounts?: Account[]) =>
     s && accounts && s.canCreateAccount && accounts.length < 4
 
@@ -112,8 +122,8 @@ export class Main extends React.Component<{}, State> {
       <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Dev Actions</Text>
       <View style={{ padding: 20, flexDirection: 'row' }}>
         <Button onPress={clearStorage} title='Clear-Cache' />
+        <Button disabled={!this.state.accounts} onPress={this.sendEvents} title='Save-Events' />
       </View>
-
     </View>
   }
 }
