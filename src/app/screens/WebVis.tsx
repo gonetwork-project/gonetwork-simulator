@@ -3,7 +3,7 @@ import { WebView, Dimensions, Alert } from 'react-native'
 
 // const js = require('../../../assets/web-vis-script.js')
 const html = require('../../vis/vis.html.js')
-const script = require('../../index.min.js')
+// const script = require('../../vis/index.min.js')
 
 const html2 = `
 <!DOCTYPE html>
@@ -28,6 +28,8 @@ const html2 = `
 
 </html>
 `
+// console.log(script)
+console.log(html)
 
 export class WebVis extends React.Component {
   wv?: WebView
@@ -35,8 +37,8 @@ export class WebVis extends React.Component {
   onLoad = () => {
     console.log('LOADED')
     setTimeout(() => {
-      console.log('INJECTING', script)
-      this.wv!.injectJavaScript(script)
+      console.log('INJECTING')
+      // this.wv!.injectJavaScript(script)
     }, 2000)
     // setInterval(() => {
     //   // const ev = js.event(Date.now())
@@ -58,7 +60,7 @@ export class WebVis extends React.Component {
       javaScriptEnabled={true}
       domStorageEnabled={true}
       onLoadEnd={this.onLoad}
-      injectedJavaScript={script}
+      // injectedJavaScript={script}
       onError={err => console.log('ERR', err)}
       ref={(r) => (this as any).wv = r} style={{ width, height }}
       source={source}

@@ -1,22 +1,24 @@
-import { line as l, area, curveCardinal } from 'd3-shape'
-import { transition, active } from 'd3-transition'
-import { format as f } from 'd3-format'
-import { select } from 'd3-selection'
-import { axisLeft, axisRight } from 'd3-axis'
-import { scaleLinear } from 'd3-scale'
+// import { line as l, area, curveCardinal } from 'd3-shape'
+// import { transition, active } from 'd3-transition'
+// import { format as f } from 'd3-format'
+// import { select } from 'd3-selection'
+// import { axisLeft, axisRight } from 'd3-axis'
+// import { scaleLinear } from 'd3-scale'
 
-const d3: any = {
-  line: l,
-  area,
-  transition,
-  curveCardinal,
-  scaleLinear,
-  select,
-  axisLeft,
-  axisRight,
-  active,
-  format: f
-}
+// const d3: any = {
+//   line: l,
+//   area,
+//   transition,
+//   curveCardinal,
+//   scaleLinear,
+//   select,
+//   axisLeft,
+//   axisRight,
+//   active,
+//   format: f
+// }
+// document.body.innerHTML = '<div>WTF???</div>';
+// (window as any).d3 = d3
 
 let margin = { top: 50, right: 10, bottom: 30, left: 10 }
 let width = 600 - margin.left - margin.right
