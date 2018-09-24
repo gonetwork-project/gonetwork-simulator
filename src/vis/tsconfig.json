@@ -7,6 +7,8 @@
     "outDir": "../../build/vis",
     "skipLibCheck": true,
     "strict": true,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "removeComments": true,
+    "allowJs": true
   }
 }

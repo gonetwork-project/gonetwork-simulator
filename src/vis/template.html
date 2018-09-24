@@ -105,13 +105,10 @@
     </defs>
   </svg>
 
-  <!-- <script src="http://d3js.org/d3.v4.min.js"></script> -->
-  <script>__D3_PLACEHOLDER__</script>
-  <script>setTimeout(function () {
-      document.body.insertAdjacentHTML('beforeend', 'INJECTED')
-      document.body.insertAdjacentHTML('beforeend', 'D3-?' + !!window.d3)
-      __SCRIPT_PLACEHOLDER__
-    }, 2000)</script>
+  <!-- <script>__SCRIPT_PLACEHOLDER__</script> -->
+  <script>setInterval(function () {
+      document.body.insertAdjacentHTML('beforeend', '<div>D3? ' + window.d3 + '</div>')
+    }, 5000)</script>
 </body>
 
 </html>

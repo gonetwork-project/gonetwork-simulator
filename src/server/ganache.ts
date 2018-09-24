@@ -7,6 +7,9 @@ import { Observable, Observer } from 'rxjs'
 import { Contracts } from '../protocol'
 
 import { accounts as cfgAccounts, sessionsDir, contractsPath, snapDir } from './config'
+import { initTemp } from './utils'
+
+initTemp()
 
 const snapNotFoundMsg = 'DB-SNAPSHOT NOT FOUND - please create by running create-snapshot script.'
 if (!fs.existsSync(snapDir)) {

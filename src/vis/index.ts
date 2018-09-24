@@ -1,3 +1,23 @@
+import { line as l, area, curveCardinal } from 'd3-shape'
+import { transition, active } from 'd3-transition'
+import { format as f } from 'd3-format'
+import { select } from 'd3-selection'
+import { axisLeft, axisRight } from 'd3-axis'
+import { scaleLinear } from 'd3-scale'
+
+const d3: any = {
+  line: l,
+  area,
+  transition,
+  curveCardinal,
+  scaleLinear,
+  select,
+  axisLeft,
+  axisRight,
+  active,
+  format: f
+}
+
 let margin = { top: 50, right: 10, bottom: 30, left: 10 }
 let width = 600 - margin.left - margin.right
 let height = 500 - margin.top - margin.bottom
@@ -7,7 +27,7 @@ let globalX = 0
 let globalY = 0
 let duration = 1000
 let max = 600
-let max_events = 100
+let maxEvents = 100
 let maxY = 20
 let step = 0
 let stepY = 1
@@ -45,10 +65,10 @@ let lineArea = d3.area()
 //    var axisX2 = chart.append('g').attr('class', 'x axis')
 // 		     .attr('transform', 'translate(0,200)')
 // 		     .call(xAxis2);
-let yAxis = d3.axisLeft().scale(y).tickSizeOuter(0).tickFormat('')
+let yAxis = (d3 as any).axisLeft().scale(y).tickSizeOuter(0).tickFormat('')
 let axisY = chart.append('g').attr('class', 'y axis')
   .attr('transform', 'translate(200,0)').call(yAxis)
-let yAxis2 = d3.axisRight().scale(y).tickSize(15).tickSizeOuter(0).tickFormat('')// We dont use .tickSize(0) because we want the distance away from the axis to remain;
+let yAxis2 = (d3 as any).axisRight().scale(y).tickSize(15).tickSizeOuter(0).tickFormat('')// We dont use .tickSize(0) because we want the distance away from the axis to remain;
 let axisY2 = chart.append('g').attr('class', 'y axis')
   .attr('transform', 'translate(400,0)').call(yAxis2)
 // var yAxis3 = d3.axisRight().scale(y).tickSize(15).tickSizeOuter(0);// We dont use .tickSize(0) because we want the distance away from the axis to remain;
@@ -90,11 +110,11 @@ function updateCurrentBlock () {
   d3.select('#blocknumber')
     .transition()
     .duration(duration)
-    .on('start', function repeat () {
+    .on('start', function repeat (this: any) {
       d3.active(this)
-        .tween('text', function () {
-          let that = d3.select(this),
-            i = d3.interpolateNumber(that.text().replace(/,/g, ''), Math.random() * 1e6)
+        .tween('text', function (this: any) {
+          let that = d3.select(this)
+          let i = d3.interpolateNumber(that.text().replace(/,/g, ''), Math.random() * 1e6)
           return function (t) { that.text(format(i(t))) }
         })
         .transition()
@@ -113,7 +133,7 @@ let lineGen = d3.line()
   }).curve(d3.curveBasis)// curve(d3.curveCatmullRom.alpha(0.5));;
 
 let arrows = chart.append('g').attr('id', 'arrows')
-let arrow_data = []
+let arrowData: any = []
 
 // var arrow_data = [[{x:0,y:globalY}, {x:0.5, y:globalY+stepY*0.5},{x:1.5, y:globalY+stepY*0.5}, {x:2, y:globalY}]];
 
@@ -147,15 +167,15 @@ let arrow_data = []
 tick()
 function next_arrows () {
   if (Math.random() > 0.5) {
-    arrow_data.push([{ x: 0, y: globalY - stepY }, { x: 0.25, y: globalY - stepY * .125 }, { x: 0.75, y: globalY + stepY * .125 }, { x: 1, y: globalY }])
+    arrowData.push([{ x: 0, y: globalY - stepY }, { x: 0.25, y: globalY - stepY * .125 }, { x: 0.75, y: globalY + stepY * .125 }, { x: 1, y: globalY }])
   } else {
-    arrow_data.push([{ x: 1, y: globalY - stepY }, { x: 0.75, y: globalY - stepY * .125 }, { x: 0.25, y: globalY + stepY * .125 }, { x: 0, y: globalY }])
+    arrowData.push([{ x: 1, y: globalY - stepY }, { x: 0.75, y: globalY - stepY * .125 }, { x: 0.25, y: globalY + stepY * .125 }, { x: 0, y: globalY }])
   }
   console.log('running enter')
   arrows.selectAll('.arrow')
-    .data(arrow_data, function (d) { return d[d.length - 1].y }).exit().remove()
+    .data(arrowData, function (d) { return d[d.length - 1].y }).exit().remove()
   arrows.selectAll('.arrow')
-    .data(arrow_data, function (d) { return d[d.length - 1].y })
+    .data(arrowData, function (d) { return d[d.length - 1].y })
     .enter()
     .append('path')
     .attr('class', 'arrow')
@@ -164,8 +184,8 @@ function next_arrows () {
     .attr('stroke-opacity', 0.5)
     .attr('stroke-width', 1)
     .attr('fill', 'none')
-    .attr('stroke-dasharray', function (d) { return this.getTotalLength() })
-    .attr('stroke-dashoffset', function (d) { return this.getTotalLength() })
+    .attr('stroke-dasharray', function (this: any, d) { return this.getTotalLength() })
+    .attr('stroke-dashoffset', function (this: any, d) { return this.getTotalLength() })
     .transition()
     .duration(duration)
     .ease(d3.easeLinear, 2)
@@ -173,10 +193,10 @@ function next_arrows () {
     .on('end', tick)
 
   arrows.selectAll('.arrow-head')
-    .data(arrow_data, function (d) { return d[d.length - 1].y }).exit().remove()
+    .data(arrowData, function (d) { return d[d.length - 1].y }).exit().remove()
 
   arrows.selectAll('.arrow-head')
-    .data(arrow_data, function (d) { return d[d.length - 1].y })
+    .data(arrowData, function (d) { return d[d.length - 1].y })
     .enter()
 
     .append('circle')
@@ -201,7 +221,7 @@ function next_arrows () {
 }
 // .on("end",tick);
 // Main loop
-function tick () {
+function tick (this: any) {
 
   let point = {
     x: 0,
@@ -228,12 +248,12 @@ function tick () {
   // .call(yAxis3)
 
   arrows.selectAll('.arrow')
-    .data(arrow_data, function (d) { return d[d.length - 1].y })
+    .data(arrowData, function (d) { return d[d.length - 1].y })
     .attr('d', lineGen)
 
     .attr('stroke-width', 1)
     .attr('fill', 'none')
-    .attr('stroke-dasharray', function (d) {
+    .attr('stroke-dasharray', function (this: any, d) {
       // Create a (random) dash pattern
       // The first number specifies the length of the visible part, the dash
       // The second number specifies the length of the invisible part
@@ -256,12 +276,12 @@ function tick () {
       // that is the same length as the entire path
       let dashArray = newDashes + ' 0, ' + this.getTotalLength()
       return dashArray
-      this.getTotalLength()
+      // this.getTotalLength()
     })
     .attr('stroke-dashoffset', function (d) { return 0 })
   arrows.selectAll('.arrow-head')
 
-    .data(arrow_data, function (d) { return d[d.length - 1].y })
+    .data(arrowData, function (d) { return d[d.length - 1].y })
     .attr('class', 'arrow-head')
     .attr('cx', function (d) { return x(d[d.length - 1].x) })
     .attr('cy', function (d) { return y(d[d.length - 1].y) })
@@ -281,9 +301,9 @@ function tick () {
       function () {
         let rand = Math.random()
         if (rand > 0.6) {
-          if (arrow_data.length >= max_events) {
+          if (arrowData.length >= maxEvents) {
             console.log('removing items')
-            arrow_data.splice(0, arrow_data.length - max_events)
+            arrowData.splice(0, arrowData.length - maxEvents)
           }
           console.log('running next_arrows')
           next_arrows()
@@ -293,26 +313,26 @@ function tick () {
       })
 
 }
-function onBlockchainEvent () {
+// function onBlockchainEvent () {
 
-  bcevent_data.push([{ x: Math.floor(Math.random() * 2), y: globalY }])
-  bcevents.selectAll('.bcevent')
-    .data(bcevent_data, function (d) {
+//   bcevent_data.push([{ x: Math.floor(Math.random() * 2), y: globalY }])
+//   bcevents.selectAll('.bcevent')
+//     .data(bcevent_data, function (d) {
 
-      return d[0].y
-    })
-    .enter()
+//       return d[0].y
+//     })
+//     .enter()
 
-    .append('circle')
-    .attr('class', 'bcevent')
-    .attr('cx', function (d) { return x(d[0].x) })
-    .attr('cy', function (d) { return y(d[0].y) })
-    .attr('r', 0)
-    .attr('stroke', '#5DD39E')
-    .attr('fill', 'transparent')
-    .transition()
-    .duration(duration)
-    .ease(d3.easeElastic, 2)
-    .attr('r', 5).on('end', tick)
-  if (bcevent_data.length > max_events) { bcevent_data.shift() }
-}
+//     .append('circle')
+//     .attr('class', 'bcevent')
+//     .attr('cx', function (d) { return x(d[0].x) })
+//     .attr('cy', function (d) { return y(d[0].y) })
+//     .attr('r', 0)
+//     .attr('stroke', '#5DD39E')
+//     .attr('fill', 'transparent')
+//     .transition()
+//     .duration(duration)
+//     .ease(d3.easeElastic, 2)
+//     .attr('r', 5).on('end', tick)
+//   if (bcevent_data.length > maxEvents) { bcevent_data.shift() }
+// }

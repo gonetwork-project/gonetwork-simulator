@@ -1,8 +1,9 @@
 import * as React from 'react'
 import { WebView, Dimensions, Alert } from 'react-native'
 
-const js = require('../../../assets/web-vis-script.js')
+// const js = require('../../../assets/web-vis-script.js')
 const html = require('../../vis/vis.html.js')
+const script = require('../../index.min.js')
 
 const html2 = `
 <!DOCTYPE html>
@@ -28,18 +29,15 @@ const html2 = `
 </html>
 `
 
-const script = '(' + js.setup.toString() + ')()'
-console.log(script)
-// const script = 'document.body.innerHTML = "hy"'
-
 export class WebVis extends React.Component {
   wv?: WebView
 
   onLoad = () => {
-    // setTimeout(() => {
-    console.log('INJECTED', script)
-    // this.wv!.injectJavaScript(script)
-    // }, 2000)
+    console.log('LOADED')
+    setTimeout(() => {
+      console.log('INJECTING', script)
+      this.wv!.injectJavaScript(script)
+    }, 2000)
     // setInterval(() => {
     //   // const ev = js.event(Date.now())
     //   this.wv!.injectJavaScript(js.event(Date.now()))
@@ -49,7 +47,7 @@ export class WebVis extends React.Component {
 
   render () {
     const { width, height } = Dimensions.get('screen')
-    const source = { html }
+    const source = { html, baseUrl: 'http://gonetwork.co' }
     // const source = { uri: 'http://192.168.1.10:8080/vis.gen.html' }
     // const source = { uri: 'https://archive.nytimes.com/www.nytimes.com/interactive/2012/11/11/sunday-review/counties-moving.html' }
     // const source = {
@@ -60,7 +58,7 @@ export class WebVis extends React.Component {
       javaScriptEnabled={true}
       domStorageEnabled={true}
       onLoadEnd={this.onLoad}
-      // injectedJavaScript={script}
+      injectedJavaScript={script}
       onError={err => console.log('ERR', err)}
       ref={(r) => (this as any).wv = r} style={{ width, height }}
       source={source}

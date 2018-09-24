@@ -3,5 +3,5 @@ const extraNodeModules = require('node-libs-browser')
 
 module.exports = {
   extraNodeModules,
-  getBlacklistRE: () => blacklist([/temp\/.*/])
+  getBlacklistRE: () => blacklist([/temp\/.*/, /.*\.ts/])
 }
