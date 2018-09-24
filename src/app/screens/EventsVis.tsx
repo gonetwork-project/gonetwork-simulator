@@ -3,7 +3,8 @@ import { Event, EventSource } from '../logic/accounts'
 import { Observable } from 'rxjs'
 
 import { Container, Header, Footer, Text, Content, Card, H3, View } from 'native-base'
-import { AsyncStorage, Dimensions, ART } from 'react-native'
+import { AsyncStorage, Dimensions } from 'react-native'
+import { send } from '../logic/setup'
 
 const color1 = 'rgba(0, 200, 0, 0.1)'
 const color2 = 'rgba(0, 0, 200, 0.1)'
@@ -26,12 +27,16 @@ export class EventsVis extends React.Component<{}, State> {
           .mergeMap(([key, account, idx]) => Observable.defer(() => AsyncStorage.getItem(key as string))
             .do(() => idx === 0 ? this.setState({ account1: account as string }) : this.setState({ account2: account as string }))
             .map(e => JSON.parse(e!))
-            .map(es => es.map(e => ({ account: idx, event: e })))
+            .map(es => es.map(e => ({ account: account, event: e })))
             .mergeMap(x => x)
           )
           .toArray()
           .do(es => es.sort((a: any, b: any) => a.event.at - b.event.at))
           .do(es => this.setState({ events: es as any }))
+          .do(es => send('save-events', {
+            account: `merged-and-sorted::${this.state.account1}--${this.state.account2}`,
+            events: es
+          }))
       )
       .toPromise()
   }

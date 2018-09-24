@@ -31,7 +31,7 @@ export default class App extends React.Component<{}, State> {
       setup.session
         .distinctUntilChanged()
         .do(s => this.setState({
-          step: s ? 'main' : 'web-vis' // : 'events-vis' // 'setup' FIXME
+          step: s ? 'main' : 'events-vis' // 'setup' FIXME
         }))
     )
       .subscribe()

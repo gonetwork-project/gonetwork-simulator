@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { View, Text, Button, Alert, ActivityIndicator } from 'react-native'
+import { View, Text, Button, Alert, ActivityIndicator, AsyncStorage } from 'react-native'
 import { Observable, Subscription } from 'rxjs'
 
 import { clearStorage } from '../logic/utils'
@@ -66,15 +66,15 @@ export class Main extends React.Component<{}, State> {
     send('create-account', undefined)
   }
 
-  sendEvents = () => {
+  sendEvents = () =>
     Observable.from(this.state.accounts!
       .map(a => ({ account: a.owner.addressStr, events: a.events })))
       .mergeMap(({ account, events }) =>
         events.take(1)
           .do(es => send('save-events', { account, events: es }))
+          .do(es => AsyncStorage.setItem(`EVENTS-${account}`, JSON.stringify(es)))
       )
       .toPromise()
-  }
 
   canAddAccount = (s?: UserSession, accounts?: Account[]) =>
     s && accounts && s.canCreateAccount && accounts.length < 4

@@ -8,7 +8,6 @@ import { UserSession } from '../../protocol'
 import { session, timeouts } from './setup'
 
 import { Wei, BlockNumber, Address, PrivateKey } from 'eth-types'
-import { AsyncStorage } from 'react-native' // FIXME remove
 
 export interface Contracts {
   manager: Address
@@ -37,12 +36,21 @@ export interface OtherAccount {
 }
 
 export enum EventSource {
-  Blockchain = 1,
-  P2P,
-  BlockNumber
+  Blockchain = 'B',
+  P2P = 'P',
+  BlockNumber = 'N'
 }
 
-export interface Event { at: DateMs, source: EventSource, event: any, header: string, payload: string, short: string }
+export interface Event {
+  at: DateMs,
+  block: number, // BN not need for forseeable future
+  source: EventSource,
+  event: any,
+  account?: string
+  header: string,
+  payload: string,
+  short: string
+}
 
 export const toContracts = (contractsRaw: any) =>
   Object.keys(contractsRaw)
@@ -129,39 +137,39 @@ const initAccount = (cfg: UserSession, contracts: Contracts) => (account: Accoun
         }, {}),
         null, 4)
       return {
+        // block has to be defined to load the acocunt
+        block: blockchain.monitoring.blockNumber()!.toNumber(),
         at: Date.now(),
         source: EventSource.Blockchain,
-        event: e,
-        header: e._type,
-        payload: payload,
-        short: payload
+        event: e
+        // header: e._type,
+        // payload: payload,
+        // short: payload
       } as Event
     }),
     Observable.fromEvent(p2p, 'message-received').map(e => {
       const payload = JSON.stringify(e, null, 4)
       return {
         at: Date.now(),
+        block: blockchain.monitoring.blockNumber()!.toNumber(),
         source: EventSource.P2P,
-        event: e,
-        header: 'P2P',
-        payload,
-        short: payload.split('\n').slice(0, 4).join('\n')
+        event: e
+        // header: 'P2P',
+        // payload,
+        // short: payload.split('\n').slice(0, 4).join('\n')
       } as Event
     }),
     // FIXME - remove
     blockchain.monitoring.blockNumbers()
       .map(bn => ({
         at: Date.now(),
-        source: EventSource.P2P,
-        event: bn.toString(10)
+        source: EventSource.BlockNumber,
+        event: bn.toNumber()
       } as any))
   ), 'EVENTS') as Observable<Array<Event>> // todo: improve typing
 
   // do not loose any event
   const sub = events
-    // FIXME: remove below and AsyncStorage import
-    // .do(x => AsyncStorage.setItem(`EVENTS-${account.addressStr}`, JSON.stringify(x)))
-    // .do(x => console.log(JSON.stringify(x)))
     .subscribe()
   sub.add(blockchain.monitoring.blockNumbers()
     .do(bn => engine.onBlock(bn))
