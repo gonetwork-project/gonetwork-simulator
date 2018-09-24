@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "lib": ["es2015"],
+    // "sourceMap": true,
+    "outDir": "../../build/vis",
+    "skipLibCheck": true,
+    "strict": true,
+    "noImplicitAny": false
+  }
+}

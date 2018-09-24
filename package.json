@@ -11,11 +11,15 @@
     "app-watch": "yarn app-clear && node_modules/typescript/bin/tsc -b ./src/app --watch --verbose",
     "server-clear": "rm -rf build/server || true",
     "server-compile": "yarn run server-clear && node_modules/.bin/tsc -b ./src/server/tsconfig.json",
-    "server": "yarn server-compile && node build/server"
+    "server": "yarn server-compile && node build/server",
+    "vis-clear": "(rm -rf build/vis || true) && mkdir build/vis",
+    "vis-compile": "node scripts/vis-compile"
   },
   "dependencies": {
+    "@types/d3": "^5.0.0",
     "assert": "^1.4.1",
     "buffer": "^5.1.0",
+    "d3": "^5.7.0",
     "ethereumjs-util": "^5.2.0",
     "ethereumjs-wallet": "^0.6.2",
     "ganache-core": "^2.2.1",
