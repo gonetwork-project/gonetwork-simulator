@@ -10,7 +10,7 @@ const root = resolve(__dirname, '..')
 const d3 = [
   ['dispatch', 'collection', 'array', 'timer', 'interpolate', 'path', 'color', 'ease'], // deps of direct
   ['shape', 'selection', 'axis', 'scale'], // direct deps
-  ['format'],
+  // ['format'],
   ['time-format', 'transition'] // mixed
 ]
 
