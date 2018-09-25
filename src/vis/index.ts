@@ -1,24 +1,14 @@
-// import { line as l, area, curveCardinal } from 'd3-shape'
-// import { transition, active } from 'd3-transition'
-// import { format as f } from 'd3-format'
-// import { select } from 'd3-selection'
-// import { axisLeft, axisRight } from 'd3-axis'
-// import { scaleLinear } from 'd3-scale'
+const log = (t: string) => document.body.insertAdjacentHTML('beforeend', `<div>${t}</div>`)
 
-// const d3: any = {
-//   line: l,
-//   area,
-//   transition,
-//   curveCardinal,
-//   scaleLinear,
-//   select,
-//   axisLeft,
-//   axisRight,
-//   active,
-//   format: f
-// }
-// document.body.innerHTML = '<div>WTF???</div>';
-// (window as any).d3 = d3
+const deps = [
+  ['dispatch', 'collection', 'array', 'timer', 'interpolate', 'path', 'color', 'ease'], // deps of direct
+  ['shape', 'selection', 'format', 'axis', 'scale'], // direct deps
+  ['time-format', 'transition'] // mixed
+]
+
+const logDeps = () => deps.forEach(l => l.forEach(d => log(d + '? ' + !!(window as any).d3[d])))
+
+logDeps()
 
 let margin = { top: 50, right: 10, bottom: 30, left: 10 }
 let width = 600 - margin.left - margin.right
@@ -42,6 +32,7 @@ let chart = d3.select('#chart')
 // .attr('height', height);
 let x = d3.scaleLinear().domain([0, 2]).range([200, 600])
 let y = d3.scaleLinear().domain([globalY - maxY, globalY]).range([height, 0])
+log('LINE-GEN-BEFORE')
 let lineGenerator = d3.line()
   .curve(d3.curveCardinal)
 // -----------------------------------
@@ -56,6 +47,7 @@ let lineArea = d3.area()
   .y0(y(0))
   .y1(function (d) { return y(d.y) })
   .curve(d3.curveCardinal)
+log('LINE-GEN-AFTER')
 // -----------------------------------
 
 // Draw the axis
@@ -70,7 +62,7 @@ let lineArea = d3.area()
 let yAxis = (d3 as any).axisLeft().scale(y).tickSizeOuter(0).tickFormat('')
 let axisY = chart.append('g').attr('class', 'y axis')
   .attr('transform', 'translate(200,0)').call(yAxis)
-let yAxis2 = (d3 as any).axisRight().scale(y).tickSize(15).tickSizeOuter(0).tickFormat('')// We dont use .tickSize(0) because we want the distance away from the axis to remain;
+let yAxis2 = (d3 as any).axisRight().scale(y).tickSize(15).tickSizeOuter(0).tickFormat('') // We dont use .tickSize(0) because we want the distance away from the axis to remain;
 let axisY2 = chart.append('g').attr('class', 'y axis')
   .attr('transform', 'translate(400,0)').call(yAxis2)
 // var yAxis3 = d3.axisRight().scale(y).tickSize(15).tickSizeOuter(0);// We dont use .tickSize(0) because we want the distance away from the axis to remain;
@@ -107,30 +99,37 @@ chart.append('text')
   .attr('font-size', '20px')
   .attr('fill', 'gray')
 
-let format = d3.format(',d')
+log('FORMAT-BEFORE d3.format?' + !!d3.format)
+// let format = d3.format(',d')
+log('FORMAT-AFTER')
+let bn = 1
 function updateCurrentBlock () {
+  log('UPDATE')
+  logDeps()
   d3.select('#blocknumber')
-    .transition()
-    .duration(duration)
-    .on('start', function repeat (this: any) {
-      d3.active(this)
-        .tween('text', function (this: any) {
-          let that = d3.select(this)
-          let i = d3.interpolateNumber(that.text().replace(/,/g, ''), Math.random() * 1e6)
-          return function (t) { that.text(format(i(t))) }
-        })
-        .transition()
+    .attr('text', bn++)
+  // .transition()
+  // .duration(duration)
+  // .on('start', function repeat (this: any) {
+  //   log('ACTIVE?': d3.active(this) + '')
+  //   d3.active(this)
+  //     .tween('text', function (this: any) {
+  //       let that = d3.select(this)
+  //       let i = d3.interpolateNumber(that.text().replace(/,/g, ''), Math.random() * 1e6)
+  //       return function (t) { that.text(format(i(t))) }
+  //     })
+  //     .transition()
 
-    })
+  // })
 }
 setInterval(updateCurrentBlock, 5000)
 let lineGen = d3.line()
   .x(function (d) {
-    console.log(x(d.x))
+    // console.log(x(d.x))
     return x(d.x)
   })
   .y(function (d) {
-    console.log(y(d.y))
+    // console.log(y(d.y))
     return y(d.y)
   }).curve(d3.curveBasis)// curve(d3.curveCatmullRom.alpha(0.5));;
 
@@ -166,6 +165,7 @@ let arrowData: any = []
 //       .duration(duration)
 //       .ease(d3.easeLinear,2)
 //       .attr("stroke-dashoffset", 0).on("end",tick)
+log('TICK-BEFORE')
 tick()
 function next_arrows () {
   if (Math.random() > 0.5) {
@@ -173,7 +173,7 @@ function next_arrows () {
   } else {
     arrowData.push([{ x: 1, y: globalY - stepY }, { x: 0.75, y: globalY - stepY * .125 }, { x: 0.25, y: globalY + stepY * .125 }, { x: 0, y: globalY }])
   }
-  console.log('running enter')
+  // console.log('running enter')
   arrows.selectAll('.arrow')
     .data(arrowData, function (d) { return d[d.length - 1].y }).exit().remove()
   arrows.selectAll('.arrow')
@@ -304,10 +304,10 @@ function tick (this: any) {
         let rand = Math.random()
         if (rand > 0.6) {
           if (arrowData.length >= maxEvents) {
-            console.log('removing items')
+            // console.log('removing items')
             arrowData.splice(0, arrowData.length - maxEvents)
           }
-          console.log('running next_arrows')
+          // console.log('running next_arrows')
           next_arrows()
         } else {
           tick()

@@ -7,11 +7,20 @@ const readFile = Rx.Observable.bindNodeCallback(fs.readFile)
 
 const root = resolve(__dirname, '..')
 
-const d3 = ['d3-shape', 'd3-transition', 'd3-format', 'd3-selection', 'd3-axis', 'd3-scale']
+const d3 = [
+  ['dispatch', 'collection', 'array', 'timer', 'interpolate', 'path', 'color', 'ease'], // deps of direct
+  ['shape', 'selection', 'axis', 'scale'], // direct deps
+  ['format'],
+  ['time-format', 'transition'] // mixed
+]
+
 Rx.Observable.from(d3)
-  .map(n => resolve(root, 'node_modules', `${n}`, 'dist', `${n}.min.js`))
-  .mergeMap(p => readFile(p, 'utf8'))
-  .map(x => `<script>${x}</script>`)
+  .concatMap((l) =>
+    Rx.Observable.from(l)
+      .map(n => resolve(root, 'node_modules', `d3-${n}`, 'dist', `d3-${n}.min.js`))
+      .mergeMap(p => readFile(p, 'utf8'))
+      .map(x => `<script>${x}</script>`)
+  )
   .toArray()
   .map(x => x.join('\n'))
   .subscribe(d3 => {
@@ -26,7 +35,7 @@ Rx.Observable.from(d3)
     const html = fs.readFileSync(resolve(root, 'src/vis/template.html'), 'utf8')
       .replace('__D3_PLACEHOLDER__', d3)
       .replace('__SCRIPT_PLACEHOLDER__', script)
-    const out = `module.exports = \`${html}\``
-    // fs.writeFileSync(resolve(root, 'build/vis/index.min.js'), `module.exports = \`${script}\``, 'utf8')
-    fs.writeFileSync(resolve(root, 'build/vis/vis.html.js'), out, 'utf8')
+
+    fs.writeFileSync(resolve(root, 'build/vis/vis.html.js'), `module.exports = \`${html}\``, 'utf8')
+    fs.writeFileSync(resolve(root, 'build/vis/vis.html'), html, 'utf8')
   })

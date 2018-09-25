@@ -106,9 +106,10 @@
   </svg>
   __D3_PLACEHOLDER__
   <script>__SCRIPT_PLACEHOLDER__</script>
-  <script>setInterval(function () {
+  <script>window.onerror = function(e) { document.body.innerHTML = '<div>?</div>'; document.body.innerHTML = JSON.stringify(e, null, 4) } </script>
+  <!-- <script>setInterval(function () {
       document.body.insertAdjacentHTML('beforeend', '<div>D3? ' + Object.keys(window.d3) + '</div>')
-    }, 5000)</script>
+    }, 5000)</script> -->
 </body>
 
 </html>

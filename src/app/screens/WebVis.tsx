@@ -49,8 +49,8 @@ export class WebVis extends React.Component {
 
   render () {
     const { width, height } = Dimensions.get('screen')
-    const source = { html, baseUrl: 'http://gonetwork.co' }
-    // const source = { uri: 'http://192.168.1.10:8080/vis.gen.html' }
+    const source = { html }
+    // const source = { uri: 'http://192.168.1.10:8080/vis/vis.html' }
     // const source = { uri: 'https://archive.nytimes.com/www.nytimes.com/interactive/2012/11/11/sunday-review/counties-moving.html' }
     // const source = {
     //   // uri: 'https://bl.ocks.org/kerryrodden/raw/7090426/'
