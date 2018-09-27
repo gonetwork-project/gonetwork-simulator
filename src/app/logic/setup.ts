@@ -52,7 +52,7 @@ export const url: Observable<Url> = Observable.merge(
   urlSub,
   Observable.defer(() => AsyncStorage.getItem(STORAGE_KEY_URL))
     .filter(Boolean)
-    .map(x => JSON.parse(x))
+    .map(x => JSON.parse(x!))
     .do(setUrl)
     .ignoreElements()
 )

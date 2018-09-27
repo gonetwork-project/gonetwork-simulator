@@ -2,7 +2,7 @@ import * as React from 'react'
 import { WebView, Dimensions, Alert } from 'react-native'
 
 // const js = require('../../../assets/web-vis-script.js')
-const html = require('../../vis/vis.html.js')
+const html = require('../../vis/vis.html')
 // const script = require('../../vis/index.min.js')
 
 const html2 = `
@@ -48,8 +48,9 @@ export class WebVis extends React.Component {
   }
 
   render () {
+    console.log('WITH-WEBKIT')
     const { width, height } = Dimensions.get('screen')
-    const source = { html }
+    const source = html
     // const source = { uri: 'http://192.168.1.10:8080/vis/vis.html' }
     // const source = { uri: 'https://archive.nytimes.com/www.nytimes.com/interactive/2012/11/11/sunday-review/counties-moving.html' }
     // const source = {
@@ -64,6 +65,8 @@ export class WebVis extends React.Component {
       onError={err => console.log('ERR', err)}
       ref={(r) => (this as any).wv = r} style={{ width, height }}
       source={source}
+      // @ts-ignore
+      useWebKit={true}
     >
     </WebView>
   }

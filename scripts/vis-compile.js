@@ -10,7 +10,7 @@ const root = resolve(__dirname, '..')
 const d3 = [
   ['dispatch', 'collection', 'array', 'timer', 'interpolate', 'path', 'color', 'ease'], // deps of direct
   ['shape', 'selection', 'axis', 'scale'], // direct deps
-  // ['format'],
+  ['format'],
   ['time-format', 'transition'] // mixed
 ]
 
@@ -19,7 +19,7 @@ Rx.Observable.from(d3)
     Rx.Observable.from(l)
       .map(n => resolve(root, 'node_modules', `d3-${n}`, 'dist', `d3-${n}.min.js`))
       .mergeMap(p => readFile(p, 'utf8'))
-      .map(x => `<script>${x}</script>`)
+      .map(x => `<script>try { ${x} } catch (err) { alert('error') }</script>`)
   )
   .toArray()
   .map(x => x.join('\n'))

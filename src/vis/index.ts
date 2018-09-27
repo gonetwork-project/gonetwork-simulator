@@ -1,14 +1,4 @@
-const log = (t: string) => document.body.insertAdjacentHTML('beforeend', `<div>${t}</div>`)
-
-const deps = [
-  ['dispatch', 'collection', 'array', 'timer', 'interpolate', 'path', 'color', 'ease'], // deps of direct
-  ['shape', 'selection', 'format', 'axis', 'scale'], // direct deps
-  ['time-format', 'transition'] // mixed
-]
-
-const logDeps = () => deps.forEach(l => l.forEach(d => log(d + '? ' + !!(window as any).d3[d])))
-
-logDeps()
+interface Point { x: number, y: number }
 
 let margin = { top: 50, right: 10, bottom: 30, left: 10 }
 let width = 600 - margin.left - margin.right
@@ -28,46 +18,32 @@ let chart = d3.select('#chart')
   .attr('height', height + margin.top + margin.bottom)
   .append('g')
   .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-// .attr('width', width)
-// .attr('height', height);
+
 let x = d3.scaleLinear().domain([0, 2]).range([200, 600])
 let y = d3.scaleLinear().domain([globalY - maxY, globalY]).range([height, 0])
-log('LINE-GEN-BEFORE')
+
 let lineGenerator = d3.line()
   .curve(d3.curveCardinal)
-// -----------------------------------
-let line = d3.line()
-  .x(function (d) { return x(d.x) })
-  .y(function (d) { return y(d.y) })
-let smoothLine = d3.line().curve(d3.curveCardinal)
-  .x(function (d) { return x(d.x) })
-  .y(function (d) { return y(d.y) })
-let lineArea = d3.area()
-  .x(function (d) { return x(d.x) })
-  .y0(y(0))
-  .y1(function (d) { return y(d.y) })
-  .curve(d3.curveCardinal)
-log('LINE-GEN-AFTER')
-// -----------------------------------
 
-// Draw the axis
-//    var xAxis = d3.axisBottom().scale(x);
-//    var axisX = chart.append('g').attr('class', 'x axis')
-// 		     .attr('transform', 'translate(0, 500)')
-// 		     .call(xAxis);
-// var xAxis2 = d3.axisTop().scale(x);
-//    var axisX2 = chart.append('g').attr('class', 'x axis')
-// 		     .attr('transform', 'translate(0,200)')
-// 		     .call(xAxis2);
+let line = d3.line<Point>()
+  .x(d => x(d.x))
+  .y(d => y(d.y))
+let smoothLine = d3.line<Point>()
+  .curve(d3.curveCardinal)
+  .x(d => x(d.x))
+  .y(d => y(d.y))
+let lineArea = d3.area<Point>()
+  .x(d => x(d.x))
+  .y0(y(0))
+  .y1(d => y(d.y))
+  .curve(d3.curveCardinal)
+
 let yAxis = (d3 as any).axisLeft().scale(y).tickSizeOuter(0).tickFormat('')
 let axisY = chart.append('g').attr('class', 'y axis')
   .attr('transform', 'translate(200,0)').call(yAxis)
 let yAxis2 = (d3 as any).axisRight().scale(y).tickSize(15).tickSizeOuter(0).tickFormat('') // We dont use .tickSize(0) because we want the distance away from the axis to remain;
 let axisY2 = chart.append('g').attr('class', 'y axis')
   .attr('transform', 'translate(400,0)').call(yAxis2)
-// var yAxis3 = d3.axisRight().scale(y).tickSize(15).tickSizeOuter(0);// We dont use .tickSize(0) because we want the distance away from the axis to remain;
-// var axisY3 = chart.append("g").attr('class', 'y axis')
-// .attr("transform", "translate(600,0)").call(yAxis3);
 
 chart.append('g').attr('transform', 'translate(188,-30) scale(0.25)')
   .append('use').attr('xlink:href', '#man')
@@ -99,85 +75,38 @@ chart.append('text')
   .attr('font-size', '20px')
   .attr('fill', 'gray')
 
-log('FORMAT-BEFORE d3.format?' + !!d3.format)
-// let format = d3.format(',d')
-log('FORMAT-AFTER')
-let bn = 1
-function updateCurrentBlock () {
-  log('UPDATE')
-  logDeps()
-  d3.select('#blocknumber')
-    .attr('text', bn++)
-  // .transition()
-  // .duration(duration)
-  // .on('start', function repeat (this: any) {
-  //   log('ACTIVE?': d3.active(this) + '')
-  //   d3.active(this)
-  //     .tween('text', function (this: any) {
-  //       let that = d3.select(this)
-  //       let i = d3.interpolateNumber(that.text().replace(/,/g, ''), Math.random() * 1e6)
-  //       return function (t) { that.text(format(i(t))) }
-  //     })
-  //     .transition()
+let format = d3.format(',d')
 
-  // })
+function updateCurrentBlock () {
+  d3.select('#blocknumber')
+    .transition()
+    .duration(duration)
+    .on('start', function repeat (this: any) {
+      d3.active(this)!
+        .tween('text', function (this: any) {
+          let that = d3.select(this) as any
+          let i = d3.interpolateNumber(that.text().replace(/,/g, ''), Math.random() * 1e6)
+          return function (t) { that.text(format(i(t))) }
+        })
+        .transition()
+    })
 }
-setInterval(updateCurrentBlock, 5000)
-let lineGen = d3.line()
-  .x(function (d) {
-    // console.log(x(d.x))
-    return x(d.x)
-  })
-  .y(function (d) {
-    // console.log(y(d.y))
-    return y(d.y)
-  }).curve(d3.curveBasis)// curve(d3.curveCatmullRom.alpha(0.5));;
 
 let arrows = chart.append('g').attr('id', 'arrows')
-let arrowData: any = []
+let arrowData: Point[][] = []
 
-// var arrow_data = [[{x:0,y:globalY}, {x:0.5, y:globalY+stepY*0.5},{x:1.5, y:globalY+stepY*0.5}, {x:2, y:globalY}]];
-
-//   arrows.selectAll(".arrow")
-//   .data(arrow_data,function(d) { return d[0].y})
-//   .enter()
-//   .append("path")
-//   .attr("class", "arrow")
-//   .attr("d", lineGen)
-//   .attr('stroke', 'lightgrey')
-//   .attr('stroke-opacity', 0.5)
-// 			.attr('stroke-width', 2)
-// 			.attr('fill', 'none')
-// 			.attr("stroke-dasharray", function(d){ return this.getTotalLength() })
-//           .attr("stroke-dashoffset", function(d){ return this.getTotalLength() });
-
-// // var arrow = chart.append('path').data(arrow_data
-// // 	 	)
-// // 			.attr('d', lineGen)
-// // 			.attr('stroke', 'green')
-// // 			.attr('stroke-width', 2)
-// // 			.attr('fill', 'none')
-// // 			.attr("stroke-dasharray", function(d){ return this.getTotalLength() })
-// //           .attr("stroke-dashoffset", function(d){ return this.getTotalLength() });
-
-// 			arrows.selectAll("path")
-//     .transition()
-//       .duration(duration)
-//       .ease(d3.easeLinear,2)
-//       .attr("stroke-dashoffset", 0).on("end",tick)
-log('TICK-BEFORE')
-tick()
 function next_arrows () {
   if (Math.random() > 0.5) {
     arrowData.push([{ x: 0, y: globalY - stepY }, { x: 0.25, y: globalY - stepY * .125 }, { x: 0.75, y: globalY + stepY * .125 }, { x: 1, y: globalY }])
   } else {
     arrowData.push([{ x: 1, y: globalY - stepY }, { x: 0.75, y: globalY - stepY * .125 }, { x: 0.25, y: globalY + stepY * .125 }, { x: 0, y: globalY }])
   }
-  // console.log('running enter')
-  arrows.selectAll('.arrow')
-    .data(arrowData, function (d) { return d[d.length - 1].y }).exit().remove()
-  arrows.selectAll('.arrow')
-    .data(arrowData, function (d) { return d[d.length - 1].y })
+
+  (arrows.selectAll('.arrow') as d3.Selection<HTMLElement, Point[], any, number>)
+    .data<Point[]>(arrowData, function (d: Point[]) { return d[d.length - 1].y } as any).exit().remove();
+
+  (arrows.selectAll('.arrow') as d3.Selection<HTMLElement, Point[], any, number>)
+    .data<Point[]>(arrowData, function (d) { return d[d.length - 1].y } as any)
     .enter()
     .append('path')
     .attr('class', 'arrow')
@@ -190,59 +119,45 @@ function next_arrows () {
     .attr('stroke-dashoffset', function (this: any, d) { return this.getTotalLength() })
     .transition()
     .duration(duration)
-    .ease(d3.easeLinear, 2)
+    .ease(d3.easeLinear /*, 2*/)
     .attr('stroke-dashoffset', 0)
     .on('end', tick)
 
   arrows.selectAll('.arrow-head')
-    .data(arrowData, function (d) { return d[d.length - 1].y }).exit().remove()
+    .data(arrowData, function (d) { return d[d.length - 1].y } as any).exit().remove()
 
   arrows.selectAll('.arrow-head')
-    .data(arrowData, function (d) { return d[d.length - 1].y })
+    .data(arrowData, function (d) { return d[d.length - 1].y } as any)
     .enter()
-
     .append('circle')
     .attr('class', 'arrow-head arrow-head-start')
     .attr('cx', function (d) { return x(d[d.length - 1].x) })
     .attr('cy', function (d) { return y(d[d.length - 1].y) })
     .attr('stroke', 'none')
     .attr('fill', '#FF6B6B')
-    // .attr('fill-opacity',0.75)
     .attr('r', 0)
     .transition()
     .duration(duration)
     .delay(duration)
-    .ease(d3.easeElastic, 100)
+    .ease(d3.easeElastic /*, 100*/)
     .attr('r', 5)
-  // .on("end", tick);
-  // .transition()
-  // ,duration(duration)
-  //
-  // attr("r", 5);
-
 }
 // .on("end",tick);
 // Main loop
 function tick (this: any) {
 
-  let point = {
-    x: 0,
-    y: (globalY + stepY)
-  }
-  // data.push(point);
   globalX += step
   globalY += stepY
 
-  let d = y.domain()
   y.domain([globalY - maxY, globalY])
   axisY.transition()
     .duration(duration)
-    .ease(d3.easeLinear, 2)
+    .ease(d3.easeLinear/*, 2*/)
     .call(yAxis)
   // .on('end',tick);
   axisY2.transition()
     .duration(duration)
-    .ease(d3.easeLinear, 2)
+    .ease(d3.easeLinear/*, 2*/)
     .call(yAxis2)
   // axisY3.transition()
   // .duration(duration)
@@ -250,7 +165,7 @@ function tick (this: any) {
   // .call(yAxis3)
 
   arrows.selectAll('.arrow')
-    .data(arrowData, function (d) { return d[d.length - 1].y })
+    .data(arrowData, function (d) { return d[d.length - 1].y } as any)
     .attr('d', lineGen)
 
     .attr('stroke-width', 1)
@@ -280,25 +195,15 @@ function tick (this: any) {
       return dashArray
       // this.getTotalLength()
     })
-    .attr('stroke-dashoffset', function (d) { return 0 })
+    .attr('stroke-dashoffset', function () { return 0 })
   arrows.selectAll('.arrow-head')
 
-    .data(arrowData, function (d) { return d[d.length - 1].y })
+    .data(arrowData, function (d) { return d[d.length - 1].y } as any)
     .attr('class', 'arrow-head')
     .attr('cx', function (d) { return x(d[d.length - 1].x) })
     .attr('cy', function (d) { return y(d[d.length - 1].y) })
-  // bcevents.selectAll(".bcevent")
-  // 	 .data(bcevent_data,function(d) {
 
-  //   	return d[0].y})
-  // 	 .attr("class", "bcevent")
-  //    .attr("cx",function(d){ return x(d[0].x)})
-  //   .attr("cy",function(d){ return y(d[0].y)})
-  //   .attr("r",0)
-  //   .attr('stroke', '#5DD39E')
-  //  	.attr('fill',"transparent")
-
-  arrows.attr('transform', null).transition().duration(duration).ease(d3.easeLinear, 2)
+  arrows.attr('transform', null).transition().duration(duration).ease(d3.easeLinear/*, 2*/)
     .attr('transform', 'translate(0,' + y(globalY - stepY) + ')').on('end',
       function () {
         let rand = Math.random()
@@ -313,28 +218,12 @@ function tick (this: any) {
           tick()
         }
       })
-
 }
-// function onBlockchainEvent () {
 
-//   bcevent_data.push([{ x: Math.floor(Math.random() * 2), y: globalY }])
-//   bcevents.selectAll('.bcevent')
-//     .data(bcevent_data, function (d) {
-
-//       return d[0].y
-//     })
-//     .enter()
-
-//     .append('circle')
-//     .attr('class', 'bcevent')
-//     .attr('cx', function (d) { return x(d[0].x) })
-//     .attr('cy', function (d) { return y(d[0].y) })
-//     .attr('r', 0)
-//     .attr('stroke', '#5DD39E')
-//     .attr('fill', 'transparent')
-//     .transition()
-//     .duration(duration)
-//     .ease(d3.easeElastic, 2)
-//     .attr('r', 5).on('end', tick)
-//   if (bcevent_data.length > maxEvents) { bcevent_data.shift() }
-// }
+// RUN
+setInterval(updateCurrentBlock, 5000)
+let lineGen = d3.line<Point>()
+  .x(d => x(d.x))
+  .y(d => y(d.y))
+  .curve(d3.curveBasis)
+tick()

@@ -1,9 +1,11 @@
+// https://github.com/facebook/metro/tree/master/packages/metro-config/src
+
 const blacklist = require('metro').createBlacklist
 const extraNodeModules = require('node-libs-browser')
 
 module.exports = {
   resolver: {
-    extraNodeModules
-  },
-  getBlacklistRE: () => blacklist([/temp\/.*/, /.*\.ts/])
+    extraNodeModules,
+    blacklistRE: blacklist([/temp\/.*/, /.*\.ts/])
+  }
 }
