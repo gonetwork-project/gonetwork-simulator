@@ -7,10 +7,10 @@
   <title>Visualization</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script>
-  //   setTimeout(function () {
-  //     document.body.insertAdjacentHTML('beforeend', '<div>script running</div>')
-  //     window.GN.onEvent(e => document.body.insertAdjacentHTML('beforeend', '<div>' + JSON.stringify(e) + '</div>'))
-  // }, 1000)
+    setTimeout(function () {
+      document.body.insertAdjacentHTML('beforeend', '<div>script running</div>')
+      window.GN.onEvent(e => document.body.insertAdjacentHTML('beforeend', '<div>' + JSON.stringify(e) + '</div>'))
+  }, 1000)
   </script>
 </head>
 
@@ -106,10 +106,6 @@
   </svg>
   __D3_PLACEHOLDER__
   <script>__SCRIPT_PLACEHOLDER__</script>
-  <script>window.onerror = function(e) { document.body.innerHTML = '<div>?</div>'; document.body.innerHTML = JSON.stringify(e, null, 4) } </script>
-  <!-- <script>setInterval(function () {
-      document.body.insertAdjacentHTML('beforeend', '<div>D3? ' + Object.keys(window.d3) + '</div>')
-    }, 5000)</script> -->
 </body>
 
 </html>

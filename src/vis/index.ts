@@ -94,6 +94,10 @@ function updateCurrentBlock () {
 
 let arrows = chart.append('g').attr('id', 'arrows')
 let arrowData: Point[][] = []
+let lineGen = d3.line<Point>()
+  .x(d => x(d.x))
+  .y(d => y(d.y))
+  .curve(d3.curveBasis)
 
 function next_arrows () {
   if (Math.random() > 0.5) {
@@ -221,9 +225,21 @@ function tick (this: any) {
 }
 
 // RUN
-setInterval(updateCurrentBlock, 5000)
-let lineGen = d3.line<Point>()
-  .x(d => x(d.x))
-  .y(d => y(d.y))
-  .curve(d3.curveBasis)
-tick()
+const initBridge = (onInit: (e: any) => void, onEvent: (e: any) => void) => {
+  (window as any)._GN = {
+    emitInit: (e: any) => onInit(e),
+    emitEvent: (e: any) => {
+      // document.body.insertAdjacentHTML('beforeend', `<div>EVENT ${JSON.stringify(e)}</div>`)
+      onEvent(e)
+    }
+  }
+}
+
+initBridge(
+  () => {
+    document.body.insertAdjacentHTML('beforeend', `<div>INITED</div>`)
+    setInterval(updateCurrentBlock, 5000)
+    tick()
+  },
+  (e) => document.body.insertAdjacentHTML('beforeend', `<div>EVENT: ${JSON.stringify(e)}</div>`)
+)
