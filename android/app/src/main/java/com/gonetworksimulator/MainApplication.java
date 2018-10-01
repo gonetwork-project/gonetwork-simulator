@@ -1,4 +1,4 @@
-package com.testapp;
+package com.gonetworksimulator;
 
 import android.app.Application;
 
