@@ -10,13 +10,42 @@ export interface Props {
   onSelected?: () => void
 }
 
+const renderBalance = (bl: AccountBalanceFormatted) =>
+  <View>
+    <View style={{ padding: 4, flexDirection: 'row', alignItems: 'center' }}>
+      <View style={{ width: 100, alignItems: 'flex-end' }}>
+        <Text note>ETH</Text>
+      </View>
+      <View style={{ alignItems: 'flex-start' }}>
+        <Text >{bl.eth}</Text>
+      </View>
+    </View>
+    <View style={{ padding: 4, flexDirection: 'row', alignItems: 'center' }}>
+      <View style={{ width: 100, alignItems: 'flex-end' }}>
+        <Text note>GOT</Text>
+      </View>
+      <View style={{ alignItems: 'flex-start' }}>
+        <Text >{bl.got}</Text>
+      </View>
+    </View>
+    <View style={{ padding: 4, flexDirection: 'row', alignItems: 'center' }}>
+      <View style={{ width: 100, alignItems: 'flex-end' }}>
+        <Text note>ERC20</Text>
+      </View>
+      <View style={{ alignItems: 'flex-start' }}>
+        <Text >{bl.hs}</Text>
+      </View>
+    </View>
+  </View>
+
 export const AccountShort = (p: Props) =>
   <ListItem>
     <Body>
       <H3>0x{p.account.owner.addressStr}</H3>
-      {p.balance && <Text note numberOfLines={1}>ETH: {p.balance.eth}</Text>}
-      {p.balance && <Text note numberOfLines={1}>GOT: {p.balance.got}</Text>}
-      {p.balance && <Text note numberOfLines={1}>ERC20: {p.balance.hs}</Text>}
+      {p.balance ?
+        renderBalance(p.balance) :
+        <ActivityIndicator />
+      }
     </Body>
     <Right>
       <Button transparent onPress={p.onSelected}>
