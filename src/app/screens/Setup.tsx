@@ -1,9 +1,9 @@
 import * as React from 'react'
-import { View, TextInput, ActivityIndicator } from 'react-native'
+import { View, ActivityIndicator } from 'react-native'
 import { RNCamera, BarCodeType } from 'react-native-camera'
 import { Subscription, Observable } from 'rxjs'
 
-import { Container, Text, Button, H1, H2, Tab, Tabs, Card, Item, Input, Label, Form } from 'native-base'
+import { Container, Content, Text, Button, H1, H2, Tab, Tabs, Card, Item, Input, Label, Header } from 'native-base'
 
 import { setUnknownError } from '../global'
 import { GeneralInfo, SessionConfigClient, SessionId } from '../../protocol'
@@ -35,12 +35,13 @@ export class Setup extends React.Component<Props, State> {
   sub!: Subscription
 
   componentDidMount () {
+    console.log('SETUP', setup, this.state)
     this.sub = (Observable.merge(
       setup.url.map(u => ({ url: u })),
       setup.sessionConfig.map(s => ({ sessionConfig: s })),
       setup.connectionWithStatus.map(c => ({ connection: c })),
       setup.generalInfo
-        // .do(g => g && this.createSession()) // TODO remove / allow automatic creation in UI
+        .do(g => g && this.createSession()) // TODO remove / allow automatic creation in UI
         .map(g => ({ generalInfo: g }))
     ) as Observable<State>)
       .do(c => this.setState(c))
@@ -64,7 +65,7 @@ export class Setup extends React.Component<Props, State> {
   }
 
   createSession = () =>
-    setup.send('create-session', this.state.sessionConfig)
+    this.state && this.state.sessionConfig && setup.send('create-session', this.state.sessionConfig)
 
   joinSession = (sessionId: SessionId) =>
     setup.send('join-session', { sessionId })
@@ -159,15 +160,17 @@ export class Setup extends React.Component<Props, State> {
   }
 
   renderSetup = () => {
+    if (!this.state) return
     const i = this.state.generalInfo
     if (!i) {
       return <View style={{ padding: 64 }}>
         <H2>You need to connect to the server first - TODO add some image</H2>
       </View>
     }
+
     const cfg = this.state.sessionConfig
     const wrongBlockTime = !cfg.blockTime || cfg.blockTime < setup.minBlockTime
-    return <Container style={{ padding: 12 }}>
+    return <View style={{ padding: 12 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', padding: 32 }}>
         <Item style={{ maxWidth: 160 }} stackedLabel error={wrongBlockTime}>
           <Label>Block time in ms:</Label>
@@ -179,7 +182,7 @@ export class Setup extends React.Component<Props, State> {
           />
         </Item>
 
-        <Button disabled={wrongBlockTime} onPress={this.createSession} style={{ margin: 24 }}>
+        <Button primary disabled={wrongBlockTime} onPress={this.createSession} style={{ margin: 24 }}>
           <Text>New Session</Text>
         </Button>
 
@@ -187,28 +190,33 @@ export class Setup extends React.Component<Props, State> {
       </View>
 
       {this.renderSessions(i)}
-    </Container>
+    </View>
   }
   // #endregion Setup
 
   render () {
     if (!this.state) return null
+    console.log(this.state)
     return <Container>
-      <H1>Welcome to GoNetwork Simulator App</H1>
-      <Tabs>
-        <Tab heading={steps.connect}>
-          {this.renderConnect()}
-        </Tab>
-        <Tab heading={steps.sessions}>
-          {this.renderSetup()}
-        </Tab>
-        <Tab heading={steps.info}>
-          <Text>
-            TOOD: desription of the project, links to instructions / docs etc. Probably better to have 1-2 sentence always visible
-            and make it part of connect panel
+      <Header>
+        <H1>Welcome to GoNetwork Simulator</H1>
+      </Header>
+      <Content>
+        <Tabs>
+          <Tab heading={steps.connect}>
+            {this.renderConnect()}
+          </Tab>
+          <Tab heading={steps.sessions}>
+            {this.renderSetup()}
+          </Tab>
+          <Tab heading={steps.info}>
+            <Text>
+              TOOD: desription of the project, links to instructions / docs etc. Probably better to have 1-2 sentence always visible
+              and make it part of connect panel
             </Text>
-        </Tab>
-      </Tabs>
+          </Tab>
+        </Tabs>
+      </Content>
     </Container>
   }
 }

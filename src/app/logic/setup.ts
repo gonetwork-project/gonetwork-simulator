@@ -13,7 +13,7 @@ export interface Url {
 
 export type ConnectionWithStatus = WebSocket | 'idle' | 'connecting' | 'failed'
 
-export const defaultBlockTime = 500
+export const defaultBlockTime = 5000
 export const minBlockTime = 100
 export const timeouts = {
   settle: as.BlockNumber(51),

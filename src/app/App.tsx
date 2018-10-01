@@ -1,6 +1,7 @@
 import * as React from 'react'
-import { ScrollView, View, Modal } from 'react-native'
+import { Modal } from 'react-native'
 import { Observable, Subscription } from 'rxjs'
+import { Container } from 'native-base'
 
 import { CriticalError, ErrorProps, errors } from './global'
 import { Setup, Main, EventsVis, WebVis } from './screens'
@@ -31,7 +32,7 @@ export default class App extends React.Component<{}, State> {
       setup.session
         .distinctUntilChanged()
         .do(s => this.setState({
-          step: s ? 'main' : 'web-vis' // 'events-vis' // 'setup' FIXME
+          step: s ? 'main' : 'setup' // FIXME
         }))
     )
       .subscribe()
@@ -61,9 +62,6 @@ export default class App extends React.Component<{}, State> {
         <CriticalError {...this.state.criticalError} />
       </Modal>
     }
-    return <ScrollView style={{ paddingTop: 24, paddingLeft: 12, paddingRight: 12 }}>
-      {this.renderContent()}
-      <View style={{ height: 24 }} />
-    </ScrollView>
+    return this.renderContent()
   }
 }

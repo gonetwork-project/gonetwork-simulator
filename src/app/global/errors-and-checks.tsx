@@ -65,8 +65,9 @@ export interface ErrorProps {
   error?: Error
 }
 
-export const CriticalError = (p: ErrorProps) =>
-  <View style={{ padding: 20, backgroundColor: 'rgba(200, 20, 20, 0.2)' }}>
+export const CriticalError = (p: ErrorProps) => {
+  console.error(p)
+  return <View style={{ padding: 20, backgroundColor: 'rgba(200, 20, 20, 0.2)' }}>
     <Text style={{ fontSize: 26, marginBottom: 20, fontWeight: 'bold', color: 'rgb(200,20,20)' }}>{errorsConfig[p.type].header}</Text>
     <Text style={{ fontSize: 14, marginBottom: 20, fontWeight: 'bold', color: 'rgba(200,20,20, 0.9)' }}>{errorsConfig[p.type].message}</Text>
 
@@ -85,4 +86,5 @@ export const CriticalError = (p: ErrorProps) =>
     }
     <Button onPress={clearError} title='Re-initialize' />
   </View>
+}
 // #endregion

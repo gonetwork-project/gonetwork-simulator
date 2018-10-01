@@ -30,6 +30,12 @@ export interface AccountBalance {
   hsToken: Wei
 }
 
+export interface AccountBalanceFormatted extends AccountBalance {
+  eth: string
+  got: string
+  hs: string
+}
+
 export interface OtherAccount {
   addressStr: string
   address: Address
@@ -80,6 +86,12 @@ const balance = (blockchain: ReturnType<typeof serviceCreate>) =>
         blockchain.rpc.getBalance({ address: blockchain.config.owner }),
         (gotToken, hsToken, wei) => ({ gotToken, hsToken, wei, blockNumber: bn } as AccountBalance)
       ).take(1)
+        .map(bl => ({
+          ...bl,
+          eth: bl.wei.div(new BN('1000000000000000000')).toString(),
+          got: bl.gotToken.toString(10),
+          hs: bl.gotToken.toString(10)
+        }) as AccountBalanceFormatted)
     )
     .startWith(undefined)
     .shareReplay(1)
@@ -257,7 +269,7 @@ export const balances = (accs: ReturnType<typeof accounts>) =>
     .mergeMap(x => x)
     .mergeMap(acc =>
       (acc.balance
-        .filter(Boolean) as Observable<AccountBalance>)
+        .filter(Boolean) as Observable<AccountBalanceFormatted>)
         .distinctUntilChanged(isBalanceChanged)
         .startWith(undefined)
         .map(b => ({ [acc.owner.addressStr]: b }))
