@@ -47,6 +47,10 @@ export class Main extends React.Component<{}, State> {
         .mergeMap(as => as[0].blockchain.monitoring.blockNumbers())
         .do(b => this.setState({ currentBlock: b }))
     )
+      .retryWhen(errs => errs
+        .do(x => console.warn('ERR', x))
+        .delay(1000)
+      )
       .subscribe({
         error: err => {
           // todo: investigate why sometimes it throws
@@ -104,7 +108,7 @@ export class Main extends React.Component<{}, State> {
     {this.state.isAddingAccount ?
       <ActivityIndicator /> :
       <Button primary transparent style={{ alignSelf: 'center' }}
-      disabled={!this.canAddAccount(this.state.session, this.state.accounts)} onPress={this.addAccount}>
+        disabled={!this.canAddAccount(this.state.session, this.state.accounts)} onPress={this.addAccount}>
         <Text>Add Account</Text>
       </Button>}
   </Content>
