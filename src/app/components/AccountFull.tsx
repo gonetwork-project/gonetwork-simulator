@@ -1,19 +1,21 @@
 import * as React from 'react'
-import { View, Text, Button, ActivityIndicator, Modal, Switch } from 'react-native'
+import { View, ActivityIndicator, Switch } from 'react-native'
 import { Subscription, Observable } from 'rxjs'
+import { Container, Content, Header, Left, Button, Body, Text, Subtitle, Title, Icon, Right } from 'native-base'
 
 import { BlockNumber } from 'eth-types'
 import { Channel } from 'go-network-framework/lib/state-channel/channel'
-import { Account, AccountBalance, OtherAccount } from '../logic/accounts'
+import { Account, AccountBalanceFormatted, OtherAccount } from '../logic/accounts'
 import { OpenChannel } from './OpenChannel'
 import { ChannelShort } from './Channel'
 import { Events } from './Events'
+import { Balance } from './Balance'
 
 export interface Props {
   account: Account
   otherAccounts: OtherAccount[]
   currentBlock?: BlockNumber
-  balance?: AccountBalance
+  balance?: AccountBalanceFormatted
   onBack: () => void
 }
 
@@ -68,42 +70,47 @@ export class AccountFull extends React.Component<Props, State> {
 
   render () {
     const p = this.props
-    return <View style={{ padding: 20 }}>
-      <View style={{ padding: 12, flexDirection: 'row' }}>
-        <Button title='Back' onPress={p.onBack} />
-        <Button title='Show-Events' onPress={() => this.setState({ showEvents: true })} />
-      </View>
+    return <Container>
 
-      <Text>Current block: {this.props.currentBlock && this.props.currentBlock.toString(10) || '...'}</Text>
+      <Header>
+        <Left>
+          <Button transparent onPress={p.onBack}>
+            <Icon name='arrow-back' />
+          </Button>
+        </Left>
+        <Body>
+          <Title>0x{p.account.owner.addressStr}</Title>
+          {this.props.currentBlock && <Subtitle>Block: {this.props.currentBlock.toString(10)}</Subtitle>}
+        </Body>
+        <Right>
+        </Right>
+      </Header>
 
-      {this.state.showEvents && <Modal animationType='slide'>
-        <Events account={this.props.account} onClose={() => this.setState({ showEvents: false })} />
-      </Modal>}
+      <Content>
+        {
+          !p.balance ?
+            <ActivityIndicator size='small' /> :
+            Balance({ balance: p.balance, direction: 'row' })
+        }
 
-      <Text style={{ fontSize: 22, fontWeight: 'bold' }}>0x{p.account.owner.addressStr}</Text>
-      {
-        !p.balance ?
-          <ActivityIndicator size='small' /> :
-          <Text>{JSON.stringify(p.balance, null, 4)}</Text>
-      }
+        <View style={{ flexDirection: 'row', padding: 8, alignItems: 'center' }}>
+          <Switch value={this.state.ignoreSecretToProof} onValueChange={this.props.account.setIgnoreSecretToProof} />
+          <Text style={{ marginLeft: 8 }}>ignore 'SecretToProof' (allows testing broken protocol)</Text>
+        </View>
 
-      <View style={{ flexDirection: 'row', padding: 8, alignItems: 'center' }}>
-        <Switch value={this.state.ignoreSecretToProof} onValueChange={this.props.account.setIgnoreSecretToProof} />
-        <Text style={{ marginLeft: 8 }}>ignore 'SecretToProof' (allows testing broken protocol)</Text>
-      </View>
+        <Text style={{ fontSize: 20, fontWeight: 'bold', marginTop: 12 }}>Open Netting Channels</Text>
+        {!this.props.balance || !this.state.accountsWithoutChannel ?
+          <ActivityIndicator /> :
+          <OpenChannel
+            balance={this.props.balance}
+            account={this.props.account}
+            accountsWithoutChannel={this.state.accountsWithoutChannel}
+          />
+        }
 
-      <Text style={{ fontSize: 20, fontWeight: 'bold', marginTop: 12 }}>Open Netting Channels</Text>
-      {!this.props.balance || !this.state.accountsWithoutChannel ?
-        <ActivityIndicator /> :
-        <OpenChannel
-          balance={this.props.balance}
-          account={this.props.account}
-          accountsWithoutChannel={this.state.accountsWithoutChannel}
-        />
-      }
-
-      <Text style={{ fontSize: 20, fontWeight: 'bold', marginTop: 12 }}>Netting Channels</Text>
-      {this.renderChannels()}
-    </View>
+        <Text style={{ fontSize: 20, fontWeight: 'bold', marginTop: 12 }}>Netting Channels</Text>
+        {this.renderChannels()}
+      </Content>
+    </Container>
   }
 }
