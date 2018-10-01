@@ -36,7 +36,7 @@ export class Main extends React.Component<{}, State> {
     this.sub = Observable.merge(
       accs
         .do(acc => this.setState({
-          // selectedAccount: acc[0], // TODO comment out
+          selectedAccount: acc[0], // TODO comment out
           accounts: acc
         })),
       otherAccounts()
