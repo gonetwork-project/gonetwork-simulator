@@ -90,7 +90,7 @@ const balance = (blockchain: ReturnType<typeof serviceCreate>) =>
           ...bl,
           eth: bl.wei.div(new BN('1000000000000000000')).toString(),
           got: bl.gotToken.toString(10),
-          hs: bl.gotToken.toString(10)
+          hs: bl.hsToken.toString(10)
         }) as AccountBalanceFormatted)
     )
     .startWith(undefined)
