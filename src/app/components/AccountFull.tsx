@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { View, ActivityIndicator, Switch } from 'react-native'
+import { View, ActivityIndicator, Switch, Modal } from 'react-native'
 import { Subscription, Observable } from 'rxjs'
 import { Container, Content, Header, Left, Button, Body, Text, Subtitle, Title, Icon, Right } from 'native-base'
 
@@ -20,20 +20,18 @@ export interface Props {
 }
 
 export interface State {
-  ignoreSecretToProof: boolean
   accountsWithoutChannel?: OtherAccount[]
   selectedChannel?: any
   channels?: Channel[]
   showEvents?: boolean
+  showOpenChannel?: boolean
 }
 
 export const getAccountsWithoutChannel = (channels?: Channel[], other?: OtherAccount[]) =>
   channels && other && other.filter(o => !channels.find(ch => o.address.compare(ch.peerState.address) === 0))
 
 export class AccountFull extends React.Component<Props, State> {
-  state: State = {
-    ignoreSecretToProof: false
-  }
+  state: State = {}
 
   sub?: Subscription
 
@@ -46,9 +44,7 @@ export class AccountFull extends React.Component<Props, State> {
         .do((channels) => this.setState({
           channels,
           accountsWithoutChannel: getAccountsWithoutChannel(channels, this.props.otherAccounts)
-        })),
-      this.props.account.ignoreSecretToProof
-        .do(v => this.setState({ ignoreSecretToProof: v }))
+        }))
     )
       .subscribe()
   }
@@ -70,7 +66,19 @@ export class AccountFull extends React.Component<Props, State> {
 
   render () {
     const p = this.props
+    const canOpenChannel = this.state.accountsWithoutChannel && this.state.accountsWithoutChannel.length > 0
     return <Container>
+
+      {this.state.showOpenChannel && <Modal
+        supportedOrientations={['portrait']}
+        onDismiss={() => this.setState({ showOpenChannel: false })}>
+        <OpenChannel
+          account={this.props.account}
+          accountsWithoutChannel={this.state.accountsWithoutChannel!}
+          balance={this.props.balance!}
+          onDone={() => this.setState({ showOpenChannel: false })}
+        />
+      </Modal>}
 
       <Header>
         <Left>
@@ -86,27 +94,17 @@ export class AccountFull extends React.Component<Props, State> {
         </Right>
       </Header>
 
-      <Content>
+      <Content padder>
         {
           !p.balance ?
             <ActivityIndicator size='small' /> :
             Balance({ balance: p.balance, direction: 'row' })
         }
 
-        <View style={{ flexDirection: 'row', padding: 8, alignItems: 'center' }}>
-          <Switch value={this.state.ignoreSecretToProof} onValueChange={this.props.account.setIgnoreSecretToProof} />
-          <Text style={{ marginLeft: 8 }}>ignore 'SecretToProof' (allows testing broken protocol)</Text>
-        </View>
-
-        <Text style={{ fontSize: 20, fontWeight: 'bold', marginTop: 12 }}>Open Netting Channels</Text>
-        {!this.props.balance || !this.state.accountsWithoutChannel ?
-          <ActivityIndicator /> :
-          <OpenChannel
-            balance={this.props.balance}
-            account={this.props.account}
-            accountsWithoutChannel={this.state.accountsWithoutChannel}
-          />
-        }
+        <Button disabled={!canOpenChannel} style={{ margin: 8, alignSelf: 'center' }}
+          onPress={() => this.setState({ showOpenChannel: true })}>
+          <Text>Open Channel</Text>
+        </Button>
 
         <Text style={{ fontSize: 20, fontWeight: 'bold', marginTop: 12 }}>Netting Channels</Text>
         {this.renderChannels()}
