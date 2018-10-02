@@ -10,9 +10,9 @@ import { accounts as cfgAccounts, sessionsDir, contractsPath, snapDir } from './
 import { initTemp, deleteSessionFiles } from './utils'
 
 const snapNotFoundMsg = 'DB-SNAPSHOT NOT FOUND - please create by running create-snapshot script.'
-if (!fs.existsSync(snapDir)) {
-  throw new Error(snapNotFoundMsg)
-}
+// if (!fs.existsSync(snapDir)) {
+//   throw new Error(snapNotFoundMsg)
+// }
 
 // SIDE EFFECTS
 initTemp()
@@ -73,7 +73,7 @@ export const start = (c: Config, dbPath = path.resolve(sessionsDir, `${Date.now(
 
       srv.on('close', () => {
         console.log(`Ganache closed url: ${info.url}, db-path: ${info.dbPath}`)
-        // deleteSessionFiles(dbPath)
+        deleteSessionFiles(dbPath)
       })
 
       return () => {
