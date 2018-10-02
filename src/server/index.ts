@@ -202,7 +202,7 @@ const serve = () => {
       .do(() => joinSession(ws, s.id!, 2))
       .finally(() => console.log('SESSION-ENDED', s.id))
       .subscribe({
-        next: s => console.log('SESSION-CREATED', s),
+        next: i => console.log('SESSION-CREATED', i),
         error: err => console.error(err)
       })
 
@@ -236,19 +236,28 @@ const serve = () => {
 
     // todo: fix types
     ws.on('message', (data: any) => {
-      const msg = JSON.parse(data)
-      console.log('msg', msg)
-      switch (msg.type as P.ClientAction) {
-        case 'create-session':
-          return createSession(ws, (msg.payload as P.ClientRequests['create-session']))
-        case 'join-session':
-          return joinSession(ws, (msg.payload as P.ClientRequests['join-session']).sessionId)
-        case 'leave-session':
-          return leaveSession(ws)
-        case 'create-account':
-          return createAccount(ws)
-        case 'save-events':
-          fs.writeFileSync(`${tempDir}/events-${msg.payload.account}-${Date.now()}.json`, JSON.stringify(msg.payload), 'utf8')
+      let msg: any
+      try {
+        msg = JSON.parse(data)
+      } catch (e) {
+        console.warn('Malformed request.', data)
+      }
+      if (!msg) {
+        leaveSession(ws)
+      } else {
+        console.log('msg', msg)
+        switch (msg.type as P.ClientAction) {
+          case 'create-session':
+            return createSession(ws, (msg.payload as P.ClientRequests['create-session']))
+          case 'join-session':
+            return joinSession(ws, (msg.payload as P.ClientRequests['join-session']).sessionId)
+          case 'leave-session':
+            return leaveSession(ws)
+          case 'create-account':
+            return createAccount(ws)
+          case 'save-events':
+            fs.writeFileSync(`${tempDir}/events-${msg.payload.account}-${Date.now()}.json`, JSON.stringify(msg.payload), 'utf8')
+        }
       }
     })
   })

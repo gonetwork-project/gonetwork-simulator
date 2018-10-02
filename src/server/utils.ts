@@ -56,12 +56,17 @@ export const execIfScript = (serve: () => () => void, isScript: boolean) => {
 export const initTemp = () => {
   !fs.existsSync(tempDir) && fs.mkdirSync(tempDir)
   if (fs.existsSync(sessionsDir)) {
-    console.log('removing old sessions')
-    Observable.from(fs.readdirSync(sessionsDir))
-      .mergeMap(p => exec(`rm -rf ${sessionsDir}/${p}`), 3)
+    const old = fs.readdirSync(sessionsDir)
+    console.log('removing old sessions', old.length)
+    Observable.from(old)
+      .mergeMap(p => exec(`rm -rf ${sessionsDir}/${p}`)
+      //  .do(() => console.log('removed', p))
+      , 4)
       .subscribe({
         complete: () => console.log('old sessions removed')
       })
   }
   !fs.existsSync(sessionsDir) && fs.mkdirSync(sessionsDir)
 }
+
+export const deleteSessionFiles = (dir: string) => cp.exec(`rm -rf ${dir}`, () => console.log('DELETED', dir))

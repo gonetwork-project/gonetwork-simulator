@@ -7,14 +7,15 @@ import { Observable, Observer } from 'rxjs'
 import { Contracts } from '../protocol'
 
 import { accounts as cfgAccounts, sessionsDir, contractsPath, snapDir } from './config'
-import { initTemp } from './utils'
-
-initTemp()
+import { initTemp, deleteSessionFiles } from './utils'
 
 const snapNotFoundMsg = 'DB-SNAPSHOT NOT FOUND - please create by running create-snapshot script.'
 if (!fs.existsSync(snapDir)) {
   throw new Error(snapNotFoundMsg)
 }
+
+// SIDE EFFECTS
+initTemp()
 
 const exec = Observable.bindNodeCallback(cp.exec)
 
@@ -72,6 +73,7 @@ export const start = (c: Config, dbPath = path.resolve(sessionsDir, `${Date.now(
 
       srv.on('close', () => {
         console.log(`Ganache closed url: ${info.url}, db-path: ${info.dbPath}`)
+        // deleteSessionFiles(dbPath)
       })
 
       return () => {
