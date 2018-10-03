@@ -2,7 +2,7 @@ import * as React from 'react'
 import { View, ActivityIndicator } from 'react-native'
 import {
   Header, Text, Content, Container, Button, Input, Left,
-  Icon, Body, Title, Right, Subtitle, Radio, ListItem, Item, Label, H2, Card, CardItem, Spinner
+  Icon, Body, Title, Right, Subtitle, Radio, ListItem, Item, Label, H2, Card, CardItem, Spinner, Toast
 } from 'native-base'
 
 import { Address, Wei } from 'eth-types'
@@ -66,6 +66,17 @@ export class OpenChannel extends React.Component<Props, State> {
               (k, s) => progress.next(Object.assign({}, progress.value, { [k]: { status: s } })))
           )
             .mapTo('success' as Status)
+            .mergeMap(s => Observable.merge(
+              Observable.of(s),
+              Observable.timer(10)
+                .do(() => Toast.show({
+                  type: 'success',
+                  text: 'New Channel Created',
+                  duration: 5000
+                }))
+                .do(() => this.props.onDone())
+                .ignoreElements()
+            ))
             .catch(() => Observable.of('error' as Status))
         )
     )
@@ -163,7 +174,7 @@ export class OpenChannel extends React.Component<Props, State> {
     return <Container>
       <Header>
         <Left>
-          <Button transparent onPress={p.onDone}>
+          <Button transparent disabled={this.state.status !== 'active'} onPress={p.onDone}>
             <Icon name='arrow-back' />
           </Button>
         </Left>

@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Modal } from 'react-native'
 import { Observable, Subscription } from 'rxjs'
-import { Container } from 'native-base'
+import { Root } from 'native-base'
 
 import { CriticalError, ErrorProps, errors } from './global'
 import { Setup, Main, EventsVis, WebVis } from './screens'
@@ -62,6 +62,8 @@ export default class App extends React.Component<{}, State> {
         <CriticalError {...this.state.criticalError} />
       </Modal>
     }
-    return this.renderContent()
+    return <Root>
+      {this.renderContent()}
+    </Root>
   }
 }

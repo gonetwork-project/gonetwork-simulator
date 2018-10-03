@@ -54,7 +54,6 @@ export const deposit = (account: Account, token: Address, channel: Address, amou
 export const openChannelAndDeposit = (account: Account, amount: Wei, other: Address, log: LogFn) =>
   Promise.all([
     account.blockchain.monitoring.asStream('ChannelNewBalance')
-      .skip(1)
       .take(1)
       .delay(0)
       .toPromise(),
