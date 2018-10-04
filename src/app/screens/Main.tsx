@@ -102,7 +102,7 @@ export class Main extends React.Component<{}, State> {
               balance={this.state.balances[a.owner.addressStr]}
               onSelected={() => this.setState({ selectedAccount: a })}
             />) :
-          <Text>...initializig...</Text>
+          <ActivityIndicator />
       }
     </List>
     {this.state.isAddingAccount ?

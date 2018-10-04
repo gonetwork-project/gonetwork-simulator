@@ -32,7 +32,7 @@ export const autoDispose = (dispose: () => void) => {
   })
 
   process.on('uncaughtException', function (e) {
-    console.log(e.stack)
+    console.error('uncaughtException', e.stack)
     process.exit(1)
   })
 
@@ -69,4 +69,5 @@ export const initTemp = () => {
   !fs.existsSync(sessionsDir) && fs.mkdirSync(sessionsDir)
 }
 
-export const deleteSessionFiles = (dir: string) => cp.exec(`rm -rf ${dir}`, () => console.log('DELETED', dir))
+export const deleteSessionFiles = (dir: string) =>
+  setTimeout(() => cp.exec(`rm -rf ${dir}`, () => console.log('DELETED', dir)), 1000)

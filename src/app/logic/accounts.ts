@@ -288,6 +288,7 @@ export const balances = (accs: ReturnType<typeof accounts>) =>
                 hs: !a.hsToken.eq(b.hsToken) ? b.hsToken.sub(a.hsToken).toString() : undefined
               }
             }) as AccountBalanceFormatted
+            ['eth', 'got', 'hs'].forEach(k => d.delta[k] && d.delta[k][0] !== '-' && (d.delta[k] = '+' + d.delta[k]))
             return Observable.of(b).delay(5000).startWith(d)
           } else {
             return Observable.of(b)

@@ -110,8 +110,7 @@ export class OpenChannel extends React.Component<Props, State> {
               <Text note={p.status === 'not-started'}>{m}</Text>
               {p.status === 'waiting' ?
                 <ActivityIndicator size='small' style={{ marginRight: 24 }} /> :
-                <Icon name='ios-checkmark' active={p.status !== 'not-started'}
-                  style={{ color: p.status === 'ok' ? 'green' : 'rgba(128,128,128,0.6)' }} />
+                p.status === 'ok' && <Icon name='ios-checkmark' style={{ color: 'green' }} />
               }
             </View>
           </CardItem>)

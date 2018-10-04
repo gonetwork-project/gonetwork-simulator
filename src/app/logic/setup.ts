@@ -13,12 +13,12 @@ export interface Url {
 
 export type ConnectionWithStatus = WebSocket | 'idle' | 'connecting' | 'failed'
 
-export const defaultBlockTime = 5000
+export const defaultBlockTime = 500
 export const minBlockTime = 100
 export const timeouts = {
-  settle: as.BlockNumber(51),
-  reveal: as.BlockNumber(50),
-  collateral: as.BlockNumber(50)
+  settle: as.BlockNumber(21),
+  reveal: as.BlockNumber(20),
+  collateral: as.BlockNumber(20)
 }
 
 const defaultUrl: Readonly<Url> = {
