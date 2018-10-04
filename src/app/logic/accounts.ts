@@ -20,6 +20,7 @@ export interface AccountBase {
   privateKeyStr: string
   address: Address
   addressStr: string
+  addressShort: string
 }
 
 export type Account = ReturnType<ReturnType<typeof initAccount>> extends Observable<infer U> ? U : never
@@ -34,11 +35,17 @@ export interface AccountBalanceFormatted extends AccountBalance {
   eth: string
   got: string
   hs: string
+  delta: { // since last block
+    eth?: string
+    got?: string
+    hs?: string
+  }
 }
 
 export interface OtherAccount {
   addressStr: string
   address: Address
+  addressShort
 }
 
 export enum EventSource {
@@ -72,29 +79,15 @@ export const toAccount = (acc: { privateKey: string }): AccountBase => {
   return {
     addressStr,
     privateKeyStr,
+    addressShort: shortAddress(addressStr),
     address: as.Address(new Buffer(addressStr, 'hex')),
     privateKey
   }
 }
 
-const balance = (blockchain: ReturnType<typeof serviceCreate>) =>
-  blockchain.monitoring.blockNumbers()
-    .switchMap(bn =>
-      Observable.zip(
-        blockchain.contractsProxy.call.token.balanceOf({ to: blockchain.config.gotToken }, { _owner: blockchain.config.owner }),
-        blockchain.contractsProxy.call.token.balanceOf({ to: blockchain.config.testToken }, { _owner: blockchain.config.owner }),
-        blockchain.rpc.getBalance({ address: blockchain.config.owner }),
-        (gotToken, hsToken, wei) => ({ gotToken, hsToken, wei, blockNumber: bn } as AccountBalance)
-      ).take(1)
-        .map(bl => ({
-          ...bl,
-          eth: bl.wei.div(new BN('1000000000000000000')).toString(),
-          got: bl.gotToken.toString(10),
-          hs: bl.hsToken.toString(10)
-        }) as AccountBalanceFormatted)
-    )
-    .startWith(undefined)
-    .shareReplay(1)
+const shortAddress = (a: string) => '0x' + a.substring(0, 16) + '...'
+
+const weiToEthString = (w: Wei) => w.div(new BN('1000000000000000000')).toString()
 
 const collectEvents = (evs: Observable<any>, name = 'N/A') =>
   evs
@@ -256,13 +249,35 @@ export const accounts = () => {
 export const otherAccounts = () => userSession()
   .map(s => (s.addresses || []).map(a => ({
     address: new Buffer(a, 'hex'),
-    addressStr: a
+    addressStr: a,
+    addressShort: shortAddress(a)
   } as OtherAccount)))
   // .do(x => console.log('OTHER-ADDRESSES', x))
   .shareReplay(1)
 
 const isBalanceChanged = (a: AccountBalance, b: AccountBalance) =>
-  !(['gotToken', 'hsToken', 'wei'] as Array<keyof AccountBalance>).reduce((v, k) => v || !a[k].eq(b[k]), false)
+  !(['gotToken', 'hsToken', 'wei'] as Array<keyof AccountBalance>).reduce((v, k) =>
+     v || !a[k].eq(b[k]), false)
+
+const balance = (blockchain: ReturnType<typeof serviceCreate>) =>
+  blockchain.monitoring.blockNumbers()
+    .switchMap(bn =>
+      Observable.zip(
+        blockchain.contractsProxy.call.token.balanceOf({ to: blockchain.config.gotToken }, { _owner: blockchain.config.owner }),
+        blockchain.contractsProxy.call.token.balanceOf({ to: blockchain.config.testToken }, { _owner: blockchain.config.owner }),
+        blockchain.rpc.getBalance({ address: blockchain.config.owner }),
+        (gotToken, hsToken, wei) => ({ gotToken, hsToken, wei, blockNumber: bn } as AccountBalance)
+      ).take(1)
+        .map(bl => ({
+          ...bl,
+          eth: weiToEthString(bl.wei),
+          got: bl.gotToken.toString(10),
+          hs: bl.hsToken.toString(10),
+          delta: {}
+        }) as AccountBalanceFormatted)
+    )
+    .startWith(undefined)
+    .shareReplay(1)
 
 export const balances = (accs: ReturnType<typeof accounts>) =>
   accs
@@ -271,6 +286,22 @@ export const balances = (accs: ReturnType<typeof accounts>) =>
       (acc.balance
         .filter(Boolean) as Observable<AccountBalanceFormatted>)
         .distinctUntilChanged(isBalanceChanged)
+        .startWith(undefined)
+        .pairwise()
+        .switchMap(([a, b]) => {
+          if (a && b) {
+            const d = Object.assign({}, b, {
+              delta: {
+                eth: !a.wei.eq(b.wei) ? weiToEthString(as.Wei(b.wei.sub(a.wei))) : undefined,
+                got: !a.gotToken.eq(b.gotToken) ? b.gotToken.sub(a.gotToken).toString() : undefined,
+                hs: !a.hsToken.eq(b.hsToken) ? b.hsToken.sub(a.hsToken).toString() : undefined
+              }
+            }) as AccountBalanceFormatted
+            return Observable.of(b).delay(5000).startWith(d)
+          } else {
+            return Observable.of(b)
+          }
+        })
         .startWith(undefined)
         .map(b => ({ [acc.owner.addressStr]: b }))
     )

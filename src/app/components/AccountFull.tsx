@@ -98,7 +98,7 @@ export class AccountFull extends React.Component<Props, State> {
         {
           !p.balance ?
             <ActivityIndicator size='small' /> :
-            Balance({ balance: p.balance, direction: 'row' })
+            Balance({ balance: p.balance, direction: 'horizontal' })
         }
 
         <Button disabled={!canOpenChannel} style={{ margin: 8, alignSelf: 'center' }}

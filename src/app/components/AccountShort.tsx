@@ -15,9 +15,9 @@ export interface Props {
 export const AccountShort = (p: Props) =>
   <ListItem>
     <Body>
-      <H3>0x{p.account.owner.addressStr}</H3>
+      <Text style={{ fontWeight: 'bold' }}>{p.account.owner.addressShort}</Text>
       {p.balance ?
-        Balance({ balance: p.balance }) :
+        Balance({ balance: p.balance, direction: 'vertical' }) :
         <ActivityIndicator />
       }
     </Body>

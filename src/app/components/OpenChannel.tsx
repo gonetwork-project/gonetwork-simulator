@@ -2,7 +2,7 @@ import * as React from 'react'
 import { View, ActivityIndicator } from 'react-native'
 import {
   Header, Text, Content, Container, Button, Input, Left,
-  Icon, Body, Title, Right, Subtitle, Radio, ListItem, Item, Label, H2, Card, CardItem, Spinner, Toast
+  Icon, Body, Title, Right, Subtitle, Radio, ListItem, Item, Label, H2, Card, CardItem, Spinner, Toast, H3
 } from 'native-base'
 
 import { Address, Wei } from 'eth-types'
@@ -18,7 +18,7 @@ type Status = 'active' | 'in-progress' | 'error' | 'success'
 export interface Props {
   account: Account
   balance: AccountBalanceFormatted
-  accountsWithoutChannel: Array<{ address: Address, addressStr: string }>
+  accountsWithoutChannel: Array<{ address: Address, addressStr: string, addressShort: string }>
   onDone: () => void
 }
 
@@ -106,7 +106,7 @@ export class OpenChannel extends React.Component<Props, State> {
         progressOrder
           .map((k) => ({ k, p: p[k], m: progressMessage[k] }))
           .map(({ p, m, k }) => <CardItem key={k}>
-            <View style={{ flexDirection: 'row', width: '100%', paddingRight: 72, justifyContent: 'space-between', alignItems: 'center' }}>
+            <View style={{ flexDirection: 'row', width: '100%', paddingRight: 36, justifyContent: 'space-between', alignItems: 'center' }}>
               <Text note={p.status === 'not-started'}>{m}</Text>
               {p.status === 'waiting' ?
                 <ActivityIndicator size='small' style={{ marginRight: 24 }} /> :
@@ -132,7 +132,7 @@ export class OpenChannel extends React.Component<Props, State> {
           return <Text>You need to have some tokens to be able to open new netting channel. Please use a master account instead.</Text>
         }
         return <View>
-          <View style={{ flexDirection: 'row', padding: 8, justifyContent: 'space-around', alignItems: 'center' }}>
+          <View style={{ flexDirection: 'row', padding: 8, marginTop: 16, marginBottom: 16, justifyContent: 'space-around', alignItems: 'center' }}>
             <Item floatingLabel style={{ maxWidth: '30%' }}>
               <Label>Amount</Label>
               <Input
@@ -148,10 +148,10 @@ export class OpenChannel extends React.Component<Props, State> {
               <Text>Open</Text>
             </Button>
           </View>
-          <H2>Select Peer</H2>
+          <H3>Select Peer</H3>
           {without.map((w, idx) =>
             <ListItem key={w.addressStr} onPress={() => this.state.selectedIdx = idx}>
-              <Left><Text>0x{w.addressStr}</Text></Left>
+              <Left><Text>{w.addressShort}</Text></Left>
               <Right>
                 <Radio selected={this.state.selectedIdx === idx} />
               </Right>
@@ -160,7 +160,7 @@ export class OpenChannel extends React.Component<Props, State> {
           <Text note style={{ marginTop: 16 }}>Only one netting channel may be active between two Ethereum addresses.
             To open another one the previous one needs to settle.
             The above selection excludes address which have open channel.
-        </Text>
+          </Text>
         </View>
       }
       case 'success':
@@ -179,8 +179,8 @@ export class OpenChannel extends React.Component<Props, State> {
           </Button>
         </Left>
         <Body>
-          <Title>Open Netting Channel</Title>
-          <Subtitle>0x{p.account.owner.addressStr.substring(0, 21)}...</Subtitle>
+          <Title>Open Channel</Title>
+          <Subtitle>0x{p.account.owner.addressStr.substring(0, 16)}...</Subtitle>
         </Body>
         <Right>
         </Right>
@@ -190,7 +190,7 @@ export class OpenChannel extends React.Component<Props, State> {
         {
           !p.balance ?
             <ActivityIndicator size='small' /> :
-            Balance({ balance: p.balance, direction: 'row' })
+            Balance({ balance: p.balance, direction: 'horizontal' })
         }
         {this.renderContent()}
       </Content>
