@@ -27,6 +27,7 @@ const freePort = () => {
 
 let sessionId = 0
 const PINGING_INTERVAL = 1000
+const INITIAL_ACCOUNT_COUNT = 3
 
 const subprocess = <C extends { port: number, hostname: string }, T> (cfg: Partial<C>, pr: (c: C) => Observable<T>): Observable<T> =>
   Observable.race(
@@ -199,7 +200,7 @@ const serve = () => {
         inCreation = inCreation.filter(_s => _s !== s)
         active.push(session)
       })
-      .do(() => joinSession(ws, s.id!, 2))
+      .do(() => joinSession(ws, s.id!, INITIAL_ACCOUNT_COUNT))
       .finally(() => console.log('SESSION-ENDED', s.id))
       .subscribe({
         next: i => console.log('SESSION-CREATED', i),
@@ -211,7 +212,8 @@ const serve = () => {
     const meta: SessionMeta = {
       createdBy: ws,
       subscription: sub,
-      accountsPool: accounts.slice(2).map(a => ({ privateKey: a.secretKey.substring(2), address: a.address.toString('hex') })),
+      accountsPool: accounts.slice(2)
+        .map(a => ({ privateKey: a.secretKey.substring(2), address: a.address.toString('hex') })),
       users: new Map()
     }
 

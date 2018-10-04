@@ -19,6 +19,8 @@ initTemp()
 
 const exec = Observable.bindNodeCallback(cp.exec)
 
+let id = 0
+
 export interface GanacheInfo {
   dbPath: string
   url: string
@@ -31,7 +33,7 @@ interface Config {
   blockTime: number
 }
 
-export const start = (c: Config, dbPath = path.resolve(sessionsDir, `${Date.now()}.db`), ignoreSnapshot = false):
+export const start = (c: Config, dbPath = path.resolve(sessionsDir, `${Date.now()}-${++id}.db`), ignoreSnapshot = false):
   Observable<GanacheInfo> =>
   Observable.concat(
     ignoreSnapshot ? Observable.empty() :

@@ -60,8 +60,8 @@ export const initTemp = () => {
     console.log('removing old sessions', old.length)
     Observable.from(old)
       .mergeMap(p => exec(`rm -rf ${sessionsDir}/${p}`)
-      //  .do(() => console.log('removed', p))
-      , 4)
+        //  .do(() => console.log('removed', p))
+        , 4)
       .subscribe({
         complete: () => console.log('old sessions removed')
       })
@@ -69,5 +69,12 @@ export const initTemp = () => {
   !fs.existsSync(sessionsDir) && fs.mkdirSync(sessionsDir)
 }
 
-export const deleteSessionFiles = (dir: string) =>
-  setTimeout(() => cp.exec(`rm -rf ${dir}`, () => console.log('DELETED', dir)), 1000)
+export const deleteSessionFiles = (dir: string) => {
+  Observable.bindNodeCallback(fs.readdir)(dir)
+    .map((c: any) => c.length)
+    .delay(0.1 * 60 * 1000)
+    .mergeMap((before) => Observable.bindNodeCallback(fs.readdir)(dir)
+      .map((c: any) => console.log(`Deleting ${dir}, more files: ${c.length - before}`)))
+    .mergeMap(() => exec(`rm -rf ${dir}`))
+    .subscribe()
+}
