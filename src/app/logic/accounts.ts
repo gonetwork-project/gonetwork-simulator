@@ -206,15 +206,6 @@ const initAccount = (cfg: UserSession, contracts: Contracts) => (account: Accoun
       contracts, p2p, engine, blockchain, owner: account, txs: blockchain.txs,
       balance: balance(blockchain),
       events,
-      // events: {
-      //   blockchain: collectEvents(blockchain.monitoring.asStream('*'), 'BLOCKCHAIN'),
-      //   p2p: collectEvents(Observable.fromEvent(p2p, 'message-received'), 'P2P'),
-      //   all: collectEvents(Observable.merge(
-      //     blockchain.monitoring.asStream('*').map(e => ({ type: EventType.Blockchain, event: e })),
-      //     Observable.fromEvent(p2p, 'message-received').map(e => ({ type: EventType.P2P, event: e }))
-      //     ), 'ALL') as Observable<{ type: EventType, event: any }>, // todo: improve typing
-      //   engine: Observable.throw('TO-DO')
-      // },
       dispose: () => {
         p2p.dispose()
         blockchain.monitoring.dispose()

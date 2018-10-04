@@ -38,6 +38,7 @@ export const start = (c: Config, dbPath = path.resolve(sessionsDir, `${Date.now(
       fs.existsSync(snapDir) && fs.existsSync(contractsPath) ?
         exec(`cp -r ${snapDir} ${dbPath}`).ignoreElements()
         : Observable.throw(snapNotFoundMsg),
+    Observable.timer(200).ignoreElements(), // there is some ganache-core issue - most likely race condition
     Observable.create((obs: Observer<GanacheInfo>) => {
       const options = {
         port: c.port,
@@ -74,6 +75,11 @@ export const start = (c: Config, dbPath = path.resolve(sessionsDir, `${Date.now(
       srv.on('close', () => {
         console.log(`Ganache closed url: ${info.url}, db-path: ${info.dbPath}`)
         deleteSessionFiles(dbPath)
+      })
+
+      srv.on('error', (err: any) => {
+        console.error('GANACHE-ERROR', err)
+        obs.error(err)
       })
 
       return () => {

@@ -203,7 +203,7 @@ const serve = () => {
       .finally(() => console.log('SESSION-ENDED', s.id))
       .subscribe({
         next: i => console.log('SESSION-CREATED', i),
-        error: err => console.error(err)
+        error: err => console.error('GANACHE-ERROR', err)
       })
 
     console.log('CREATE-UPDATE')
