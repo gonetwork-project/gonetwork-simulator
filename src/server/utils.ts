@@ -36,14 +36,16 @@ export const autoDisposeOrRestart = (serve: () => () => void, restartOnError = f
     console.error('uncaughtException', e.stack)
     if (restartOnError) {
       dispose()
-      dispose = serve()
+      setTimeout(() => {
+        dispose = serve()
+      }, 1000)
     } else {
       process.exit(1)
     }
   })
 
   return () => {
-    removeExitListeners()
+    !restartOnError && removeExitListeners()
     dispose()
   }
 }

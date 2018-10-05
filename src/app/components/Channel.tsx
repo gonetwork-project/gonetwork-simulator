@@ -147,41 +147,69 @@ export class ChannelComp extends React.Component<Props, State> {
   renderVisibile = () => {
     const ch = this.props.channel
     switch (ch.state) {
-      case 'opened': return <View style={{
-        flexDirection: 'row', alignSelf: 'stretch', alignItems: 'center', justifyContent: 'space-between',
-        marginBottom: this.state.error ? 0 : 8
-      }}>
+      case 'opened':
+        return <View style={{
+          flexDirection: 'row', alignSelf: 'stretch', alignItems: 'center', justifyContent: 'space-between',
+          minHeight: 40, marginBottom: this.state.error ? 0 : 8
+        }}>
 
-        <Item floatingLabel style={{ maxWidth: '30%' }}>
-          <Label>Amount</Label>
-          <Input
-            value={this.state.amount ? this.state.amount.toString(10) : ''}
-            onChangeText={t => this.setState({ amount: parseInt(t, 10) ? as.Wei(parseInt(t, 10)) : undefined })}
-            keyboardType='number-pad'
-          />
-        </Item>
+          <Item floatingLabel style={{ maxWidth: '30%' }}>
+            <Label>Amount</Label>
+            <Input
+              value={this.state.amount ? this.state.amount.toString(10) : ''}
+              onChangeText={t => this.setState({ amount: parseInt(t, 10) ? as.Wei(parseInt(t, 10)) : undefined })}
+              keyboardType='number-pad'
+            />
+          </Item>
 
-        <View style={{ alignItems: 'center' }}>
-          <Text note>Send Transfer</Text>
-          <View style={{ flexDirection: 'row' }}>
-            <Button disabled={!this.state.amount} transparent onPress={this.sendDirect}>
-              <Text>Direct</Text>
-            </Button>
-            <Button disabled={!this.state.amount} transparent onPress={this.sendMediated}>
-              <Text>Mediated</Text>
+          <View style={{ alignItems: 'center' }}>
+            <Text note>Send Transfer</Text>
+            <View style={{ flexDirection: 'row' }}>
+              <Button disabled={!this.state.amount} transparent onPress={this.sendDirect}>
+                <Text>Direct</Text>
+              </Button>
+              <Button disabled={!this.state.amount} transparent onPress={this.sendMediated}>
+                <Text>Mediated</Text>
+              </Button>
+            </View>
+          </View>
+
+          <View>
+            <Button onPress={() => this.updateState({ more: !this.state.more })} transparent style={{ alignSelf: 'flex-end' }}>
+              <Text style={{ fontSize: 12 }}>[{this.state.more ? '-' : '+'}]</Text>
             </Button>
           </View>
+
         </View>
 
-        <View>
-          <Button onPress={() => this.updateState({ more: !this.state.more })} transparent style={{ alignSelf: 'flex-end' }}>
-            <Text style={{ fontSize: 12 }}>[{this.state.more ? '-' : '+'}]</Text>
-          </Button>
+      case 'closed':
+        const toSettle = ch.closedBlock!.add(this.props.account.engine.settleTimeout).sub(this.props.currentBlock)
+        const canSettle = toSettle.lte(new BN(0))
+        const canWithdraw = Object.keys(ch.peerState.openLocks).length > 0
+        return <View style={{ minHeight: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          {canWithdraw ?
+            <Button disabled={!canWithdraw} onPress={this.withdraw}>
+              <Text>Withdraw Open Locks</Text>
+            </Button> :
+            <Text note>No open locks to withdraw.</Text>
+          }
+          {
+            canSettle ?
+              <Button onPress={this.settle}>
+                <Text>Settle</Text>
+              </Button> :
+              <Text>Settle possible in {toSettle.toString(10)}</Text>
+          }
         </View>
 
-      </View>
+      case 'settled':
+        return <Text note style={{ minHeight: 40, alignSelf: 'center', justifyContent: 'center' }}>Channel settled. [TODO] remove/create-new</Text>
+
       default:
-        return <Text>TODO: {ch.state}</Text>
+        return <View style={{ minHeight: 40, alignSelf: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator />
+          <Text note>{ch.state}</Text>
+        </View>
     }
   }
 
@@ -192,6 +220,12 @@ export class ChannelComp extends React.Component<Props, State> {
       <Text style={{ fontSize: 14 }}>{ch.state}</Text>
       <Text note>Channel Address</Text>
       <Text style={{ fontSize: 14 }}>0x{ch.channelAddress.toString('hex')}</Text>
+      {
+        ch.state === 'opened' &&
+        <Button bordered danger onPress={this.close} style={{ alignSelf: 'flex-end', marginTop: 4 }}>
+          <Text>Close</Text>
+        </Button>
+      }
     </View>
 
   render () {
@@ -208,22 +242,5 @@ export class ChannelComp extends React.Component<Props, State> {
         {this.renderMore()}
       </Body>
     </Card>
-    // return <View style={{ padding: 20 }}>
-    //   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-    //     {this.renderActions()}
-    //   </View>
-    //   <Text>State: {ch.state}</Text>
-    //   <Text>Channel Address: 0x{ch.channelAddress.toString('hex')}</Text>
-    //   <Text>Peer Address: 0x{ch.peerState.address.toString('hex')}</Text>
-    //   <Text>Opened Block: {ch.openedBlock.toString(10)}</Text>
-    //   {ch.closedBlock && <Text>Closed Block: {ch.closedBlock.toString(10)}</Text>}
-
-    //   <Text style={{ fontWeight: 'bold' }}>Peer State</Text>
-    //   {State(ch.peerState, openLocks)}
-
-    //   <Text style={{ fontWeight: 'bold' }}>Account State</Text>
-    //   {State(ch.myState)}
-
-    // </View>
   }
 }

@@ -196,7 +196,6 @@ export class Setup extends React.Component<Props, State> {
 
   render () {
     if (!this.state) return null
-    console.log(this.state)
     return <Container>
       <Header>
         <H1>Welcome to GoNetwork Simulator</H1>
