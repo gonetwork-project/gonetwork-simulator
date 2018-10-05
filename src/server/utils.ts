@@ -25,7 +25,8 @@ const removeExitListeners = () => {
   process.removeAllListeners('uncaughtException')
 }
 
-export const autoDispose = (dispose: () => void) => {
+export const autoDisposeOrRestart = (serve: () => () => void, restartOnError = false) => {
+  let dispose = serve()
   process.on('SIGINT', () => {
     dispose()
     process.exit()
@@ -33,7 +34,12 @@ export const autoDispose = (dispose: () => void) => {
 
   process.on('uncaughtException', function (e) {
     console.error('uncaughtException', e.stack)
-    process.exit(1)
+    if (restartOnError) {
+      dispose()
+      dispose = serve()
+    } else {
+      process.exit(1)
+    }
   })
 
   return () => {
@@ -42,13 +48,13 @@ export const autoDispose = (dispose: () => void) => {
   }
 }
 
-export const execIfScript = (serve: () => () => void, isScript: boolean) => {
+export const execIfScript = (serve: () => () => void, isScript: boolean, restartOnError = false) => {
   if (isScript) {
-    let dispose = autoDispose(serve())
+    let dispose = autoDisposeOrRestart(serve, restartOnError)
 
     process.on('SIGUSR2', () => {
       dispose()
-      dispose = autoDispose(serve())
+      dispose = autoDisposeOrRestart(serve, restartOnError)
     })
   }
 }
@@ -72,7 +78,7 @@ export const initTemp = () => {
 export const deleteSessionFiles = (dir: string) => {
   Observable.bindNodeCallback(fs.readdir)(dir)
     .map((c: any) => c.length)
-    .delay(0.1 * 60 * 1000)
+    // .delay(10000) // even after closed ganache process is still active and tries to modify the dir https://github.com/trufflesuite/ganache-core/issues/187
     .mergeMap((before) => Observable.bindNodeCallback(fs.readdir)(dir)
       .map((c: any) => console.log(`Deleting ${dir}, more files: ${c.length - before}`)))
     .mergeMap(() => exec(`rm -rf ${dir}`))

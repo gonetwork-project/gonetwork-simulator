@@ -281,4 +281,4 @@ const serve = () => {
   }
 }
 
-execIfScript(serve, !module.parent)
+execIfScript(serve, !module.parent, true)
