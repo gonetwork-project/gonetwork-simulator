@@ -8,6 +8,7 @@ import { UserSession } from '../../protocol'
 import { session, timeouts } from './setup'
 
 import { Wei, BlockNumber, Address, PrivateKey } from 'eth-types'
+import { openChannelAndDeposit } from './onchain-actions'
 
 export interface Contracts {
   manager: Address
@@ -232,6 +233,13 @@ export const accounts = () => {
         .do(a => inited.push(a))
         .merge(Observable.from(inited))
         .toArray()
+        .do((ar) => {
+          if (ar && ar.length === 3) {
+            const [a, b, c] = ar
+            openChannelAndDeposit(a, as.Wei(1000), b.owner.address, () => null)
+              .then(() => openChannelAndDeposit(a, as.Wei(1000), c.owner.address, () => null))
+          }
+        })
     )
     // .do(x => console.log('USER-ACCOUNTS', x))
     .shareReplay(1)
@@ -248,7 +256,7 @@ export const otherAccounts = () => userSession()
 
 const isBalanceChanged = (a: AccountBalance, b: AccountBalance) =>
   !(['gotToken', 'hsToken', 'wei'] as Array<keyof AccountBalance>).reduce((v, k) =>
-     v || !a[k].eq(b[k]), false)
+    v || !a[k].eq(b[k]), false)
 
 const balance = (blockchain: ReturnType<typeof serviceCreate>) =>
   blockchain.monitoring.blockNumbers()

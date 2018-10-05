@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { View, ActivityIndicator, Switch, Modal } from 'react-native'
+import { View, ActivityIndicator, Switch, Modal, LayoutAnimation } from 'react-native'
 import { Subscription, Observable } from 'rxjs'
 import { Container, Content, Header, Left, Button, Body, Text, Subtitle, Title, Icon, Right } from 'native-base'
 
@@ -7,7 +7,7 @@ import { BlockNumber } from 'eth-types'
 import { Channel } from 'go-network-framework/lib/state-channel/channel'
 import { Account, AccountBalanceFormatted, OtherAccount } from '../logic/accounts'
 import { OpenChannel } from './OpenChannel'
-import { ChannelShort } from './Channel'
+import { ChannelComp } from './Channel'
 import { Events } from './Events'
 import { Balance } from './Balance'
 
@@ -41,6 +41,7 @@ export class AccountFull extends React.Component<Props, State> {
         .asStream('*')
         .startWith(true as any)
         .map(() => Object.values(this.props.account.engine.channels))
+        .do(() => LayoutAnimation.configureNext(LayoutAnimation.Presets.spring))
         .do((channels) => this.setState({
           channels,
           accountsWithoutChannel: getAccountsWithoutChannel(channels, this.props.otherAccounts)
@@ -57,7 +58,7 @@ export class AccountFull extends React.Component<Props, State> {
     const cs = this.state.channels
     if (!cs) return <ActivityIndicator />
     if (cs.length === 0) return <Text>No openned channels.</Text>
-    return cs.map(ch => <ChannelShort
+    return cs.map(ch => <ChannelComp
       key={ch.peerState.address.toString('hex')}
       currentBlock={this.props.currentBlock!}
       account={this.props.account}
@@ -101,10 +102,15 @@ export class AccountFull extends React.Component<Props, State> {
             Balance({ balance: p.balance, direction: 'horizontal' })
         }
 
-        <Button disabled={!canOpenChannel} style={{ margin: 8, alignSelf: 'center' }}
+        <Button disabled={!canOpenChannel} style={{
+          marginTop: 18,
+          marginBottom: canOpenChannel ? 18 : 0, alignSelf: 'center'
+        }}
           onPress={() => this.setState({ showOpenChannel: true })}>
           <Text>Open Channel</Text>
         </Button>
+        {!canOpenChannel && <Text style={{ marginBottom: canOpenChannel ? 18 : 0, alignSelf: 'center' }}
+          note>No accounts without active channel available.</Text>}
 
         <Text style={{ fontSize: 20, fontWeight: 'bold', marginTop: 12 }}>Netting Channels</Text>
         {this.renderChannels()}

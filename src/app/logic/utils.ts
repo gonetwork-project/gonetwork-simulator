@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs'
-import { AsyncStorage } from 'react-native'
+import { AsyncStorage, ErrorUtils } from 'react-native'
 
 export const ignoreUndefined = <T, R> (s: (v: T) => Observable<R> | Promise<R>) => (v: T | undefined) =>
   v ? s(v) : Observable.empty() as Observable<R>

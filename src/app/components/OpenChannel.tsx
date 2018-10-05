@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { View, ActivityIndicator } from 'react-native'
+import { View, ActivityIndicator, LayoutAnimation } from 'react-native'
 import {
   Header, Text, Content, Container, Button, Input, Left,
   Icon, Body, Title, Right, Subtitle, Radio, ListItem, Item, Label, H2, Card, CardItem, Spinner, Toast, H3
@@ -57,8 +57,11 @@ export class OpenChannel extends React.Component<Props, State> {
   componentDidMount () {
     const progress = new BehaviorSubject<OpenAndDepositState>(openAndDepositStateStart())
     this.sub = Observable.merge(
-      progress.do(p => this.setState({ progress: p })),
+      progress
+        .do(() => LayoutAnimation.configureNext(LayoutAnimation.Presets.spring))
+        .do(p => this.setState({ progress: p })),
       this.openSub
+        .do(() => LayoutAnimation.configureNext(LayoutAnimation.Presets.spring))
         .do(() => this.setState({ status: 'in-progress' }))
         .exhaustMap(s =>
           Observable.defer(

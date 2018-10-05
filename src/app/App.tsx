@@ -1,16 +1,17 @@
 import * as React from 'react'
-import { Modal } from 'react-native'
+import { Modal, YellowBox } from 'react-native'
 import { Observable, Subscription } from 'rxjs'
 import { Root } from 'native-base'
 
 import { CriticalError, ErrorProps, errors } from './global'
 import { Setup, Main, EventsVis, WebVis } from './screens'
+import * as setup from './logic/setup'
+import { SessionId } from '../protocol'
 
 // Side-Effects
 // todo: it is not ideal as, in theory, it may fail
 import './logic/init'
-import * as setup from './logic/setup'
-import { SessionId } from '../protocol'
+YellowBox.ignoreWarnings(['Warning: Overriding previous layout', 'Attempted to invoke'])
 
 type Step = 'setup' | 'main' | 'events-vis' | 'web-vis'
 
