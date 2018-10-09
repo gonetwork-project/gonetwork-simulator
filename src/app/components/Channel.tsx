@@ -23,13 +23,14 @@ export const OpenLock = (lock: Lock, index: number) =>
     <Text>Amount: {lock.amount.toString(10)}</Text>
   </View>
 
-export const ChannelState = (ch: Channel) => {
+export const ChannelState = (ch: Channel, block: BlockNumber) => {
   const acc = ch.myState
   const peer = ch.peerState
   const openLocks = Object.values(peer.openLocks)
   return <View style={{ width: '100%', height: 120, marginBottom: 8, justifyContent: 'space-between', flexDirection: 'row' }}>
     <View style={{ width: '30%', justifyContent: 'space-around', alignItems: 'flex-end' }}>
       <Text style={{ height: 20 }}></Text>
+      <Text note>balance</Text>
       <Text note>deposit</Text>
       <Text note>transferred</Text>
       <Text note>nonce</Text>
@@ -38,6 +39,7 @@ export const ChannelState = (ch: Channel) => {
 
     <View style={{ width: '30%', justifyContent: 'space-around', alignItems: 'center' }}>
       <Text style={{ fontWeight: 'bold' }}>account</Text>
+      <Text>{ch.transferrable().toString(10)}</Text>
       <Text>{acc.depositBalance.toString(10)}</Text>
       <Text>{acc.transferredAmount.toString(10)}</Text>
       <Text>{acc.nonce.toString(10)}</Text>
@@ -46,6 +48,7 @@ export const ChannelState = (ch: Channel) => {
 
     <View style={{ width: '30%', justifyContent: 'space-around', alignItems: 'center' }}>
       <Text style={{ fontWeight: 'bold' }}>peer</Text>
+      <Text>{ch.transferrableFromTo(peer, acc, block).toString(10)}</Text>
       <Text>{peer.depositBalance.toString(10)}</Text>
       <Text>{peer.transferredAmount.toString(10)}</Text>
       <Text>{peer.nonce.toString(10)}</Text>
@@ -112,36 +115,6 @@ export class ChannelComp extends React.Component<Props, State> {
   settle = () => {
     this.props.account.engine.settleChannel(this.props.channel.channelAddress)
     this.forceUpdate()
-  }
-
-  renderActions = () => {
-    const ch = this.props.channel
-
-    if (ch.peerState.depositBalance.toNumber() === 0 && ch.myState.depositBalance.toNumber() === 0) {
-      return <Text>...waiting for deposit...</Text>
-    }
-
-    switch (ch.state) {
-      case 'opened': return [
-        <ButtonRN key='c' title='Close' onPress={this.close} />,
-        <ButtonRN key='d' title='Send Direct (50)' onPress={this.sendDirect} />,
-        <ButtonRN key='m' title='Send Mediated (50)' onPress={this.sendMediated} />
-      ]
-      case 'closed':
-        const toSettle = ch.closedBlock!.add(this.props.account.engine.settleTimeout).sub(this.props.currentBlock)
-        const canSettle = toSettle.lte(new BN(0))
-        const canWithdraw = Object.keys(ch.peerState.openLocks).length > 0
-        return [
-          <ButtonRN key='w' disabled={!canWithdraw} title='Withdraw Peer Open Locks' onPress={this.withdraw} />,
-          canSettle ?
-            <ButtonRN key='s' title='Settle' onPress={this.settle} /> :
-            <Text key='s'>Settle possible in {toSettle.toString(10)}</Text>
-        ]
-      case 'settling': return <Text>...settling...</Text>
-      case 'settled': return <Text>Settled - no more actions available</Text>
-      default:
-        return <ActivityIndicator />
-    }
   }
 
   renderVisibile = () => {
@@ -215,7 +188,7 @@ export class ChannelComp extends React.Component<Props, State> {
 
   renderMore = (ch = this.props.channel) =>
     this.state.more && <View style={{ width: '100%' }}>
-      {ChannelState(ch)}
+      {ChannelState(ch, this.props.currentBlock)}
       <Text note>State</Text>
       <Text style={{ fontSize: 14 }}>{ch.state}</Text>
       <Text note>Channel Address</Text>

@@ -27,20 +27,14 @@ export const sendMediated = (from: Account, to: Address, amount: Wei) => {
   return from.blockchain.monitoring.blockNumbers()
     .take(1)
     .map((currentBlock) => {
-      // TODO: currently a global exception is thrown - we could try to use a RN.ErrorUtils to intercept it,
-      // but way better would be to fix the underlying issue in the framework itself
-      try {
-        from.engine.sendMediatedTransfer(
-          to,
-          to,
-          amount,
-          currentBlock.add(from.engine.revealTimeout).add(timeouts.collateral) as BlockNumber,
-          secretHashPair.secret as any, // FIXME
-          secretHashPair.hash
-        )
-      } catch (e) {
-        console.warn(e)
-      }
+      from.engine.sendMediatedTransfer(
+        to,
+        to,
+        amount,
+        currentBlock.add(from.engine.revealTimeout).add(timeouts.collateral) as BlockNumber,
+        secretHashPair.secret as any, // FIXME
+        secretHashPair.hash
+      )
     })
     .mapTo(true)
     .toPromise()
