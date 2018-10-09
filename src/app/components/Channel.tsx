@@ -213,17 +213,25 @@ export class ChannelComp extends React.Component<Props, State> {
 
   render () {
     const ch = this.props.channel
-    return <Card style={{ padding: 8 }}>
+    return <Card>
       <CardItem header>
         <Text ellipsizeMode='middle' numberOfLines={1}>0x{ch.peerState.address.toString('hex')}</Text>
       </CardItem>
-      <Body style={{ alignItems: 'flex-start', alignSelf: 'stretch' }}>
+      <Body style={{ padding: 8, alignItems: 'flex-start', alignSelf: 'stretch' }}>
         {this.renderVisibile()}
         {this.state.error &&
           <Text style={{ padding: 8, color: 'red' }}>{this.state.error}</Text>
         }
         {this.renderMore()}
       </Body>
+      {
+        ch.state === 'opened' &&
+        <CardItem footer style={{ alignSelf: 'stretch', justifyContent: 'center', backgroundColor: 'rgba(200,200,200,0.2)' }}>
+          <Button style={{ alignSelf: 'center' }} onPress={() => Alert.alert('TODO/Integrate')}>
+            <Text>Visualize</Text>
+          </Button>
+        </CardItem>
+      }
     </Card>
   }
 }
