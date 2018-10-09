@@ -117,6 +117,13 @@ export class ChannelComp extends React.Component<Props, State> {
     this.forceUpdate()
   }
 
+  renderToggle = () =>
+    <View>
+      <Button onPress={() => this.updateState({ more: !this.state.more })} transparent style={{ alignSelf: 'flex-end' }}>
+        <Text style={{ fontSize: 12 }}>[{this.state.more ? '-' : '+'}]</Text>
+      </Button>
+    </View>
+
   renderVisibile = () => {
     const ch = this.props.channel
     switch (ch.state) {
@@ -147,11 +154,7 @@ export class ChannelComp extends React.Component<Props, State> {
             </View>
           </View>
 
-          <View>
-            <Button onPress={() => this.updateState({ more: !this.state.more })} transparent style={{ alignSelf: 'flex-end' }}>
-              <Text style={{ fontSize: 12 }}>[{this.state.more ? '-' : '+'}]</Text>
-            </Button>
-          </View>
+          {this.renderToggle()}
 
         </View>
 
@@ -173,10 +176,17 @@ export class ChannelComp extends React.Component<Props, State> {
               </Button> :
               <Text>Settle possible in {toSettle.toString(10)}</Text>
           }
+
+          {this.renderToggle()}
         </View>
 
       case 'settled':
-        return <Text note style={{ minHeight: 40, alignSelf: 'center', justifyContent: 'center' }}>Channel settled. [TODO] remove/create-new</Text>
+        return <View style={{ minHeight: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <Text note>
+            Channel settled. [TODO] remove/create-new
+          </Text>
+          {this.renderToggle()}
+        </View>
 
       default:
         return <View style={{ minHeight: 40, alignSelf: 'center', justifyContent: 'center' }}>
