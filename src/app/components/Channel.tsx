@@ -4,10 +4,11 @@ import { View, Alert, Button as ButtonRN, ActivityIndicator, LayoutAnimation } f
 import { Channel } from 'go-network-framework/lib/state-channel/channel'
 import { as, BN } from 'go-network-framework'
 import { Wei, BlockNumber } from 'eth-types'
-import { Card, CardItem, Text, Button, Body, Item, Label, Input } from 'native-base'
+import { Card, CardItem, Text, Button, Body, Item, Label, Input, Toast } from 'native-base'
 
 import { sendDirect, sendMediated } from '../logic/offchain-actions'
 import { Account } from '../logic/accounts'
+import { deposit } from '../logic/onchain-actions';
 
 interface Lock {
   expiration: BlockNumber
@@ -65,6 +66,7 @@ export interface Props {
 }
 
 export interface State {
+  depositing?: boolean
   more?: boolean
   amount?: Wei
   error?: string
@@ -104,6 +106,24 @@ export class ChannelComp extends React.Component<Props, State> {
       .catch((e) => this.errorSub.next(e))
   }
 
+  deposit = () => {
+    const amount = this.state.amount
+    if (!amount) return
+    this.setState({ depositing: true })
+    deposit(this.props.account, this.props.account.contracts.testToken,
+      this.props.channel.channelAddress, amount, () => null)
+      .then(() => {
+        this.updateState({ amount: undefined })
+        Toast.show({
+          type: 'success',
+          text: `Deposited: ${amount.toString(10)}`
+        })
+      })
+      .catch((e) => this.errorSub.next(e))
+      .then(() => this.setState({ depositing: false }))
+
+  }
+
   close = () =>
     this.props.account.engine.closeChannel(this.props.channel.channelAddress)
       .then(x => console.log('CLOSED', x))
@@ -117,13 +137,6 @@ export class ChannelComp extends React.Component<Props, State> {
     this.forceUpdate()
   }
 
-  renderToggle = () =>
-    <View>
-      <Button onPress={() => this.updateState({ more: !this.state.more })} transparent style={{ alignSelf: 'flex-end' }}>
-        <Text style={{ fontSize: 12 }}>[{this.state.more ? '-' : '+'}]</Text>
-      </Button>
-    </View>
-
   renderVisibile = () => {
     const ch = this.props.channel
     switch (ch.state) {
@@ -133,7 +146,7 @@ export class ChannelComp extends React.Component<Props, State> {
           minHeight: 40, marginBottom: this.state.error ? 0 : 8
         }}>
 
-          <Item floatingLabel style={{ maxWidth: '30%' }}>
+          <Item floatingLabel style={{ maxWidth: '25%' }}>
             <Label>Amount</Label>
             <Input
               value={this.state.amount ? this.state.amount.toString(10) : ''}
@@ -141,6 +154,15 @@ export class ChannelComp extends React.Component<Props, State> {
               keyboardType='number-pad'
             />
           </Item>
+
+          <View style={{ alignItems: 'center' }}>
+            <Text note> </Text>
+            <View style={{ flexDirection: 'row' }}>
+              <Button transparent disabled={!this.state.amount || this.state.depositing} onPress={this.deposit}>
+                <Text>Deposit</Text>
+              </Button>
+            </View>
+          </View>
 
           <View style={{ alignItems: 'center' }}>
             <Text note>Send Transfer</Text>
@@ -153,8 +175,6 @@ export class ChannelComp extends React.Component<Props, State> {
               </Button>
             </View>
           </View>
-
-          {this.renderToggle()}
 
         </View>
 
@@ -176,8 +196,6 @@ export class ChannelComp extends React.Component<Props, State> {
               </Button> :
               <Text>Settle possible in {toSettle.toString(10)}</Text>
           }
-
-          {this.renderToggle()}
         </View>
 
       case 'settled':
@@ -185,7 +203,6 @@ export class ChannelComp extends React.Component<Props, State> {
           <Text note>
             Channel settled. [TODO] remove/create-new
           </Text>
-          {this.renderToggle()}
         </View>
 
       default:
@@ -204,10 +221,7 @@ export class ChannelComp extends React.Component<Props, State> {
       <Text note>Channel Address</Text>
       <Text style={{ fontSize: 14 }}>0x{ch.channelAddress.toString('hex')}</Text>
       {
-        ch.state === 'opened' &&
-        <Button bordered danger onPress={this.close} style={{ alignSelf: 'flex-end', marginTop: 4 }}>
-          <Text>Close</Text>
-        </Button>
+
       }
     </View>
 
@@ -225,11 +239,26 @@ export class ChannelComp extends React.Component<Props, State> {
         {this.renderMore()}
       </Body>
       {
-        ch.state === 'opened' &&
-        <CardItem footer style={{ alignSelf: 'stretch', justifyContent: 'center', backgroundColor: 'rgba(200,200,200,0.2)' }}>
-          <Button style={{ alignSelf: 'center' }} onPress={() => Alert.alert('TODO/Integrate')}>
-            <Text>Visualize</Text>
-          </Button>
+
+        <CardItem footer style={{ alignSelf: 'stretch', justifyContent: 'space-between', backgroundColor: 'rgba(200,200,200,0.2)' }}>
+          <View>
+            <Button onPress={() => this.updateState({ more: !this.state.more })} transparent style={{ alignSelf: 'flex-end' }}>
+              <Text style={{ fontSize: 12 }}>{this.state.more ? 'less' : 'more'}</Text>
+            </Button>
+          </View>
+
+          {ch.state === 'opened' &&
+            <Button style={{ alignSelf: 'center' }} onPress={() => Alert.alert('TODO/Integrate')}>
+              <Text>Visualize</Text>
+            </Button>
+          }
+
+          {ch.state === 'opened' &&
+            <Button transparent danger onPress={this.close} style={{ alignSelf: 'flex-end' }}>
+              <Text>Close</Text>
+            </Button>
+          }
+
         </CardItem>
       }
     </Card>

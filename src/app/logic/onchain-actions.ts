@@ -43,7 +43,7 @@ export const deposit = (account: Account, token: Address, channel: Address, amou
     .then(() => {
       log('ApproveChannel', 'ok')
       log('Deposit', 'waiting')
-      account.txs.deposit({ to: channel }, { amount: amount })
+      return account.txs.deposit({ to: channel }, { amount: amount })
         .then(d => {
           log('Deposit', 'ok')
           return d
