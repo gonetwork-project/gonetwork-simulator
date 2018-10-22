@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { View, ActivityIndicator, AsyncStorage } from 'react-native'
+import { ActivityIndicator, AsyncStorage } from 'react-native'
 import { Observable, Subscription } from 'rxjs'
 
 import { clearStorage } from '../logic/utils'
