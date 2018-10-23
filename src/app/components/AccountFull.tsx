@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { View, ActivityIndicator, Switch, Modal, LayoutAnimation } from 'react-native'
+import { ActivityIndicator, Modal, LayoutAnimation } from 'react-native'
 import { Subscription, Observable } from 'rxjs'
 import { Container, Content, Header, Left, Button, Body, Text, Subtitle, Title, Icon, Right } from 'native-base'
 
@@ -28,7 +28,7 @@ export interface State {
 }
 
 export const getAccountsWithoutChannel = (channels?: Channel[], other?: OtherAccount[]) =>
-  channels && other && other.filter(o => !channels.find(ch => o.address.compare(ch.peerState.address) === 0))
+  channels && other && other.filter(o => !channels.find(ch => o.address.compare(ch.peerState.address) === 0 && ch.state !== 'settled'))
 
 export class AccountFull extends React.Component<Props, State> {
   state: State = {}

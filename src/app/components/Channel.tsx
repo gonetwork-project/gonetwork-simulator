@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Subscription, BehaviorSubject, Observable } from 'rxjs'
-import { View, Alert, Button as ButtonRN, ActivityIndicator, LayoutAnimation } from 'react-native'
+import { View, Alert, ActivityIndicator, LayoutAnimation } from 'react-native'
 import { Channel } from 'go-network-framework/lib/state-channel/channel'
 import { as, BN } from 'go-network-framework'
 import { Wei, BlockNumber } from 'eth-types'
@@ -8,7 +8,7 @@ import { Card, CardItem, Text, Button, Body, Item, Label, Input, Toast } from 'n
 
 import { sendDirect, sendMediated } from '../logic/offchain-actions'
 import { Account } from '../logic/accounts'
-import { deposit } from '../logic/onchain-actions';
+import { deposit } from '../logic/onchain-actions'
 
 interface Lock {
   expiration: BlockNumber
@@ -199,9 +199,9 @@ export class ChannelComp extends React.Component<Props, State> {
         </View>
 
       case 'settled':
-        return <View style={{ minHeight: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+        return <View style={{ minHeight: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
           <Text note>
-            Channel settled. [TODO] remove/create-new
+            Channel settled - no more actions possible. To send more transfers, new channel must be opened.
           </Text>
         </View>
 
