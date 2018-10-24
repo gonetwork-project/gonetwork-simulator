@@ -124,9 +124,11 @@ export class ChannelComp extends React.Component<Props, State> {
 
   }
 
-  close = () =>
+  close = () => {
     this.props.account.engine.closeChannel(this.props.channel.channelAddress)
       .then(x => console.log('CLOSED', x))
+    this.forceUpdate()
+  }
 
   withdraw = () =>
     this.props.account.engine.withdrawPeerOpenLocks(this.props.channel.channelAddress)

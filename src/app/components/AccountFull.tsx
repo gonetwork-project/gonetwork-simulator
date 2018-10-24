@@ -7,6 +7,7 @@ import { BlockNumber } from 'eth-types'
 import { Channel } from 'go-network-framework/lib/state-channel/channel'
 import { Account, AccountBalanceFormatted, OtherAccount } from '../logic/accounts'
 import { OpenChannel } from './OpenChannel'
+import { Messages } from './Messages'
 import { ChannelComp } from './Channel'
 import { Events } from './Events'
 import { Balance } from './Balance'
@@ -25,6 +26,7 @@ export interface State {
   channels?: Channel[]
   showEvents?: boolean
   showOpenChannel?: boolean
+  showMessages?: boolean
 }
 
 export const getAccountsWithoutChannel = (channels?: Channel[], other?: OtherAccount[]) =>
@@ -71,6 +73,7 @@ export class AccountFull extends React.Component<Props, State> {
     return <Container>
 
       {this.state.showOpenChannel && <Modal
+        animationType='slide'
         supportedOrientations={['portrait']}
         onDismiss={() => this.setState({ showOpenChannel: false })}>
         <OpenChannel
@@ -78,6 +81,16 @@ export class AccountFull extends React.Component<Props, State> {
           accountsWithoutChannel={this.state.accountsWithoutChannel!}
           balance={this.props.balance!}
           onDone={() => this.setState({ showOpenChannel: false })}
+        />
+      </Modal>}
+
+      {this.state.showMessages && <Modal
+        animationType='slide'
+        supportedOrientations={['portrait']}
+        onDismiss={() => this.setState({ showMessages: false })}>
+        <Messages
+          account={this.props.account}
+          onDone={() => this.setState({ showMessages: false })}
         />
       </Modal>}
 
@@ -92,6 +105,9 @@ export class AccountFull extends React.Component<Props, State> {
           {this.props.currentBlock && <Subtitle>Block: {this.props.currentBlock.toString(10)}</Subtitle>}
         </Body>
         <Right>
+          <Button transparent onPress={() => this.setState({ showMessages: true })}>
+            <Icon name='send' />
+          </Button>
         </Right>
       </Header>
 

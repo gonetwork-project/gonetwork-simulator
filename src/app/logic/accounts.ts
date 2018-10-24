@@ -66,6 +66,10 @@ export interface Event {
   short: string
 }
 
+export type P2PMode = 'normal' | 'manual'
+
+export type P2PProxy = ReturnType<typeof createP2PProxy>
+
 export const toContracts = (contractsRaw: any) =>
   Object.keys(contractsRaw)
     .reduce((acc, k) => {
@@ -96,14 +100,42 @@ const collectEvents = (evs: Observable<any>, name = 'N/A') =>
     .scan((a, e) => a.concat([e]), [])
     .shareReplay(1)
 
+const createP2PProxy = (p2p: P2P) => {
+  let mode: P2PMode = 'normal'
+  const messages = new BehaviorSubject<Array<[Address, message.SignedMessage]>>([])
+
+  const flush = () => {
+    console.log('MESSAGES', messages.value)
+    messages.value.forEach(([t, m]) => p2p.send(t.toString('hex'), message.serialize(m)))
+    messages.next([])
+  }
+
+  return {
+    messages,
+    getMode: () => mode,
+    setMode: (m: P2PMode) => {
+      flush()
+      mode = m
+    },
+    send: (to: Address, msg: message.SignedMessage) => {
+      console.log('SEND', to, msg)
+      return mode === 'normal' ?
+        p2p.send(to.toString('hex'), message.serialize(msg)) :
+        messages.next(messages.value.concat([[to, msg]])) as undefined || Promise.resolve(false)
+    },
+    flush
+  }
+}
+
 const initAccount = (cfg: UserSession, contracts: Contracts) => (account: AccountBase) => {
-  const ignoreSecretToProof = new BehaviorSubject(false)
 
   const p2p = new P2P({
     mqttUrl: cfg.mqttUrl,
     address: account.addressStr,
     storage: fakeStorage()
   })
+
+  const p2pProxy = createP2PProxy(p2p)
 
   const blockchain = serviceCreate({
     ...contracts,
@@ -120,13 +152,7 @@ const initAccount = (cfg: UserSession, contracts: Contracts) => (account: Accoun
   const engine = new Engine({
     address: account.address,
     sign: (msg) => msg.sign(account.privateKey),
-    send: (to, msg) => {
-      if (ignoreSecretToProof.value && msg.classType === 'SecretToProof') {
-        console.log('IGNORED', account.addressStr, '-->', to.toString('hex'), msg.classType)
-        return Promise.resolve(true)
-      }
-      return p2p.send(to.toString('hex'), message.serialize(msg))
-    },
+    send: p2pProxy.send,
     blockchain: blockchain,
     // todo: make if configurable - another thing is that engine assumes single value for all contracts
     settleTimeout: timeouts.settle,
@@ -202,8 +228,6 @@ const initAccount = (cfg: UserSession, contracts: Contracts) => (account: Accoun
       .do(x => console.log('BALANCE', x.toString(), account.addressStr))
   )
     .mapTo({
-      setIgnoreSecretToProof: (v: boolean) => ignoreSecretToProof.next(v),
-      ignoreSecretToProof: ignoreSecretToProof,
       contracts, p2p, engine, blockchain, owner: account, txs: blockchain.txs,
       balance: balance(blockchain),
       events,
@@ -211,7 +235,8 @@ const initAccount = (cfg: UserSession, contracts: Contracts) => (account: Accoun
         p2p.dispose()
         blockchain.monitoring.dispose()
         sub.unsubscribe()
-      }
+      },
+      p2pProxy
     })
 }
 
