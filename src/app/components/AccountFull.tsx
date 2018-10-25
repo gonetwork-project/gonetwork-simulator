@@ -9,7 +9,6 @@ import { Account, AccountBalanceFormatted, OtherAccount } from '../logic/account
 import { OpenChannel } from './OpenChannel'
 import { Messages } from './Messages'
 import { ChannelComp } from './Channel'
-import { Events } from './Events'
 import { Balance } from './Balance'
 
 export interface Props {

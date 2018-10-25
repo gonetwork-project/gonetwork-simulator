@@ -76,6 +76,7 @@ export class ChannelComp extends React.Component<Props, State> {
   sub?: Subscription
   errorSub = new BehaviorSubject<any | undefined>(undefined)
   state: State = {}
+  amountRef: null | { _root: { blur: () => void } } = null
 
   componentDidMount () {
     this.sub = this.errorSub.switchMap(e =>
@@ -88,12 +89,15 @@ export class ChannelComp extends React.Component<Props, State> {
     this.sub && this.sub.unsubscribe()
   }
 
+  blur = () => this.amountRef && this.amountRef._root.blur()
+
   updateState = (s: Partial<State>) => {
     this.setState(s)
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
   }
 
   sendDirect = () => {
+    this.blur()
     sendDirect(this.props.account, this.props.channel.peerState.address,
       this.props.channel.myState.transferredAmount.add(this.state.amount!) as Wei)
       .then(() => this.updateState({ amount: undefined }))
@@ -101,6 +105,7 @@ export class ChannelComp extends React.Component<Props, State> {
   }
 
   sendMediated = () => {
+    this.blur()
     sendMediated(this.props.account, this.props.channel.peerState.address, this.state.amount!)
       .then(() => this.updateState({ amount: undefined }))
       .catch((e) => this.errorSub.next(e))
@@ -109,6 +114,7 @@ export class ChannelComp extends React.Component<Props, State> {
   deposit = () => {
     const amount = this.state.amount
     if (!amount) return
+    this.blur()
     this.setState({ depositing: true })
     deposit(this.props.account, this.props.account.contracts.testToken,
       this.props.channel.channelAddress, amount, () => null)
@@ -151,6 +157,7 @@ export class ChannelComp extends React.Component<Props, State> {
           <Item floatingLabel style={{ maxWidth: '25%' }}>
             <Label>Amount</Label>
             <Input
+              getRef={(i) => this.amountRef = i as any}
               value={this.state.amount ? this.state.amount.toString(10) : ''}
               onChangeText={t => this.setState({ amount: parseInt(t, 10) ? as.Wei(parseInt(t, 10)) : undefined })}
               keyboardType='number-pad'

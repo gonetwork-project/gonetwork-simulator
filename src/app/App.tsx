@@ -11,7 +11,7 @@ import { SessionId } from '../protocol'
 // Side-Effects
 // todo: it is not ideal as, in theory, it may fail
 import './logic/init'
-YellowBox.ignoreWarnings(['Warning: Overriding previous layout', 'Attempted to invoke'])
+YellowBox.ignoreWarnings(['Warning: Overriding previous layout', 'Attempted to invoke', 'Remote debugger'])
 
 type Step = 'setup' | 'main' | 'events-vis' | 'web-vis'
 

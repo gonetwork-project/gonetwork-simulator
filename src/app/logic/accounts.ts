@@ -105,7 +105,7 @@ const createP2PProxy = (p2p: P2P) => {
   const messages = new BehaviorSubject<Array<[Address, message.SignedMessage]>>([])
 
   const flush = () => {
-    console.log('MESSAGES', messages.value)
+    // console.log('MESSAGES', messages.value)
     messages.value.forEach(([t, m]) => p2p.send(t.toString('hex'), message.serialize(m)))
     messages.next([])
   }
@@ -118,7 +118,7 @@ const createP2PProxy = (p2p: P2P) => {
       mode = m
     },
     send: (to: Address, msg: message.SignedMessage) => {
-      console.log('SEND', to, msg)
+      // console.log('SEND', to, msg)
       return mode === 'normal' ?
         p2p.send(to.toString('hex'), message.serialize(msg)) :
         messages.next(messages.value.concat([[to, msg]])) as undefined || Promise.resolve(false)
@@ -258,9 +258,11 @@ export const accounts = () => {
         .do(a => inited.push(a))
         .merge(Observable.from(inited))
         .toArray()
+        // FIXME - it automatically opens netting channels
         .do((ar) => {
           if (ar && ar.length === 3) {
             const [a, b, c] = ar
+            a.p2pProxy.setMode('manual')
             openChannelAndDeposit(a, as.Wei(1000), b.owner.address, () => null)
               .then(() => openChannelAndDeposit(a, as.Wei(1000), c.owner.address, () => null))
           }
