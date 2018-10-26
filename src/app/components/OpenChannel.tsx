@@ -177,7 +177,7 @@ export class OpenChannel extends React.Component<Props, State> {
       <Header>
         <Left>
           <Button transparent disabled={this.state.status !== 'active'} onPress={p.onDone}>
-            <Icon name='arrow-back' />
+            <Text>Close</Text>
           </Button>
         </Left>
         <Body>

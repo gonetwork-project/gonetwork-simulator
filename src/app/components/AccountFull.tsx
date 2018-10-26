@@ -69,6 +69,7 @@ export class AccountFull extends React.Component<Props, State> {
   render () {
     const p = this.props
     const canOpenChannel = this.state.accountsWithoutChannel && this.state.accountsWithoutChannel.length > 0
+    const manual = p.account.p2pProxy.getMode() === 'manual'
     return <Container>
 
       {this.state.showOpenChannel && <Modal
@@ -106,6 +107,8 @@ export class AccountFull extends React.Component<Props, State> {
         <Right>
           <Button transparent onPress={() => this.setState({ showMessages: true })}>
             <Icon name='send' />
+            {manual && <Text style={{ fontSize: 12, paddingLeft: 4, color: 'orange' }}>
+              ({p.account.p2pProxy.messages.value.length})</Text>}
           </Button>
         </Right>
       </Header>

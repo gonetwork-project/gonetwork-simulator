@@ -7,14 +7,19 @@ import { BN } from 'bn.js'
 
 import { Account } from '../logic/accounts'
 
-const MessageItem = (k: string, v: Buffer | BN | string) => {
-  const _v = BN.isBN(v) ? v.toString(10) :
-    Buffer.isBuffer(v) ? '0x' + v.toString('hex') : `${v}`
-  return <View key={k} style={{ flexDirection: 'row', width: '100%' }}>
-    <Text note style={{ alignContent: 'flex-end', width: 80 }}>{k}</Text>
-    <Text>{_v}</Text>
+const headerKeys = ['classType', 'nonce', 'msgID']
+const headerKeysMap = Object.values(headerKeys).reduce((a, k) => (a[k] = true, a), {})
+
+const valueToString = (v: Buffer | BN | string) =>
+  BN.isBN(v) ? v.toString(10) :
+    Buffer.isBuffer(v) ? '0x' + v.toString('hex') :
+    typeof v === 'object' ? '[TODO]' : `${v}`
+
+const MessageItem = (k: string, v: Buffer | BN | string) =>
+  <View key={k} style={{ margin: 4 }}>
+    <Text note>{k}</Text>
+    <Text>{valueToString(v)}</Text>
   </View>
-}
 
 export interface Props {
   account: Account
@@ -57,15 +62,18 @@ export class Messages extends React.Component<Props> {
         <Text>Flush Messages</Text>
       </Button>,
       <Text key='h' note>{ms.length} message{ms.length !== 1 ? 's' : ''} buffered.</Text>,
-      ...ms.map(([to, msg]) => <Card key={msg.getHash() as any}>
-        <CardItem header>
-          <Text>{msg.classType}</Text>
+      ...ms.map(([_, msg]) => <Card key={msg.getHash() as any}>
+        <CardItem header style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          {headerKeys.map(k => <View key={k} style={{ flex: k === 'classType' ? 3 : 1 }}>
+            <Text note>{k}</Text>
+            <Text ellipsizeMode='head'>{valueToString(msg[k])}</Text>
+          </View>)}
         </CardItem>
-        <Body>
-          {MessageItem('to', to)}
-          {Object.keys(msg).map((k) => MessageItem(k, msg[k]))}
-          {MessageItem('hash', msg.getHash() as any)}
-        </Body>
+        <CardItem cardBody style={{ alignItems: 'flex-start', flexDirection: 'column' }}>
+          {
+            Object.keys(msg).filter(k => !headerKeysMap[k]).map((k) => MessageItem(k, msg[k]))
+          }
+        </CardItem>
       </Card>)
     ]
   }
@@ -76,7 +84,7 @@ export class Messages extends React.Component<Props> {
       <Header>
         <Left>
           <Button transparent onPress={p.onDone}>
-            <Icon name='arrow-back' />
+            <Text>Close</Text>
           </Button>
         </Left>
         <Body>

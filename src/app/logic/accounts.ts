@@ -216,6 +216,10 @@ const initAccount = (cfg: UserSession, contracts: Contracts) => (account: Accoun
     console.log('p2p', account.addressStr, m.classType, engine.channels)
   })
 
+  p2p.on('callback-error', err => {
+    console.warn('P2P:emit-error', account.addressStr, err)
+  })
+
   return Observable.zip(
     Observable.fromEvent(p2p, 'status-changed')
       .filter(s => s === 'connected')
