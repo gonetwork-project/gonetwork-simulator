@@ -62,7 +62,7 @@ export interface Props {
   currentBlock: BlockNumber
   account: Account
   channel: Channel
-  onSelected: () => void
+  onVisualize: () => void
 }
 
 export interface State {
@@ -257,7 +257,7 @@ export class ChannelComp extends React.Component<Props, State> {
           </View>
 
           {ch.state === 'opened' &&
-            <Button style={{ alignSelf: 'center' }} onPress={() => Alert.alert('TODO/Integrate')}>
+            <Button style={{ alignSelf: 'center' }} onPress={this.props.onVisualize}>
               <Text>Visualize</Text>
             </Button>
           }

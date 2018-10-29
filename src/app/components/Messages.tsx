@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { View } from 'react-native'
 import {
-  Header, Text, Content, Container, Button, Left, Icon, Body, Title, Right, Subtitle, Card, CardItem
+  Header, Text, Content, Container, Button, Left, Body, Title, Right, Subtitle, Card, CardItem
 } from 'native-base'
 import { BN } from 'bn.js'
 

@@ -10,6 +10,7 @@ import { OpenChannel } from './OpenChannel'
 import { Messages } from './Messages'
 import { ChannelComp } from './Channel'
 import { Balance } from './Balance'
+import { Visualization } from './Visualization'
 
 export interface Props {
   account: Account
@@ -26,6 +27,7 @@ export interface State {
   showEvents?: boolean
   showOpenChannel?: boolean
   showMessages?: boolean
+  showVis?: Channel
 }
 
 export const getAccountsWithoutChannel = (channels?: Channel[], other?: OtherAccount[]) =>
@@ -63,7 +65,7 @@ export class AccountFull extends React.Component<Props, State> {
       key={ch.peerState.address.toString('hex')}
       currentBlock={this.props.currentBlock!}
       account={this.props.account}
-      channel={ch} onSelected={() => console.log('SELECTED')} />)
+      channel={ch} onVisualize={() => this.setState({ showVis: ch })} />)
   }
 
   render () {
@@ -91,6 +93,17 @@ export class AccountFull extends React.Component<Props, State> {
         <Messages
           account={this.props.account}
           onDone={() => this.setState({ showMessages: false })}
+        />
+      </Modal>}
+
+      {this.state.showVis && <Modal
+        animationType='slide'
+        supportedOrientations={['portrait']}
+        onDismiss={() => this.setState({ showVis: undefined })}>
+        <Visualization
+          account={this.props.account}
+          channel={this.state.showVis}
+          onClose={() => this.setState({ showVis: undefined })}
         />
       </Modal>}
 

@@ -4,7 +4,7 @@ import { Observable, Subscription } from 'rxjs'
 import { Root } from 'native-base'
 
 import { CriticalError, ErrorProps, errors } from './global'
-import { Setup, Main, EventsVis, WebVis } from './screens'
+import { Setup, Main } from './screens'
 import * as setup from './logic/setup'
 import { SessionId } from '../protocol'
 
@@ -49,10 +49,6 @@ export default class App extends React.Component<{}, State> {
         return <Setup onDone={() => this.setState({ step: 'main' })} />
       case 'main':
         return <Main />
-      case 'events-vis':
-        return <EventsVis />
-      case 'web-vis':
-        return <WebVis />
     }
   }
 
