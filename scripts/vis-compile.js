@@ -26,7 +26,7 @@ Rx.Observable.from(d3)
   .subscribe(d3 => {
     execSync('npm run vis-clear', { cwd: root })
     try {
-      execSync('node_modules/.bin/tsc -p ./src/vis/tsconfig.json', { cwd: root })
+      execSync('node_modules/.bin/tsc -b ./src/vis/tsconfig.json', { cwd: root })
     } catch (err) { }
     // execSync(`webpack index.js -o index.min.js`, { cwd: resolve(root, 'build/vis') })
     // const script = fs.readFileSync(resolve(root, 'node_modules/d3-selection/dist/d3-selection.min.js'), 'utf8')

@@ -9,6 +9,10 @@
     "strict": true,
     "noImplicitAny": false,
     "removeComments": true,
-    "allowJs": true
-  }
+    "allowJs": true,
+  },
+  "references": [
+    { "path": "../app" },
+    { "path": "../protocol" }
+  ]
 }

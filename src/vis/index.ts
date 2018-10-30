@@ -17,6 +17,7 @@ const maxEvents = 10
 const maxY = 20
 const step = 0
 const stepY = 2
+
 const chart = d3.select('#chart')
   .attr('width', width + margin.left + margin.right)
   .attr('height', height + margin.top + margin.bottom)
@@ -86,7 +87,7 @@ chart.append('text')
   .attr('fill', 'gray')
 
 let format = d3.format(',d')
-function updateCurrentBlock () {
+function updateCurrentBlock (bn: number) {
   d3.select('#blocknumber')
     .transition()
     .duration(duration)
@@ -94,8 +95,8 @@ function updateCurrentBlock () {
       d3.active(this)!
         .tween('text', function (this: any) {
           const that = d3.select(this) as any
-          const i = d3.interpolateNumber(that.text().replace(/,/g, ''), Math.random() * 1e6)
-          return function (t) { that.text(format(i(t))) }
+          //  const i = d3.interpolateNumber(that.text().replace(/,/g, ''), Math.random() * 1e6)
+          return function (t) { that.text(format(bn)) }
         })
         .transition()
 
@@ -124,7 +125,7 @@ function drawBlock (val) {
     .attr('y', function (d) {
       return y(d[0].y)
     })
-    .attr('width', 200)// static
+    .attr('width', max - 200)// static
     .attr('fill', 'url(#lightstripe)')
     .attr('fill-opacity', '0.1')
     .attr('height', function (d) {
@@ -330,7 +331,7 @@ function tick (events: any[]) {
     .on('end',
       function () {
         if (arrowData.length >= maxEvents) {
-          console.log('removing items')
+          // console.log('removing items')
           arrowData.splice(0, arrowData.length - maxEvents)
           metaData.splice(0, metaData.length - maxEvents)
         }
@@ -338,7 +339,7 @@ function tick (events: any[]) {
           blockData.splice(0, blockData.length - maxEvents)
         }
 
-        console.log('running next_arrows')
+        // console.log('running next_arrows')
         next_arrows()
       })
 
@@ -355,7 +356,6 @@ const initBridge = (onInit: (e: any) => void, onEvent: (e: any) => void) => {
   }
 }
 // TODO -- REMOVE SIDE EFFECTS
-setInterval(updateCurrentBlock, 5000)
 setInterval(function () { return tick([{}]) }, 2000)
 
 initBridge(
@@ -364,5 +364,9 @@ initBridge(
     setInterval(updateCurrentBlock, 5000)
     tick([])
   },
-  (e) => document.body.insertAdjacentHTML('beforeend', `<div>EVENT: ${JSON.stringify(e)}</div>`)
-)
+  (e: AppEvent) => {
+    switch (e.source) {
+      case 'N': // todo: remove enum from app
+        updateCurrentBlock(e.block)
+    }
+  })
