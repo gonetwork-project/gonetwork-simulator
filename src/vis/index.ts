@@ -4,14 +4,15 @@ type MetaData = any // todo: define correctly
 type EventT = any // todo: unify accross app and vis
 
 const margin = { top: 50, right: 10, bottom: 30, left: 10 }
-const width = 600 - margin.left - margin.right
-const height = 500 - margin.top - margin.bottom
+const width = window.innerWidth - margin.left - margin.right
+const height = window.innerHeight - margin.top - margin.bottom
 const data = []
 
 let globalX = 0
 let globalY = 0
 const duration = 400
-const max = 600
+const max = window.innerWidth
+const middle = window.innerWidth / 2
 const maxEvents = 10
 const maxY = 20
 const step = 0
@@ -22,7 +23,7 @@ const chart = d3.select('#chart')
   .append('g')
   .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
 
-const x = d3.scaleLinear().domain([0, 2]).range([200, 600])
+const x = d3.scaleLinear().domain([0, 2]).range([100, max - 100])
 const y = d3.scaleLinear().domain([globalY - maxY, globalY]).range([height, 0])
 const lineGenerator = d3.line()
   .curve(d3.curveCardinal)
@@ -46,18 +47,18 @@ const lineGen = d3.line<Point>()
 
 const yAxis = (d3 as any).axisLeft().scale(y).tickSizeOuter(0).tickFormat('')
 const axisY = chart.append('g').attr('class', 'y axis')
-  .attr('transform', 'translate(200,0)').call(yAxis)
+  .attr('transform', 'translate(100,0)').call(yAxis)
 const yAxis2 = (d3 as any).axisRight().scale(y).tickSize(15).tickSizeOuter(0).tickFormat('')// We dont use .tickSize(0) because we want the distance away from the axis to remain;
 const axisY2 = chart.append('g').attr('class', 'y axis')
-  .attr('transform', 'translate(400,0)').call(yAxis2)
+  .attr('transform', `translate(${max - 100},0)`).call(yAxis2)
 
-chart.append('g').attr('transform', 'translate(188,-30) scale(0.25)')
+chart.append('g').attr('transform', 'translate(88,-30) scale(0.25)')
   .append('use').attr('xlink:href', '#man')
-chart.append('g').attr('transform', 'translate(388,-30),scale(0.25)')
+chart.append('g').attr('transform', `translate(${max - 112},-30),scale(0.25)`)
   .append('use').attr('xlink:href', '#man')
 
 chart.append('text')
-  .attr('transform', 'translate(300,' + height / 2 + ')')
+  .attr('transform', `translate(${middle},` + height / 2 + ')')
   .attr('text-anchor', 'middle')
   .text('OFF-CHAIN COMMUNICATION')
   .attr('font-family', 'sans-serif')
@@ -69,7 +70,7 @@ chart.append('text')
   .ease(d3.easeLinear)
   .attr('opacity', 0.2)
 chart.append('text')
-  .attr('transform', 'translate(300,0)')
+  .attr('transform', `translate(${middle},0)`)
   .attr('text-anchor', 'middle')
   .text('CURRENT BLOCK')
   .attr('font-family', 'sans-serif')
@@ -77,7 +78,7 @@ chart.append('text')
   .attr('fill', 'gray')
 chart.append('text')
   .attr('id', 'blocknumber')
-  .attr('transform', 'translate(300,-10)')
+  .attr('transform', `translate(${middle},-10)`)
   .attr('text-anchor', 'middle')
   .text('9000')
   .attr('font-family', 'sans-serif')
@@ -119,7 +120,7 @@ function drawBlock (val) {
   let block = add.append('g').attr('class', 'block')
   block.append('rect')
 
-    .attr('x', 200)// static
+    .attr('x', 100)// static
     .attr('y', function (d) {
       return y(d[0].y)
     })
@@ -132,18 +133,18 @@ function drawBlock (val) {
   (block as any).append('use').attr('class', 'block-marker')
     .attr('transform', 'scale(0.0225)')
     .attr('xlink:href', '#marker')
-    .attr('x', 200 / 0.045)// divide by scale
+    .attr('x', 100 / 0.045)// divide by scale
     .attr('y', function (d) {
 
       return (y(d[0].y) + 5) / 0.0225 + 933.3333333333334
     }).transition()
     .duration(duration)
     .ease(d3.easeElastic, 2)
-    .attr('x', 200 / 0.0225)
+    .attr('x', 100 / 0.0225)
 
   block.append('text')
     .attr('class', 'block-text')
-    .attr('transform', 'translate(300,' + (y(val[0].y - val[0].height / 2)) + ')')
+    .attr('transform', `translate(${middle},` + (y(val[0].y - val[0].height / 2)) + ')')
     .attr('text-anchor', 'middle')
     .attr('font-family', 'sans-serif')
     .attr('font-size', '10px')
@@ -162,8 +163,6 @@ function next_arrows () {
     // right to left
     metaData.push({ 'text': 'right to left:' + globalY })
     arrowData.push([{ x: 1, y: globalY - stepY }, { x: 0.75, y: globalY - stepY * .125 }, { x: 0.25, y: globalY + stepY * .125 }, { x: 0, y: globalY }])
-    // textPath = lineGen([{x:0,y:globalY}, {x:0.25, y:globalY+stepY*.125},{x:0.75, y:globalY-stepY*.125}, {x:1, y:globalY-stepY}]);
-    // alert(textPath);
   } else {
     // blockchain event
     drawBlock([{ y: globalY, height: stepY, text: 'globalVal:' + globalY }])
@@ -176,7 +175,6 @@ function next_arrows () {
     .enter()
     .append('path')
     .attr('class', 'arrow')
-    // .attr("id", function(d){return "line"+d[0].y;})
     .attr('d', lineGen)
     .attr('stroke', 'lightgrey')
     .attr('stroke-opacity', 0.5)
@@ -323,7 +321,7 @@ function tick (events: any[]) {
     })
   blocks.selectAll('.block-text')
     .attr('transform', function (d) {
-      return 'translate(300,' + (y(d[0].y - d[0].height / 2)) + ')'
+      return `translate(${middle},` + (y(d[0].y - d[0].height / 2)) + ')'
     });
   (blocks as any).attr('transform', null).transition().duration(duration).ease(d3.easeLinear, 2)
     .attr('transform', 'translate(0,' + y(globalY - stepY) + ')');
@@ -331,8 +329,6 @@ function tick (events: any[]) {
     .attr('transform', 'translate(0,' + y(globalY - stepY) + ')')
     .on('end',
       function () {
-        let rand = Math.random()
-        // if(rand> 0.6){
         if (arrowData.length >= maxEvents) {
           console.log('removing items')
           arrowData.splice(0, arrowData.length - maxEvents)
@@ -344,7 +340,6 @@ function tick (events: any[]) {
 
         console.log('running next_arrows')
         next_arrows()
-
       })
 
 }
