@@ -36,6 +36,6 @@ Rx.Observable.from(d3)
       .replace('__D3_PLACEHOLDER__', d3)
       .replace('__SCRIPT_PLACEHOLDER__', script)
 
-    fs.writeFileSync(resolve(root, 'build/vis/vis.html.js'), `module.exports = \`${html}\``, 'utf8')
+    // fs.writeFileSync(resolve(root, 'build/vis/vis.html.js'), `module.exports = \`${html}\``, 'utf8')
     fs.writeFileSync(resolve(root, 'build/vis/vis.html'), html, 'utf8')
   })

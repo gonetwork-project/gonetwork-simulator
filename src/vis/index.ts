@@ -1,48 +1,54 @@
 interface Point { x: number, y: number }
+type BlockData = any // todo: define correctly
+type MetaData = any // todo: define correctly
+type EventT = any // todo: unify accross app and vis
 
-let margin = { top: 50, right: 10, bottom: 30, left: 10 }
-let width = 600 - margin.left - margin.right
-let height = 500 - margin.top - margin.bottom
-let data = []
+const margin = { top: 50, right: 10, bottom: 30, left: 10 }
+const width = 600 - margin.left - margin.right
+const height = 500 - margin.top - margin.bottom
+const data = []
 
 let globalX = 0
 let globalY = 0
-let duration = 1000
-let max = 600
-let maxEvents = 100
-let maxY = 20
-let step = 0
-let stepY = 1
-let chart = d3.select('#chart')
+const duration = 400
+const max = 600
+const maxEvents = 10
+const maxY = 20
+const step = 0
+const stepY = 2
+const chart = d3.select('#chart')
   .attr('width', width + margin.left + margin.right)
   .attr('height', height + margin.top + margin.bottom)
   .append('g')
   .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
 
-let x = d3.scaleLinear().domain([0, 2]).range([200, 600])
-let y = d3.scaleLinear().domain([globalY - maxY, globalY]).range([height, 0])
-
-let lineGenerator = d3.line()
+const x = d3.scaleLinear().domain([0, 2]).range([200, 600])
+const y = d3.scaleLinear().domain([globalY - maxY, globalY]).range([height, 0])
+const lineGenerator = d3.line()
   .curve(d3.curveCardinal)
 
-let line = d3.line<Point>()
+const line = d3.line<Point>()
   .x(d => x(d.x))
   .y(d => y(d.y))
-let smoothLine = d3.line<Point>()
+const smoothLine = d3.line<Point>()
   .curve(d3.curveCardinal)
   .x(d => x(d.x))
   .y(d => y(d.y))
-let lineArea = d3.area<Point>()
+const lineArea = d3.area<Point>()
   .x(d => x(d.x))
   .y0(y(0))
   .y1(d => y(d.y))
   .curve(d3.curveCardinal)
+const lineGen = d3.line<Point>()
+  .x(d => x(d.x))
+  .y(d => y(d.y))
+  .curve(d3.curveBasis)
 
-let yAxis = (d3 as any).axisLeft().scale(y).tickSizeOuter(0).tickFormat('')
-let axisY = chart.append('g').attr('class', 'y axis')
+const yAxis = (d3 as any).axisLeft().scale(y).tickSizeOuter(0).tickFormat('')
+const axisY = chart.append('g').attr('class', 'y axis')
   .attr('transform', 'translate(200,0)').call(yAxis)
-let yAxis2 = (d3 as any).axisRight().scale(y).tickSize(15).tickSizeOuter(0).tickFormat('') // We dont use .tickSize(0) because we want the distance away from the axis to remain;
-let axisY2 = chart.append('g').attr('class', 'y axis')
+const yAxis2 = (d3 as any).axisRight().scale(y).tickSize(15).tickSizeOuter(0).tickFormat('')// We dont use .tickSize(0) because we want the distance away from the axis to remain;
+const axisY2 = chart.append('g').attr('class', 'y axis')
   .attr('transform', 'translate(400,0)').call(yAxis2)
 
 chart.append('g').attr('transform', 'translate(188,-30) scale(0.25)')
@@ -50,17 +56,20 @@ chart.append('g').attr('transform', 'translate(188,-30) scale(0.25)')
 chart.append('g').attr('transform', 'translate(388,-30),scale(0.25)')
   .append('use').attr('xlink:href', '#man')
 
-chart.append('g').attr('transform', 'translate(388,0) scale(0.0225)')
-  .append('use').attr('xlink:href', '#marker')
 chart.append('text')
   .attr('transform', 'translate(300,' + height / 2 + ')')
   .attr('text-anchor', 'middle')
   .text('OFF-CHAIN COMMUNICATION')
   .attr('font-family', 'sans-serif')
-  .attr('font-size', '10px')
+  .attr('font-size', '8px')
   .attr('fill', 'gray')
+  .attr('opacity', 1)
+  .transition()
+  .duration(3000)
+  .ease(d3.easeLinear)
+  .attr('opacity', 0.2)
 chart.append('text')
-  .attr('transform', 'translate(300,10)')
+  .attr('transform', 'translate(300,0)')
   .attr('text-anchor', 'middle')
   .text('CURRENT BLOCK')
   .attr('font-family', 'sans-serif')
@@ -68,7 +77,7 @@ chart.append('text')
   .attr('fill', 'gray')
 chart.append('text')
   .attr('id', 'blocknumber')
-  .attr('transform', 'translate(300,0)')
+  .attr('transform', 'translate(300,-10)')
   .attr('text-anchor', 'middle')
   .text('9000')
   .attr('font-family', 'sans-serif')
@@ -76,7 +85,6 @@ chart.append('text')
   .attr('fill', 'gray')
 
 let format = d3.format(',d')
-
 function updateCurrentBlock () {
   d3.select('#blocknumber')
     .transition()
@@ -84,97 +92,97 @@ function updateCurrentBlock () {
     .on('start', function repeat (this: any) {
       d3.active(this)!
         .tween('text', function (this: any) {
-          let that = d3.select(this) as any
-          let i = d3.interpolateNumber(that.text().replace(/,/g, ''), Math.random() * 1e6)
+          const that = d3.select(this) as any
+          const i = d3.interpolateNumber(that.text().replace(/,/g, ''), Math.random() * 1e6)
           return function (t) { that.text(format(i(t))) }
         })
         .transition()
+
     })
 }
 
-let arrows = chart.append('g').attr('id', 'arrows')
-let arrowData: Point[][] = []
-let lineGen = d3.line<Point>()
-  .x(d => x(d.x))
-  .y(d => y(d.y))
-  .curve(d3.curveBasis)
+const blocks = chart.append('g').attr('id', 'blocks')
+const blockData: BlockData[] = []
+const arrows = chart.append('g').attr('id', 'arrows')
+const arrowData: Point[][] = []
+const metaData: MetaData[] = []
+
+// draw the block from y height to max-height
+function drawBlock (val) {
+  blockData.push(val)
+  let add = blocks.selectAll('.block')
+    .data(blockData, function (d) {
+
+      return d[0].y
+    })
+    .enter()
+  let block = add.append('g').attr('class', 'block')
+  block.append('rect')
+
+    .attr('x', 200)// static
+    .attr('y', function (d) {
+      return y(d[0].y)
+    })
+    .attr('width', 200)// static
+    .attr('fill', 'url(#lightstripe)')
+    .attr('fill-opacity', '0.1')
+    .attr('height', function (d) {
+      return height / maxY * d[0].height
+    });
+  (block as any).append('use').attr('class', 'block-marker')
+    .attr('transform', 'scale(0.0225)')
+    .attr('xlink:href', '#marker')
+    .attr('x', 200 / 0.045)// divide by scale
+    .attr('y', function (d) {
+
+      return (y(d[0].y) + 5) / 0.0225 + 933.3333333333334
+    }).transition()
+    .duration(duration)
+    .ease(d3.easeElastic, 2)
+    .attr('x', 200 / 0.0225)
+
+  block.append('text')
+    .attr('class', 'block-text')
+    .attr('transform', 'translate(300,' + (y(val[0].y - val[0].height / 2)) + ')')
+    .attr('text-anchor', 'middle')
+    .attr('font-family', 'sans-serif')
+    .attr('font-size', '10px')
+    .attr('fill', 'orange')
+    .text(val[0].text)
+
+}
+drawBlock([{ y: 0, height: stepY, text: 'Initialize' }])
 
 function next_arrows () {
-  if (Math.random() > 0.5) {
+  if (Math.random() < 0.3) {
+    // left to right
+    metaData.push({ 'text': 'left to right:' + globalY })
     arrowData.push([{ x: 0, y: globalY - stepY }, { x: 0.25, y: globalY - stepY * .125 }, { x: 0.75, y: globalY + stepY * .125 }, { x: 1, y: globalY }])
-  } else {
+  } else if (Math.random() < 0.6) {
+    // right to left
+    metaData.push({ 'text': 'right to left:' + globalY })
     arrowData.push([{ x: 1, y: globalY - stepY }, { x: 0.75, y: globalY - stepY * .125 }, { x: 0.25, y: globalY + stepY * .125 }, { x: 0, y: globalY }])
+    // textPath = lineGen([{x:0,y:globalY}, {x:0.25, y:globalY+stepY*.125},{x:0.75, y:globalY-stepY*.125}, {x:1, y:globalY-stepY}]);
+    // alert(textPath);
+  } else {
+    // blockchain event
+    drawBlock([{ y: globalY, height: stepY, text: 'globalVal:' + globalY }])
   }
 
-  (arrows.selectAll('.arrow') as d3.Selection<HTMLElement, Point[], any, number>)
-    .data<Point[]>(arrowData, function (d: Point[]) { return d[d.length - 1].y } as any).exit().remove();
-
-  (arrows.selectAll('.arrow') as d3.Selection<HTMLElement, Point[], any, number>)
-    .data<Point[]>(arrowData, function (d) { return d[d.length - 1].y } as any)
+  (arrows.selectAll('.arrow') as any)
+    .data(arrowData, function (d) { return d[d.length - 1].y }).exit().remove();
+  (arrows.selectAll('.arrow') as any)
+    .data(arrowData, function (d) { return d[d.length - 1].y })
     .enter()
     .append('path')
     .attr('class', 'arrow')
+    // .attr("id", function(d){return "line"+d[0].y;})
     .attr('d', lineGen)
     .attr('stroke', 'lightgrey')
     .attr('stroke-opacity', 0.5)
     .attr('stroke-width', 1)
     .attr('fill', 'none')
-    .attr('stroke-dasharray', function (this: any, d) { return this.getTotalLength() })
-    .attr('stroke-dashoffset', function (this: any, d) { return this.getTotalLength() })
-    .transition()
-    .duration(duration)
-    .ease(d3.easeLinear /*, 2*/)
-    .attr('stroke-dashoffset', 0)
-    .on('end', tick)
-
-  arrows.selectAll('.arrow-head')
-    .data(arrowData, function (d) { return d[d.length - 1].y } as any).exit().remove()
-
-  arrows.selectAll('.arrow-head')
-    .data(arrowData, function (d) { return d[d.length - 1].y } as any)
-    .enter()
-    .append('circle')
-    .attr('class', 'arrow-head arrow-head-start')
-    .attr('cx', function (d) { return x(d[d.length - 1].x) })
-    .attr('cy', function (d) { return y(d[d.length - 1].y) })
-    .attr('stroke', 'none')
-    .attr('fill', '#FF6B6B')
-    .attr('r', 0)
-    .transition()
-    .duration(duration)
-    .delay(duration)
-    .ease(d3.easeElastic /*, 100*/)
-    .attr('r', 5)
-}
-// .on("end",tick);
-// Main loop
-function tick (this: any) {
-
-  globalX += step
-  globalY += stepY
-
-  y.domain([globalY - maxY, globalY])
-  axisY.transition()
-    .duration(duration)
-    .ease(d3.easeLinear/*, 2*/)
-    .call(yAxis)
-  // .on('end',tick);
-  axisY2.transition()
-    .duration(duration)
-    .ease(d3.easeLinear/*, 2*/)
-    .call(yAxis2)
-  // axisY3.transition()
-  // .duration(duration)
-  // .ease(d3.easeLinear,2)
-  // .call(yAxis3)
-
-  arrows.selectAll('.arrow')
-    .data(arrowData, function (d) { return d[d.length - 1].y } as any)
-    .attr('d', lineGen)
-
-    .attr('stroke-width', 1)
-    .attr('fill', 'none')
-    .attr('stroke-dasharray', function (this: any, d) {
+    .attr('stroke-dasharray', function (this: any) {
       // Create a (random) dash pattern
       // The first number specifies the length of the visible part, the dash
       // The second number specifies the length of the invisible part
@@ -197,31 +205,148 @@ function tick (this: any) {
       // that is the same length as the entire path
       let dashArray = newDashes + ' 0, ' + this.getTotalLength()
       return dashArray
-      // this.getTotalLength()
     })
-    .attr('stroke-dashoffset', function () { return 0 })
-  arrows.selectAll('.arrow-head')
+    .attr('stroke-dashoffset', function (this: any, d) { return this.getTotalLength() })
+    .transition()
+    .duration(duration)
+    .ease(d3.easeLinear, 2)
+    .attr('stroke-dashoffset', 0);
 
-    .data(arrowData, function (d) { return d[d.length - 1].y } as any)
+  (arrows.selectAll('.arrow-text-path') as any)
+    .data(arrowData, function (d) { return d[d.length - 1].y })
+    .exit()
+    .remove();
+  (arrows.selectAll('.arrow-text-path') as any)
+    .data(arrowData, function (d) { return d[d.length - 1].y })
+    .enter().append('path')
+    .attr('class', 'arrow-text-path')
+    .attr('d', function (d) {
+      if (d[0].x === 0) {
+        return lineGen(d)
+      } else {
+        // alert(JSON.stringify(d));
+        return lineGen(d.slice().reverse())
+      }
+    })
+    .attr('id', function (d) { return 'line' + d[0].y })
+    .attr('fill', 'none')
+    .attr('stroke', 'none');
+  (arrows.selectAll('.arrow-text') as any).data(arrowData, function (d) { return d[d.length - 1].y })
+    .exit().remove();
+  (arrows.selectAll('.arrow-text') as any)
+    .data(arrowData, function (d) { return d[d.length - 1].y })
+    .enter().append('text')
+    .append('textPath') // append a textPath to the text element
+    // .attr("path", lineGen)
+    .attr('xlink:href', function (d) { return '#line' + d[0].y }) // place the ID of the path here
+    .attr('text-anchor', 'middle')
+    .attr('font-family', 'sans-serif')
+    .attr('font-size', '10px')
+    .attr('fill', 'grey')
+    .style('text-anchor', 'middle') // place the text halfway on the arc
+    .attr('startOffset', '50%')
+    .attr('opacity', 0)
+    .text(function (d, i) {
+      return metaData[i].text
+    })
+    .transition()
+    .duration(duration)
+    .ease(d3.easeLinear, 2)
+    .attr('opacity', 1)
+
+  arrows.selectAll('.arrow-head')
+    .data(arrowData, function (d: any) { return d[d.length - 1].y })
+    .exit().remove();
+
+  (arrows.selectAll('.arrow-head') as any)
+    .data(arrowData, function (d) { return d[d.length - 1].y })
+    .enter()
+    .append('circle')
+    .attr('class', 'arrow-head arrow-head-start')
+    .attr('cx', function (d) { return x(d[d.length - 1].x) })
+    .attr('cy', function (d) { return y(d[d.length - 1].y) })
+    .attr('stroke', 'none')
+    .attr('fill', '#FF6B6B')
+    .attr('r', 0)
+    .transition()
+    .duration(duration)
+    .delay(duration)
+    .ease(d3.easeElastic, 100)
+    .attr('r', 5)
+
+}
+
+function tick (events: any[]) {
+  globalX += step
+  globalY += stepY * events.length
+
+  y.domain([globalY - maxY, globalY]);
+  (axisY as any).transition()
+    .duration(duration)
+    .ease(d3.easeLinear, 2)
+    .call(yAxis);
+
+  (axisY2 as any).transition()
+    .duration(duration)
+    .ease(d3.easeLinear, 2)
+    .call(yAxis2)
+
+  arrows.selectAll('.arrow')
+    .data(arrowData, function (d: any) { return d[d.length - 1].y })
+    .attr('d', lineGen)
+    .attr('stroke-width', 1)
+    .attr('fill', 'none')
+
+  arrows.selectAll('.arrow-head')
+    .data(arrowData, function (d: any) { return d[d.length - 1].y })
     .attr('class', 'arrow-head')
     .attr('cx', function (d) { return x(d[d.length - 1].x) })
     .attr('cy', function (d) { return y(d[d.length - 1].y) })
 
-  arrows.attr('transform', null).transition().duration(duration).ease(d3.easeLinear/*, 2*/)
-    .attr('transform', 'translate(0,' + y(globalY - stepY) + ')').on('end',
+  arrows.selectAll('.arrow-text-path')
+    .data(arrowData, function (d: any) { return d[d.length - 1].y })
+    .attr('d', function (d) {
+      if (d[0].x === 0) {
+        return lineGen(d)
+      } else {
+        return lineGen(d.slice().reverse())
+      }
+    })
+  blocks.selectAll('rect').attr('y', function (d) {
+    return y(d[0].y)
+  })
+
+  blocks.selectAll('.block-marker')
+    .attr('y', function (d) {
+
+      return (y(d[0].y) + 5) / 0.0225 + 933.3333333333334
+    })
+  blocks.selectAll('.block-text')
+    .attr('transform', function (d) {
+      return 'translate(300,' + (y(d[0].y - d[0].height / 2)) + ')'
+    });
+  (blocks as any).attr('transform', null).transition().duration(duration).ease(d3.easeLinear, 2)
+    .attr('transform', 'translate(0,' + y(globalY - stepY) + ')');
+  (arrows as any).attr('transform', null).transition().duration(duration).ease(d3.easeLinear, 2)
+    .attr('transform', 'translate(0,' + y(globalY - stepY) + ')')
+    .on('end',
       function () {
         let rand = Math.random()
-        if (rand > 0.6) {
-          if (arrowData.length >= maxEvents) {
-            // console.log('removing items')
-            arrowData.splice(0, arrowData.length - maxEvents)
-          }
-          // console.log('running next_arrows')
-          next_arrows()
-        } else {
-          tick()
+        // if(rand> 0.6){
+        if (arrowData.length >= maxEvents) {
+          console.log('removing items')
+          arrowData.splice(0, arrowData.length - maxEvents)
+          metaData.splice(0, metaData.length - maxEvents)
         }
+        if (blockData.length >= maxEvents) {
+          blockData.splice(0, blockData.length - maxEvents)
+        }
+
+        console.log('running next_arrows')
+        next_arrows()
+
       })
+
 }
 
 // RUN
@@ -234,12 +359,15 @@ const initBridge = (onInit: (e: any) => void, onEvent: (e: any) => void) => {
     }
   }
 }
+// TODO -- REMOVE SIDE EFFECTS
+setInterval(updateCurrentBlock, 5000)
+setInterval(function () { return tick([{}]) }, 2000)
 
 initBridge(
   () => {
     document.body.insertAdjacentHTML('beforeend', `<div>INITED</div>`)
     setInterval(updateCurrentBlock, 5000)
-    tick()
+    tick([])
   },
   (e) => document.body.insertAdjacentHTML('beforeend', `<div>EVENT: ${JSON.stringify(e)}</div>`)
 )

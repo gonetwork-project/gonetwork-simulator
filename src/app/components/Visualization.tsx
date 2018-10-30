@@ -34,8 +34,6 @@ export class Visualization extends React.Component<Props, State> {
 
   render () {
     const p = this.props
-    const { width, height } = this.state
-    // console.log('S', width, height)
     const source = html
     return <Container>
       <Header>
@@ -58,8 +56,8 @@ export class Visualization extends React.Component<Props, State> {
         onError={err => console.log('ERR', err)}
         ref={(r) => (this as any).wv = r}
         style={{ flex: 1 }}
-        // style={{ width, height }}
         source={source}
+        scrollEnabled={false}
         // @ts-ignore
         useWebKit={true}
       >

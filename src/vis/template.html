@@ -10,100 +10,90 @@
     setTimeout(function () {
       document.body.insertAdjacentHTML('beforeend', '<div>script running</div>')
       window.GN.onEvent(e => document.body.insertAdjacentHTML('beforeend', '<div>' + JSON.stringify(e) + '</div>'))
-  }, 1000)
+    }, 1000)
   </script>
 </head>
 
 <body>
   <style>
+    .body {
+      margin: 0;
+    }
     .axis {
       font-family: sans-serif;
       /*fill: #d35400;*/
       font-size: 12px;
     }
-
     .line {
       fill: none;
       stroke: #f1c40f;
       stroke-width: 0px;
     }
-
     .smoothline {
       fill: none;
       stroke: #fff;
       stroke-width: 1px;
     }
-
     .area {
       fill: url(#grad2);
       opacity: 0.5;
     }
-
     .circle {
       stroke: #e74c3c;
       stroke-width: 3px;
       fill: #FFF;
     }
-
     .grid {
-      stroke: #DDD;
+      stroke: #FFF;
       stroke-width: 1px;
       fill: none;
     }
-
-    .tick line {
+    .tick line{
       /*remove the tick lines to clean up asthetic*/
-      stroke-opacity: 0;
+      stroke-opacity:0;
     }
-
-    .arrow path {
+    .arrow path{
       stroke-dasharray: 5;
-      stroke: #b1b1b1;
-
+      stroke:#b1b1b1;
+      
     }
-
+    
     svg {
-      background-color: #f8f8f8;
+      background-color:#f8f8f8;
     }
   </style>
   <svg id="chart">
-    <defs>
-      <g id="man" xmlns="http://www.w3.org/2000/svg">
-        <g>
-          <circle cx="51.4" cy="12.2" r="7.9" />
-          <path d="M62,22.1H51.4h-0.1H40.6c0,0-7.2,0-7.2,8.4c0,8.7,0,24,0,24s0,3.6,3.5,3.6c3.5,0,3.5-3.6,3.5-3.6V33.1h1.2v58.4    c0,0,0.1,4.4,4.4,4.4c4.5,0,4.4-4.4,4.4-4.4V57.6h0.7h0.1h0.7v33.8c0,0-0.1,4.4,4.4,4.4c4.4,0,4.4-4.4,4.4-4.4V33.1h1.2v21.5    c0,0,0,3.6,3.5,3.6c3.5,0,3.5-3.6,3.5-3.6s0-15.3,0-24C69.2,22.1,62,22.1,62,22.1z" />
-        </g>
+    <defs >
+      <g id="man" xmlns="http://www.w3.org/2000/svg"><g><circle cx="51.4" cy="12.2" r="7.9"/><path d="M62,22.1H51.4h-0.1H40.6c0,0-7.2,0-7.2,8.4c0,8.7,0,24,0,24s0,3.6,3.5,3.6c3.5,0,3.5-3.6,3.5-3.6V33.1h1.2v58.4    c0,0,0.1,4.4,4.4,4.4c4.5,0,4.4-4.4,4.4-4.4V57.6h0.7h0.1h0.7v33.8c0,0-0.1,4.4,4.4,4.4c4.4,0,4.4-4.4,4.4-4.4V33.1h1.2v21.5    c0,0,0,3.6,3.5,3.6c3.5,0,3.5-3.6,3.5-3.6s0-15.3,0-24C69.2,22.1,62,22.1,62,22.1z"/></g></g>
+      <g id="eth" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd"><path d="M31 54L50 65.5714286 50 81 31 54zM69 54L50 81 50 65.5714286 69 54zM50 62L31 50 69 50 50 62zM50 16L69 50 31 50 50 16z"  fill="url(#grad1)"/></g>
+      <g >
+        <path xmlns="http://www.w3.org/2000/svg" d="M 64 22.199219 L 30 102 C 29.6 102.9 29.699219 103.89922 30.199219 104.69922 C 30.899219 105.69922 32.099609 106.09961 33.099609 105.59961 L 63.800781 90.300781 L 64 90.300781 L 94.699219 105.59961 C 94.999219 105.79961 95.399219 105.80078 95.699219 105.80078 C 96.499219 105.80078 97.199609 105.39922 97.599609 104.69922 C 98.299609 103.89922 98.3 102.9 98 102 L 64 22.199219 z M 64 27.300781 L 96.099609 102.80078 C 96.299609 103.20078 96.099609 103.49961 96.099609 103.59961 C 95.999609 103.79961 95.899219 103.80078 95.699219 103.80078 L 65 88.400391 C 64.7 88.200391 64.4 88.199219 64 88.199219 C 63.7 88.199219 63.3 88.300391 63 88.400391 L 32.300781 103.69922 C 32.200781 103.79922 32.000391 103.7 31.900391 103.5 C 31.800391 103.4 31.700781 103.09922 31.800781 102.69922 L 64 27.300781 z " fill="url(#grad1)"/>
       </g>
-      <g id="eth" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd">
-        <path d="M31 54L50 65.5714286 50 81 31 54zM69 54L50 81 50 65.5714286 69 54zM50 62L31 50 69 50 50 62zM50 16L69 50 31 50 50 16z"
-          fill="url(#grad1)" />
-      </g>
-      <g>
-        <path xmlns="http://www.w3.org/2000/svg" d="M 64 22.199219 L 30 102 C 29.6 102.9 29.699219 103.89922 30.199219 104.69922 C 30.899219 105.69922 32.099609 106.09961 33.099609 105.59961 L 63.800781 90.300781 L 64 90.300781 L 94.699219 105.59961 C 94.999219 105.79961 95.399219 105.80078 95.699219 105.80078 C 96.499219 105.80078 97.199609 105.39922 97.599609 104.69922 C 98.299609 103.89922 98.3 102.9 98 102 L 64 22.199219 z M 64 27.300781 L 96.099609 102.80078 C 96.299609 103.20078 96.099609 103.49961 96.099609 103.59961 C 95.999609 103.79961 95.899219 103.80078 95.699219 103.80078 L 65 88.400391 C 64.7 88.200391 64.4 88.199219 64 88.199219 C 63.7 88.199219 63.3 88.300391 63 88.400391 L 32.300781 103.69922 C 32.200781 103.79922 32.000391 103.7 31.900391 103.5 C 31.800391 103.4 31.700781 103.09922 31.800781 102.69922 L 64 27.300781 z "
-          fill="url(#grad1)" />
-      </g>
-      <g>
-        <path xmlns="http://www.w3.org/2000/svg" d="M65.984,20.096c-0.029-0.88-0.408-1.744-1.137-2.353c-1.357-1.134-3.381-0.951-4.514,0.409L32.996,50.946   c-0.498,0.595-0.744,1.323-0.744,2.054s0.246,1.459,0.744,2.053l27.338,32.795c1.133,1.358,3.156,1.543,4.514,0.408   c0.729-0.609,1.107-1.472,1.141-2.35L66,85.921V20.078L65.984,20.096z"
-          fill="url(#grad1)" fill-opacity="0.5" />
+      <g >
+         <path xmlns="http://www.w3.org/2000/svg" d="M65.984,20.096c-0.029-0.88-0.408-1.744-1.137-2.353c-1.357-1.134-3.381-0.951-4.514,0.409L32.996,50.946   c-0.498,0.595-0.744,1.323-0.744,2.054s0.246,1.459,0.744,2.053l27.338,32.795c1.133,1.358,3.156,1.543,4.514,0.408   c0.729-0.609,1.107-1.472,1.141-2.35L66,85.921V20.078L65.984,20.096z" fill="url(#grad1)" fill-opacity="0.5"/>
       </g>
       <g id="marker" transform="rotate(180)">
-        <polygon xmlns="http://www.w3.org/2000/svg" class="fil0" points="748,0 182,0 0,248 182,497 748,497 568,248 "
-          fill="#06bcfb" />
+        <polygon xmlns="http://www.w3.org/2000/svg" class="fil0" points="748,0 182,0 0,248 182,497 748,497 568,248 " fill="#06bcfb"/>
       </g>
     </defs>
     <defs>
-      <linearGradient id="grad1">
-        <stop offset="0%" stop-color="#06bcfb" />
-        <stop offset="100%" stop-color="#4884ee" />
-      </linearGradient>
-    </defs>
-    <defs>
-      <linearGradient id="grad2">
-        <stop offset="0%" stop-color="#ee8c68" />
-        <stop offset="74%" stop-color="#eb6b9d" />
-      </linearGradient>
-    </defs>
+          <linearGradient id="grad1">
+              <stop offset="0%" stop-color="#06bcfb"/>
+              <stop offset="100%" stop-color="#4884ee"/>
+          </linearGradient>
+      </defs>
+        <defs>
+          <linearGradient id="grad2">
+              <stop offset="0%" stop-color="#ee8c68"/>
+              <stop offset="74%" stop-color="#eb6b9d"/>
+          </linearGradient>
+      </defs>
+      <defs> <pattern id="lightstripe" patternUnits="userSpaceOnUse" width="5" height="5"> <image xlink:href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPSc1JyBoZWlnaHQ9JzUnPgogIDxyZWN0IHdpZHRoPSc1JyBoZWlnaHQ9JzUnIGZpbGw9J3doaXRlJy8+CiAgPHBhdGggZD0nTTAgNUw1IDBaTTYgNEw0IDZaTS0xIDFMMSAtMVonIHN0cm9rZT0nIzg4OCcgc3Ryb2tlLXdpZHRoPScxJy8+Cjwvc3ZnPg==" x="0" y="0" width="5" height="5"> </image> </pattern> </defs>
+      <defs> <pattern id="dots-1" patternUnits="userSpaceOnUse" width="10" height="10"> <image xlink:href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxMCcgaGVpZ2h0PScxMCc+CiAgPHJlY3Qgd2lkdGg9JzEwJyBoZWlnaHQ9JzEwJyBmaWxsPSd3aGl0ZScgLz4KICA8cmVjdCB4PScwJyB5PScwJyB3aWR0aD0nMScgaGVpZ2h0PScxJyBmaWxsPSdibGFjaycgLz4KPC9zdmc+" x="0" y="0" width="10" height="10"> </image> </pattern> </defs>
+  
+    
   </svg>
+  <p>...loading...</p>
   __D3_PLACEHOLDER__
   <script>__SCRIPT_PLACEHOLDER__</script>
 </body>
