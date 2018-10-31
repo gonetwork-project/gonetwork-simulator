@@ -346,10 +346,9 @@ function tick (events: any[]) {
 }
 
 // RUN
-const initBridge = (onInit: (e: any) => void, onEvent: (e: any) => void) => {
+const initBridge = (onEvent: (e: VisEvent) => void) => {
   (window as any)._GN = {
-    emitInit: (e: any) => onInit(e),
-    emitEvent: (e: any) => {
+    emitEvent: (e: VisEvent) => {
       // document.body.insertAdjacentHTML('beforeend', `<div>EVENT ${JSON.stringify(e)}</div>`)
       onEvent(e)
     }
@@ -359,14 +358,18 @@ const initBridge = (onInit: (e: any) => void, onEvent: (e: any) => void) => {
 setInterval(function () { return tick([{}]) }, 2000)
 
 initBridge(
-  () => {
-    document.body.insertAdjacentHTML('beforeend', `<div>INITED</div>`)
-    setInterval(updateCurrentBlock, 5000)
-    tick([])
-  },
-  (e: AppEvent) => {
-    switch (e.source) {
-      case 'N': // todo: remove enum from app
+  (e: VisEvent) => {
+    document.body.insertAdjacentHTML('afterbegin', `<div>${JSON.stringify(e)}</div>`)
+    switch (e.type) {
+      case 'init':
+        setInterval(updateCurrentBlock, 5000)
+        tick([])
+        return
+      case 'block-number': // todo: remove enum from app
         updateCurrentBlock(e.block)
+        return
+      case 'on-event':
+      case 'off-msg':
+        return 'TODO'
     }
   })

@@ -53,3 +53,30 @@ export interface Account {
   privateKey: string
   address: string
 }
+
+export type InitEv = {
+  type: 'init',
+  block: number,
+  peer1: string
+  peer2: string
+}
+
+export type BlockNumberEv = {
+  type: 'block-number',
+  block: number
+}
+
+export type OffchainEv = {
+  type: 'off-msg',
+  from: string
+  to: string
+  messageType: string
+  message: string
+}
+
+export type OnchainEv = {
+  type: 'on-event'
+  details: string
+}
+
+export type VisEvent = InitEv | BlockNumberEv | OffchainEv | OnchainEv

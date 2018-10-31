@@ -101,6 +101,7 @@ export class AccountFull extends React.Component<Props, State> {
         supportedOrientations={['portrait']}
         onDismiss={() => this.setState({ showVis: undefined })}>
         <Visualization
+          currentBlock={this.props.currentBlock!}
           account={this.props.account}
           channel={this.state.showVis}
           onClose={() => this.setState({ showVis: undefined })}

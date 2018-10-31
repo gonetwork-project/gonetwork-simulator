@@ -13,8 +13,7 @@
     "outDir": "../../build/app",
     "skipLibCheck": true,
     "strict": true,
-    "noImplicitAny": false,
-    "composite": true
+    "noImplicitAny": false
   },
   "references": [{
     "path": "../protocol"

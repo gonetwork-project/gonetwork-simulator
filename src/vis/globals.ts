@@ -1,5 +1,5 @@
-import { Event } from '../app'
+import { VisEvent as _VisEvent } from '../protocol'
 
 declare global {
-  export type AppEvent = Event
+  export type VisEvent = _VisEvent
 }

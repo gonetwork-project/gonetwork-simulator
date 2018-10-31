@@ -4,12 +4,15 @@ import { Account } from '../logic/accounts'
 import { Channel } from 'go-network-framework/lib/state-channel/channel'
 import { Container, Header, Body, Text, Left, Button, Title, Right } from 'native-base'
 import { Subscription } from 'rxjs'
+import { BlockNumber } from 'eth-types'
+import { VisEvent } from '../../protocol'
 
 const html = require('../../vis/vis.html')
 
 export interface Props {
   account: Account
   channel: Channel
+  currentBlock: BlockNumber
   onClose: () => void
 }
 
@@ -25,7 +28,7 @@ export class Visualization extends React.Component<Props, State> {
 
   componentDidMount () {
     this.sub = this.props.account.events
-      .do(e => this._emitEvent(e))
+   //   .do(e => this._emitEvent(e))
       .subscribe()
   }
 
@@ -33,15 +36,20 @@ export class Visualization extends React.Component<Props, State> {
     this.sub && this.sub.unsubscribe()
   }
 
-  _emitEvent = (e: Event) => {
-    // const ev = `window._GN.emitEvent(${JSON.stringify(e)})`
-    // console.log('EMITTING-EVENT', ev)
-    // this.wv.injectJavaScript(ev)
+  _emitEvent = (e: VisEvent) => {
+    const ev = `window._GN.emitEvent(${JSON.stringify(e)})`
+    console.log('EMITTING-EVENT', ev)
+    this.wv.injectJavaScript(ev)
   }
 
   onLoad = () => {
     console.log('LOADED')
-    this.wv.injectJavaScript(`window._GN.emitInit(0)`)
+    this._emitEvent({
+      type: 'init',
+      peer1: this.props.account.owner.addressStr,
+      peer2: this.props.channel.peerState.address.toString('hex'),
+      block: this.props.currentBlock.toNumber()
+    })
   }
 
   render () {

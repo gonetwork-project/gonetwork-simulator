@@ -27,7 +27,7 @@ const freePort = () => {
 
 let sessionId = 0
 const PINGING_INTERVAL = 1000
-const INITIAL_ACCOUNT_COUNT = 3
+const INITIAL_ACCOUNT_COUNT = 2
 
 const subprocess = <C extends { port: number, hostname: string }, T> (cfg: Partial<C>, pr: (c: C) => Observable<T>): Observable<T> =>
   Observable.race(

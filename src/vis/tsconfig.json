@@ -12,7 +12,6 @@
     "allowJs": true,
   },
   "references": [
-    { "path": "../app" },
     { "path": "../protocol" }
   ]
 }
