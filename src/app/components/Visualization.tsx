@@ -28,7 +28,7 @@ export class Visualization extends React.Component<Props, State> {
 
   componentDidMount () {
     this.sub = this.props.account.events
-   //   .do(e => this._emitEvent(e))
+      //   .do(e => this._emitEvent(e))
       .subscribe()
   }
 
@@ -36,10 +36,16 @@ export class Visualization extends React.Component<Props, State> {
     this.sub && this.sub.unsubscribe()
   }
 
+  componentWillUpdate (props: Props) {
+    this._emitEvent({ type: 'block-number', block: props.currentBlock.toNumber() })
+  }
+
   _emitEvent = (e: VisEvent) => {
-    const ev = `window._GN.emitEvent(${JSON.stringify(e)})`
-    console.log('EMITTING-EVENT', ev)
-    this.wv.injectJavaScript(ev)
+    if (this.wv) {
+      const ev = `window._GN.emitEvent(${JSON.stringify(e)})`
+      console.log('EMITTING-EVENT', ev)
+      this.wv.injectJavaScript(ev)
+    }
   }
 
   onLoad = () => {
@@ -73,13 +79,13 @@ export class Visualization extends React.Component<Props, State> {
         javaScriptEnabled={true}
         domStorageEnabled={true}
         onLoadEnd={this.onLoad}
-        // startInLoadingState={true}
-        // renderLoading={() => <ActivityIndicator />}
         onError={err => console.log('ERR', err)}
         ref={(r) => (this as any).wv = r}
         style={{ flex: 1 }}
         source={source}
-        scrollEnabled={false}
+        // startInLoadingState={true}
+        // renderLoading={() => <ActivityIndicator />}
+        // scrollEnabled={false}
         // @ts-ignore
         useWebKit={true}
       >

@@ -331,15 +331,12 @@ function tick (events: any[]) {
     .on('end',
       function () {
         if (arrowData.length >= maxEvents) {
-          // console.log('removing items')
           arrowData.splice(0, arrowData.length - maxEvents)
           metaData.splice(0, metaData.length - maxEvents)
         }
         if (blockData.length >= maxEvents) {
           blockData.splice(0, blockData.length - maxEvents)
         }
-
-        // console.log('running next_arrows')
         next_arrows()
       })
 
@@ -359,10 +356,9 @@ setInterval(function () { return tick([{}]) }, 2000)
 
 initBridge(
   (e: VisEvent) => {
-    document.body.insertAdjacentHTML('afterbegin', `<div>${JSON.stringify(e)}</div>`)
     switch (e.type) {
       case 'init':
-        setInterval(updateCurrentBlock, 5000)
+        updateCurrentBlock(e.block)
         tick([])
         return
       case 'block-number': // todo: remove enum from app
@@ -370,6 +366,7 @@ initBridge(
         return
       case 'on-event':
       case 'off-msg':
+        document.body.insertAdjacentHTML('beforeend', `<div>${JSON.stringify(e, null, 2)}</div>`)
         return 'TODO'
     }
   })
