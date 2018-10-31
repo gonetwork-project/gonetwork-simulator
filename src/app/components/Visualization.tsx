@@ -17,11 +17,12 @@ export interface Props {
 }
 
 export interface State {
-  width: number, height: number
+  width: number, height: number,
+  wvLoaded: boolean // webview's api seems broken
 }
 
 export class Visualization extends React.Component<Props, State> {
-  state: State = Dimensions.get('screen')
+  state: State = { wvLoaded: false, ...Dimensions.get('screen') }
 
   wv!: WebView
   sub?: Subscription
@@ -43,13 +44,14 @@ export class Visualization extends React.Component<Props, State> {
   _emitEvent = (e: VisEvent) => {
     if (this.wv) {
       const ev = `window._GN.emitEvent(${JSON.stringify(e)})`
-      console.log('EMITTING-EVENT', ev)
+      e.type !== 'block-number' && console.log('EMITTING-EVENT', ev)
       this.wv.injectJavaScript(ev)
     }
   }
 
   onLoad = () => {
     console.log('LOADED')
+    this.setState({ wvLoaded: true })
     this._emitEvent({
       type: 'init',
       peer1: this.props.account.owner.addressStr,
@@ -75,6 +77,7 @@ export class Visualization extends React.Component<Props, State> {
           <View />
         </Right>
       </Header>
+
       <WebView
         javaScriptEnabled={true}
         domStorageEnabled={true}
@@ -83,13 +86,13 @@ export class Visualization extends React.Component<Props, State> {
         ref={(r) => (this as any).wv = r}
         style={{ flex: 1 }}
         source={source}
-        // startInLoadingState={true}
-        // renderLoading={() => <ActivityIndicator />}
         // scrollEnabled={false}
         // @ts-ignore
         useWebKit={true}
       >
       </WebView>
+
+      {!this.state.wvLoaded && <ActivityIndicator style={{ position: 'absolute', top: 128, alignSelf: 'center' }} />}
     </Container>
   }
 }
