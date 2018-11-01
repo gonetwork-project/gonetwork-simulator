@@ -92,8 +92,8 @@ export class ChannelComp extends React.Component<Props, State> {
   blur = () => this.amountRef && this.amountRef._root.blur()
 
   updateState = (s: Partial<State>) => {
-    this.setState(s)
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
+    this.setState(s)
   }
 
   sendDirect = () => {
@@ -127,7 +127,6 @@ export class ChannelComp extends React.Component<Props, State> {
       })
       .catch((e) => this.errorSub.next(e))
       .then(() => this.setState({ depositing: false }))
-
   }
 
   close = () => {
