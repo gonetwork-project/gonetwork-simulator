@@ -3,11 +3,12 @@ import { WebView, Dimensions, View, ActivityIndicator, LayoutAnimation } from 'r
 import { Account } from '../logic/accounts'
 import { Channel } from 'go-network-framework/lib/state-channel/channel'
 import { Container, Header, Body, Text, Left, Button, Title, Right, Toast, Item, Label, Input } from 'native-base'
-import { Subscription } from 'rxjs'
+import { Subscription, Observable } from 'rxjs'
 import { BlockNumber, Wei } from 'eth-types'
 import { VisEvent } from '../../protocol'
 import { sendMediated, sendDirect } from '../logic/offchain-actions'
 import { as } from 'go-network-framework'
+import { SignedMessage } from 'go-network-framework/lib/state-channel/message'
 
 const html = require('../../vis/vis.html')
 
@@ -35,8 +36,15 @@ export class Visualization extends React.Component<Props, State> {
   sub?: Subscription
 
   componentDidMount () {
-    this.sub = this.props.account.events
-      //   .do(e => this._emitEvent(e))
+    this.sub = Observable.merge(
+      Observable.fromEvent<SignedMessage>(this.props.account.p2p, 'message-received')
+        .map(m => ({
+          type: 'off-msg',
+          messageType: m.classType,
+          message: m.from.toString('hex')
+        } as VisEvent))
+    )
+      .do(this.emitEvent)
       .subscribe()
   }
 

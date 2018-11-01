@@ -114,7 +114,6 @@ function drawBlock (val) {
   blockData.push(val)
   let add = blocks.selectAll('.block')
     .data(blockData, function (d) {
-
       return d[0].y
     })
     .enter()
@@ -156,19 +155,6 @@ function drawBlock (val) {
 drawBlock([{ y: 0, height: stepY, text: 'Initialize' }])
 
 function next_arrows () {
-  if (Math.random() < 0.3) {
-    // left to right
-    metaData.push({ 'text': 'left to right:' + globalY })
-    arrowData.push([{ x: 0, y: globalY - stepY }, { x: 0.25, y: globalY - stepY * .125 }, { x: 0.75, y: globalY + stepY * .125 }, { x: 1, y: globalY }])
-  } else if (Math.random() < 0.6) {
-    // right to left
-    metaData.push({ 'text': 'right to left:' + globalY })
-    arrowData.push([{ x: 1, y: globalY - stepY }, { x: 0.75, y: globalY - stepY * .125 }, { x: 0.25, y: globalY + stepY * .125 }, { x: 0, y: globalY }])
-  } else {
-    // blockchain event
-    drawBlock([{ y: globalY, height: stepY, text: 'globalVal:' + globalY }])
-  }
-
   (arrows.selectAll('.arrow') as any)
     .data(arrowData, function (d) { return d[d.length - 1].y }).exit().remove();
   (arrows.selectAll('.arrow') as any)
@@ -275,9 +261,9 @@ function next_arrows () {
 
 }
 
-function tick (events: any[]) {
+function tick () {
   globalX += step
-  globalY += stepY * events.length
+  globalY += stepY
 
   y.domain([globalY - maxY, globalY]);
   (axisY as any).transition()
@@ -352,21 +338,39 @@ const initBridge = (onEvent: (e: VisEvent) => void) => {
   }
 }
 // TODO -- REMOVE SIDE EFFECTS
-setInterval(function () { return tick([{}]) }, 2000)
+// setInterval(function () { return tick() }, 2000)
+// if (Math.random() < 0.3) {
+//   // left to right
+//   metaData.push({ 'text': 'left to right:' + globalY })
+//   arrowData.push([{ x: 0, y: globalY - stepY }, { x: 0.25, y: globalY - stepY * .125 }, { x: 0.75, y: globalY + stepY * .125 }, { x: 1, y: globalY }])
+// } else if (Math.random() < 0.6) {
+//   // right to left
+//   metaData.push({ 'text': 'right to left:' + globalY })
+//   arrowData.push([{ x: 1, y: globalY - stepY }, { x: 0.75, y: globalY - stepY * .125 }, { x: 0.25, y: globalY + stepY * .125 }, { x: 0, y: globalY }])
+// } else {
+//   // blockchain event
+//   drawBlock([{ y: globalY, height: stepY, text: 'globalVal:' + globalY }])
+// }
 
 initBridge(
   (e: VisEvent) => {
     switch (e.type) {
       case 'init':
+      case 'block-number':
         updateCurrentBlock(e.block)
-        tick([])
-        return
-      case 'block-number': // todo: remove enum from app
-        updateCurrentBlock(e.block)
-        return
+        break
       case 'on-event':
+        drawBlock([{ y: globalY, height: stepY, text: e.details }])
+        break
       case 'off-msg':
-        document.body.insertAdjacentHTML('beforeend', `<div>${JSON.stringify(e, null, 2)}</div>`)
-        return 'TODO'
+        document.body.insertAdjacentHTML('afterbegin', `<div>${JSON.stringify(e)}</div>`)
+        metaData.push({ text: e.messageType + ': ' + e.message })
+        e.dir === 'right->left' ?
+          arrowData.push([{ x: 0, y: globalY - stepY },
+          { x: 0.25, y: globalY - stepY * .125 }, { x: 0.75, y: globalY + stepY * .125 }, { x: 1, y: globalY }]) :
+          arrowData.push([{ x: 1, y: globalY - stepY },
+          { x: 0.75, y: globalY - stepY * .125 }, { x: 0.25, y: globalY + stepY * .125 }, { x: 0, y: globalY }])
+        tick()
+        break
     }
   })

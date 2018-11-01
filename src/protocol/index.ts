@@ -68,8 +68,7 @@ export type BlockNumberEv = {
 
 export type OffchainEv = {
   type: 'off-msg',
-  from: string
-  to: string
+  dir: 'right->left' | 'left->right'
   messageType: string
   message: string
 }
