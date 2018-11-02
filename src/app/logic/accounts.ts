@@ -46,7 +46,8 @@ export interface AccountBalanceFormatted extends AccountBalance {
 export interface OtherAccount {
   addressStr: string
   address: Address
-  addressShort
+  addressShort: string
+  local?: Account
 }
 
 export enum EventSource {
@@ -262,7 +263,7 @@ export const accounts = () => {
         .do(a => inited.push(a))
         .merge(Observable.from(inited))
         .toArray()
-        // FIXME - it automatically opens netting channels
+        // TODO: remove - it automatically opens netting channels
         .do((ar) => {
           if (ar && ar.length === 2) {
             const [a, b, c] = ar

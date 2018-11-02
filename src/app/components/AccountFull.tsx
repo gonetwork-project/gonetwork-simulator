@@ -104,6 +104,8 @@ export class AccountFull extends React.Component<Props, State> {
           currentBlock={this.props.currentBlock!}
           account={this.props.account}
           channel={this.state.showVis}
+          other={this.props.otherAccounts.find(o =>
+            Buffer.compare(o.address, this.state.showVis!.peerState.address) === 0)!}
           onClose={() => this.setState({ showVis: undefined })}
         />
       </Modal>}

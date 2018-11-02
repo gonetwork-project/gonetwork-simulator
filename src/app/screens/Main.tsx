@@ -122,10 +122,11 @@ export class Main extends React.Component<{}, State> {
         balance={this.state.balances[selected.owner.addressStr]}
         otherAccounts={this.state.accounts!
           .filter(a => a !== selected)
-          .map(a => a.owner as OtherAccount) // more info passed than needed
+          .map(a => Object.assign({}, a.owner, { local: a }) as OtherAccount) // more info passed than needed
           .concat(this.state.otherAccounts || [])
         }
-        onBack={() => this.setState({ selectedAccount: undefined })}
+        onBack={() => this.setState({ selectedAccount: undefined })
+        }
       />
     }
 

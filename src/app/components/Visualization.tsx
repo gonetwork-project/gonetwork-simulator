@@ -1,19 +1,50 @@
 import * as React from 'react'
 import { WebView, Dimensions, View, ActivityIndicator, LayoutAnimation } from 'react-native'
-import { Account } from '../logic/accounts'
+import { Account, OtherAccount } from '../logic/accounts'
 import { Channel } from 'go-network-framework/lib/state-channel/channel'
 import { Container, Header, Body, Text, Left, Button, Title, Right, Toast, Item, Label, Input } from 'native-base'
 import { Subscription, Observable } from 'rxjs'
 import { BlockNumber, Wei } from 'eth-types'
-import { VisEvent } from '../../protocol'
+import { VisEvent, OffchainEv } from '../../protocol'
 import { sendMediated, sendDirect } from '../logic/offchain-actions'
-import { as, BN } from 'go-network-framework'
+import { as, BN, P2P } from 'go-network-framework'
 import { SignedMessage, deserializeAndDecode, Ack, Lock } from 'go-network-framework/lib/state-channel/message'
 
 const html = require('../../vis/vis.html')
 
+type P2PMsg = ReturnType<typeof deserializeAndDecode>
+type Transform = (m: P2PMsg) =>
+  { messageType: OffchainEv['messageType'], message: OffchainEv['message'] }
+
+const p2pMessageToVisEv = (dir: OffchainEv['dir'], transform: Transform) =>
+  (m: P2PMsg): OffchainEv =>
+    Object.assign({
+      dir, type: 'off-msg' as 'off-msg'
+    }, transform(m))
+
+const transform: Transform = m => {
+  if (m instanceof SignedMessage) {
+    return {
+      messageType: m.classType,
+      message: '[tood]'
+    }
+  } else if (m instanceof Ack) { // Ack and Lock seems to be not used
+    return {
+      messageType: 'Ack',
+      message: '[todo]'
+    }
+  } else if (m instanceof Lock) {
+    return {
+      messageType: 'Lock',
+      message: '[todo]'
+    }
+  }
+  throw new Error('UNKNOWN_CASE')
+}
+
 export interface Props {
   account: Account
+  other: OtherAccount
   channel: Channel
   currentBlock: BlockNumber
   onClose: () => void
@@ -36,28 +67,17 @@ export class Visualization extends React.Component<Props, State> {
   sub?: Subscription
 
   componentDidMount () {
-    this.sub = Observable.merge(
-      Observable.fromEvent<any>(this.props.account.p2p, 'message-received')
-        .map(deserializeAndDecode)
-        .map(m => {
-          if (m instanceof SignedMessage) {
-            return {
-              messageType: m.classType,
-              message: m.from.toString('hex')
-            } as VisEvent
-          } else if (m instanceof Ack) {
-            return {
-              messageType: 'Ack',
-              message: '[todo]'
-            } as VisEvent
-          } else if (m instanceof Lock) {
-            return {
-              messageType: 'Lock',
-              message: '[todo]'
-            } as VisEvent
-          }
-        }))
-      .map(x => Object.assign(x, { dir: 'right->left', type: 'off-msg' }))
+    const cfg = [
+      [this.props.account.p2p, 'left->right'],
+      [this.props.other.local && this.props.other.local.p2p, 'right->left']
+    ].filter(c => !!c[0]) as Array<[P2P, OffchainEv['dir']]>
+
+    this.sub = Observable.from(cfg)
+      .mergeMap(([p2p, dir]) =>
+        Observable.fromEvent<any>(p2p, 'message-received')
+          .map(deserializeAndDecode)
+          .map(p2pMessageToVisEv(dir, transform))
+      )
       .do(this.emitEvent)
       .subscribe()
   }
