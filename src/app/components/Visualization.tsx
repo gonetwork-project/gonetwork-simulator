@@ -78,6 +78,14 @@ export class Visualization extends React.Component<Props, State> {
           .map(deserializeAndDecode)
           .map(p2pMessageToVisEv(dir, transform))
       )
+      .merge(
+        this.props.account.blockchain.monitoring.asStream('*')
+          .filter(ev => Buffer.compare(ev._contract, this.props.channel.channelAddress) === 0)
+          .map(ev => ({
+            type: 'on-event',
+            details: `${ev._type}`
+          } as VisEvent))
+      )
       .do(this.emitEvent)
       .subscribe()
   }
