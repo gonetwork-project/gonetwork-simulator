@@ -1,7 +1,6 @@
 interface Point { x: number, y: number }
-type BlockData = any // todo: define correctly
-type MetaData = any // todo: define correctly
-type EventT = any // todo: unify accross app and vis
+type MetaData = { text: string }
+type BlockData = MetaData & { y: number, height: number }
 
 const margin = { top: 50, right: 10, bottom: 30, left: 10 }
 const width = window.innerWidth - margin.left - margin.right
@@ -110,25 +109,22 @@ const arrowData: Point[][] = []
 const metaData: MetaData[] = []
 
 // draw the block from y height to max-height
-function drawBlock (val) {
+function drawBlock (val: BlockData) {
   blockData.push(val)
   let add = blocks.selectAll('.block')
-    .data(blockData, function (d) {
-      return d[0].y
-    })
+    .data<BlockData>(blockData as any, (d: any) => d.y)
     .enter()
   let block = add.append('g').attr('class', 'block')
   block.append('rect')
-
     .attr('x', 100)// static
     .attr('y', function (d) {
-      return y(d[0].y)
+      return y(d.y)
     })
     .attr('width', max - 200)// static
     .attr('fill', 'url(#lightstripe)')
     .attr('fill-opacity', '0.1')
     .attr('height', function (d) {
-      return height / maxY * d[0].height
+      return height / maxY * d.height
     });
   (block as any).append('use').attr('class', 'block-marker')
     .attr('transform', 'scale(0.0225)')
@@ -136,7 +132,7 @@ function drawBlock (val) {
     .attr('x', 100 / 0.045)// divide by scale
     .attr('y', function (d) {
 
-      return (y(d[0].y) + 5) / 0.0225 + 933.3333333333334
+      return (y(d.y) + 5) / 0.0225 + 933.3333333333334
     }).transition()
     .duration(duration)
     .ease(d3.easeElastic, 2)
@@ -144,15 +140,14 @@ function drawBlock (val) {
 
   block.append('text')
     .attr('class', 'block-text')
-    .attr('transform', `translate(${middle},` + (y(val[0].y - val[0].height / 2)) + ')')
+    .attr('transform', `translate(${middle},` + (y(val.y - val.height / 2)) + ')')
     .attr('text-anchor', 'middle')
     .attr('font-family', 'sans-serif')
     .attr('font-size', '10px')
     .attr('fill', 'orange')
-    .text(val[0].text)
+    .text(val.text)
 
 }
-drawBlock([{ y: 0, height: stepY, text: 'Initialize' }])
 
 function next_arrows () {
   (arrows.selectAll('.arrow') as any)
@@ -205,14 +200,7 @@ function next_arrows () {
     .data(arrowData, function (d) { return d[d.length - 1].y })
     .enter().append('path')
     .attr('class', 'arrow-text-path')
-    .attr('d', function (d) {
-      if (d[0].x === 0) {
-        return lineGen(d)
-      } else {
-        // alert(JSON.stringify(d));
-        return lineGen(d.slice().reverse())
-      }
-    })
+    .attr('d', d => d[0].x === 0 ? lineGen(d) : lineGen(d.slice().reverse()))
     .attr('id', function (d) { return 'line' + d[0].y })
     .attr('fill', 'none')
     .attr('stroke', 'none');
@@ -222,7 +210,6 @@ function next_arrows () {
     .data(arrowData, function (d) { return d[d.length - 1].y })
     .enter().append('text')
     .append('textPath') // append a textPath to the text element
-    // .attr("path", lineGen)
     .attr('xlink:href', function (d) { return '#line' + d[0].y }) // place the ID of the path here
     .attr('text-anchor', 'middle')
     .attr('font-family', 'sans-serif')
@@ -231,9 +218,7 @@ function next_arrows () {
     .style('text-anchor', 'middle') // place the text halfway on the arc
     .attr('startOffset', '50%')
     .attr('opacity', 0)
-    .text(function (d, i) {
-      return metaData[i].text
-    })
+    .text((_, i) => metaData[i].text)
     .transition()
     .duration(duration)
     .ease(d3.easeLinear, 2)
@@ -297,19 +282,12 @@ function tick () {
         return lineGen(d.slice().reverse())
       }
     })
-  blocks.selectAll('rect').attr('y', function (d) {
-    return y(d[0].y)
-  })
+  blocks.selectAll('rect').attr('y', d => y(d[0].y))
 
   blocks.selectAll('.block-marker')
-    .attr('y', function (d) {
-
-      return (y(d[0].y) + 5) / 0.0225 + 933.3333333333334
-    })
+    .attr('y', (d) => (y(d[0].y) + 5) / 0.0225 + 933.3333333333334)
   blocks.selectAll('.block-text')
-    .attr('transform', function (d) {
-      return `translate(${middle},` + (y(d[0].y - d[0].height / 2)) + ')'
-    });
+    .attr('transform', (d: any) => `translate(${middle},` + (y(d.y - d.height / 2)) + ')');
   (blocks as any).attr('transform', null).transition().duration(duration).ease(d3.easeLinear, 2)
     .attr('transform', 'translate(0,' + y(globalY - stepY) + ')');
   (arrows as any).attr('transform', null).transition().duration(duration).ease(d3.easeLinear, 2)
@@ -331,26 +309,9 @@ function tick () {
 // RUN
 const initBridge = (onEvent: (e: VisEvent) => void) => {
   (window as any)._GN = {
-    emitEvent: (e: VisEvent) => {
-      // document.body.insertAdjacentHTML('beforeend', `<div>EVENT ${JSON.stringify(e)}</div>`)
-      onEvent(e)
-    }
+    emitEvent: onEvent
   }
 }
-// TODO -- REMOVE SIDE EFFECTS
-// setInterval(function () { return tick() }, 2000)
-// if (Math.random() < 0.3) {
-//   // left to right
-//   metaData.push({ 'text': 'left to right:' + globalY })
-//   arrowData.push([{ x: 0, y: globalY - stepY }, { x: 0.25, y: globalY - stepY * .125 }, { x: 0.75, y: globalY + stepY * .125 }, { x: 1, y: globalY }])
-// } else if (Math.random() < 0.6) {
-//   // right to left
-//   metaData.push({ 'text': 'right to left:' + globalY })
-//   arrowData.push([{ x: 1, y: globalY - stepY }, { x: 0.75, y: globalY - stepY * .125 }, { x: 0.25, y: globalY + stepY * .125 }, { x: 0, y: globalY }])
-// } else {
-//   // blockchain event
-//   drawBlock([{ y: globalY, height: stepY, text: 'globalVal:' + globalY }])
-// }
 
 initBridge(
   (e: VisEvent) => {
@@ -360,8 +321,8 @@ initBridge(
         updateCurrentBlock(e.block)
         break
       case 'on-event':
-        document.body.insertAdjacentHTML('afterbegin', `<div>${JSON.stringify(e)}</div>`)
-        drawBlock([{ y: globalY, height: stepY, text: e.details }])
+        drawBlock({ y: globalY, height: stepY, text: e.details })
+        tick()
         break
       case 'off-msg':
         metaData.push({ text: e.messageType + ': ' + e.message })

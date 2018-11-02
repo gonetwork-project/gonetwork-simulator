@@ -214,7 +214,7 @@ export class Visualization extends React.Component<Props, State> {
         source={source}
         scrollEnabled={false}
         // @ts-ignore
-        useWebKit={true}
+        // useWebKit={true}
       >
       </WebView>
 
