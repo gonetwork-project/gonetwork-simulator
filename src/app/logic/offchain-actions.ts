@@ -23,6 +23,7 @@ export const sendDirect = (from: Account, to: Address, amount: Wei) => {
 }
 
 export const sendMediated = (from: Account, to: Address, amount: Wei) => {
+  console.log('MEDIATED', from.owner.addressStr, to.toString('hex'), amount.toString(10))
   const secretHashPair = GenerateRandomSecretHashPair()
   return from.blockchain.monitoring.blockNumbers()
     .take(1)

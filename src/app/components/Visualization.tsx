@@ -7,8 +7,8 @@ import { Subscription, Observable } from 'rxjs'
 import { BlockNumber, Wei } from 'eth-types'
 import { VisEvent } from '../../protocol'
 import { sendMediated, sendDirect } from '../logic/offchain-actions'
-import { as } from 'go-network-framework'
-import { SignedMessage } from 'go-network-framework/lib/state-channel/message'
+import { as, BN } from 'go-network-framework'
+import { SignedMessage, deserializeAndDecode, Ack, Lock } from 'go-network-framework/lib/state-channel/message'
 
 const html = require('../../vis/vis.html')
 
@@ -37,13 +37,27 @@ export class Visualization extends React.Component<Props, State> {
 
   componentDidMount () {
     this.sub = Observable.merge(
-      Observable.fromEvent<SignedMessage>(this.props.account.p2p, 'message-received')
-        .map(m => ({
-          type: 'off-msg',
-          messageType: m.classType,
-          message: m.from.toString('hex')
-        } as VisEvent))
-    )
+      Observable.fromEvent<any>(this.props.account.p2p, 'message-received')
+        .map(deserializeAndDecode)
+        .map(m => {
+          if (m instanceof SignedMessage) {
+            return {
+              messageType: m.classType,
+              message: m.from.toString('hex')
+            } as VisEvent
+          } else if (m instanceof Ack) {
+            return {
+              messageType: 'Ack',
+              message: '[todo]'
+            } as VisEvent
+          } else if (m instanceof Lock) {
+            return {
+              messageType: 'Lock',
+              message: '[todo]'
+            } as VisEvent
+          }
+        }))
+      .map(x => Object.assign(x, { dir: 'right->left', type: 'off-msg' }))
       .do(this.emitEvent)
       .subscribe()
   }
@@ -68,16 +82,16 @@ export class Visualization extends React.Component<Props, State> {
       .catch((e) => Toast.show({ type: 'danger', text: e.message || 'Uknown error' }))
   }
 
-  close = () => {
-    this.props.account.engine.closeChannel(this.props.channel.channelAddress)
-      .then(x => console.log('CLOSED', x))
-    this.updateState({ showActions: false })
-  }
-
   sendMediated = () => {
     sendMediated(this.props.account, this.props.channel.peerState.address, this.state.amount!)
       .then(() => this.setState({ amount: undefined }))
       .catch((e) => Toast.show({ type: 'danger', text: e.message || 'Uknown error' }))
+  }
+
+  close = () => {
+    this.props.account.engine.closeChannel(this.props.channel.channelAddress)
+      .then(x => console.log('CLOSED', x))
+    this.updateState({ showActions: false })
   }
 
   emitEvent = (e: VisEvent) => {
@@ -119,10 +133,10 @@ export class Visualization extends React.Component<Props, State> {
         <View style={{ alignItems: 'center' }}>
           <Text note>Send Transfer</Text>
           <View style={{ flexDirection: 'row' }}>
-            <Button disabled={!this.state.amount} transparent onPress={this.sendDirect}>
+            <Button disabled={!this.state.amount || this.state.amount.lte(new BN(0))} transparent onPress={this.sendDirect}>
               <Text>Direct</Text>
             </Button>
-            <Button disabled={!this.state.amount} transparent onPress={this.sendMediated}>
+            <Button disabled={!this.state.amount || this.state.amount.lte(new BN(0))} transparent onPress={this.sendMediated}>
               <Text>Mediated</Text>
             </Button>
           </View>
