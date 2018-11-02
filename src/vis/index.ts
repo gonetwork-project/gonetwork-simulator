@@ -360,10 +360,10 @@ initBridge(
         updateCurrentBlock(e.block)
         break
       case 'on-event':
+        document.body.insertAdjacentHTML('afterbegin', `<div>${JSON.stringify(e)}</div>`)
         drawBlock([{ y: globalY, height: stepY, text: e.details }])
         break
       case 'off-msg':
-        document.body.insertAdjacentHTML('afterbegin', `<div>${JSON.stringify(e)}</div>`)
         metaData.push({ text: e.messageType + ': ' + e.message })
         e.dir === 'right->left' ?
           arrowData.push([{ x: 0, y: globalY - stepY },

@@ -204,7 +204,7 @@ export class Visualization extends React.Component<Props, State> {
         ref={(r) => (this as any).wv = r}
         style={{ flex: 1 }}
         source={source}
-        // scrollEnabled={false}
+        scrollEnabled={false}
         // @ts-ignore
         useWebKit={true}
       >
