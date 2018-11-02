@@ -282,10 +282,10 @@ function tick () {
         return lineGen(d.slice().reverse())
       }
     })
-  blocks.selectAll('rect').attr('y', d => y(d[0].y))
+  blocks.selectAll('rect').attr('y', (d: any) => y(d.y))
 
   blocks.selectAll('.block-marker')
-    .attr('y', (d) => (y(d[0].y) + 5) / 0.0225 + 933.3333333333334)
+    .attr('y', (d) => (y((d as any).y) + 5) / 0.0225 + 933.3333333333334)
   blocks.selectAll('.block-text')
     .attr('transform', (d: any) => `translate(${middle},` + (y(d.y - d.height / 2)) + ')');
   (blocks as any).attr('transform', null).transition().duration(duration).ease(d3.easeLinear, 2)
