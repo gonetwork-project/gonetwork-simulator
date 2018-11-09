@@ -75,7 +75,7 @@ export const start = (c: Config, dbPath = path.resolve(sessionsDir, `${Date.now(
 
       srv.on('close', () => {
         console.log(`Ganache closed url: ${info.url}, db-path: ${info.dbPath}`)
-        deleteSessionFiles(dbPath)
+        !ignoreSnapshot && deleteSessionFiles(dbPath)
       })
 
       srv.on('error', (err: any) => {
