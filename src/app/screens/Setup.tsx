@@ -41,7 +41,7 @@ export class Setup extends React.Component<Props, State> {
       setup.sessionConfig.map(s => ({ sessionConfig: s })),
       setup.connectionWithStatus.map(c => ({ connection: c })),
       setup.generalInfo
-        .do(g => g && this.createSession()) // TODO remove / allow automatic creation in UI
+        // .do(g => g && this.createSession()) // TODO remove / allow automatic creation in UI
         .map(g => ({ generalInfo: g }))
     ) as Observable<State>)
       .do(c => this.setState(c))

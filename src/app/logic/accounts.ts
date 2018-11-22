@@ -264,14 +264,14 @@ export const accounts = () => {
         .merge(Observable.from(inited))
         .toArray()
         // TODO: remove - it automatically opens netting channels
-        .do((ar) => {
-          if (ar && ar.length === 2) {
-            const [a, b, c] = ar
-            // a.p2pProxy.setMode('manual')
-            openChannelAndDeposit(a, as.Wei(1000), b.owner.address, () => null)
-            //  .then(() => openChannelAndDeposit(a, as.Wei(1000), c.owner.address, () => null))
-          }
-        })
+        // .do((ar) => {
+        //   if (ar && ar.length === 2) {
+        //     const [a, b, c] = ar
+        //     // a.p2pProxy.setMode('manual')
+        //     openChannelAndDeposit(a, as.Wei(1000), b.owner.address, () => null)
+        //     //  .then(() => openChannelAndDeposit(a, as.Wei(1000), c.owner.address, () => null))
+        //   }
+        // })
     )
     // .do(x => console.log('USER-ACCOUNTS', x))
     .shareReplay(1)
