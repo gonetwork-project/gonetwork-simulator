@@ -7,15 +7,11 @@ import { Observable, Observer } from 'rxjs'
 import { Contracts } from '../protocol'
 
 import { accounts as cfgAccounts, sessionsDir, contractsPath, snapDir } from './config'
-import { initTemp, deleteSessionFiles } from './utils'
+import { initSessions, deleteSessionFiles } from './utils'
 
 const snapNotFoundMsg = 'DB-SNAPSHOT NOT FOUND - please create by running create-snapshot script.'
-// if (!fs.existsSync(snapDir)) {
-//   throw new Error(snapNotFoundMsg)
-// }
-
 // SIDE EFFECTS
-initTemp()
+initSessions()
 
 const exec = Observable.bindNodeCallback(cp.exec)
 

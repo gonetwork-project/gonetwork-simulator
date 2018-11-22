@@ -1,13 +1,15 @@
 import { Observable, Subscription } from 'rxjs'
 import * as WebSocket from 'ws'
 import * as fs from 'fs'
+import { resolve } from 'path'
 
 import * as P from '../protocol'
 
 import { start as ganache } from './ganache'
 import { start as mqtt } from './mqtt-nano'
 import { hostname, port, accounts, tempDir } from './config'
-import { execIfScript } from './utils'
+import { execIfScript, initSnapshot } from './utils'
+
 interface SessionMeta {
   createdBy: WebSocket
   subscription: Subscription
@@ -55,6 +57,8 @@ const send = (msg: P.ServerMessage) => (ws: WebSocket): boolean => {
 }
 
 const serve = () => {
+  initSnapshot()
+
   let active: P.Session[] = []
   let inCreation: Array<Partial<P.Session>> = []
   const wsToSessions = new Map<WebSocket, Partial<P.Session>>()

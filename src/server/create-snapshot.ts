@@ -10,26 +10,18 @@ import { as } from 'go-network-framework'
 import { Contracts } from '../protocol'
 
 import { accounts as cfgAccounts, contractsPath, snapDir } from './config'
-import { initTemp } from './utils'
+import { initSessions } from './utils'
 import { start, GanacheInfo } from './ganache'
 
 // needed for rpc
 (global as any).fetch = require('node-fetch')
 
 if (module.parent) {
-  throw new Error('This is a script. Should not be loaded as a dependency.')
+  throw new Error('This is a script. Should not be loaded as a module / dependency.')
 }
 
-if (!process.argv[2]) {
-  throw new Error('Please provide absolute path to the gonetwork-framework as the single argument.')
-}
-
-const frameworkPath = process.argv[2]
+const frameworkPath = path.resolve(__dirname, '..', '..', 'node_modules/go-network-framework')
 const deployScriptPath = path.resolve(frameworkPath, './build-dev/scripts/deploy-contracts.js')
-
-if (!fs.existsSync(deployScriptPath)) {
-  throw new Error(`Deploy contracts scripts not found. Please make sure you compiled source and/or the path to framework (${frameworkPath}) is correct.`)
-}
 
 const exec = Observable.bindNodeCallback(cp.exec)
 
@@ -92,6 +84,6 @@ export const createSnap = () => {
     .do(() => console.log('snap created'))
 }
 
-initTemp()
+initSessions()
 createSnap()
   .subscribe()

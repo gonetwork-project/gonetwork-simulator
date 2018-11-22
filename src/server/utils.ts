@@ -1,10 +1,11 @@
 import * as os from 'os'
 import * as cp from 'child_process'
 import * as fs from 'fs'
+import { resolve } from 'path'
 
 import { Observable } from 'rxjs'
 
-import { tempDir, sessionsDir } from './config'
+import { tempDir, sessionsDir, snapDir } from './config'
 
 export const exec = Observable.bindNodeCallback(cp.exec)
 
@@ -61,7 +62,7 @@ export const execIfScript = (serve: () => () => void, isScript: boolean, restart
   }
 }
 
-export const initTemp = () => {
+export const initSessions = () => {
   !fs.existsSync(tempDir) && fs.mkdirSync(tempDir)
   if (fs.existsSync(sessionsDir)) {
     const old = fs.readdirSync(sessionsDir)
@@ -74,7 +75,15 @@ export const initTemp = () => {
         complete: () => console.log('old sessions removed')
       })
   }
+}
+
+export const initSnapshot = () => {
   !fs.existsSync(sessionsDir) && fs.mkdirSync(sessionsDir)
+  if (!fs.existsSync(snapDir)) {
+    const cmd = `node ${resolve(__dirname, './create-snapshot.js')}`
+    console.log(`Blockchain DB snapshot not found - creating it in a blocking way now. It is only on the first run. It should take ~60 seconds. Command: "${cmd}"`)
+    cp.execSync(cmd, { stdio: 'inherit' })
+  }
 }
 
 export const deleteSessionFiles = (dir: string) => {
