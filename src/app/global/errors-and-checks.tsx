@@ -2,7 +2,6 @@ import { BehaviorSubject, Observable } from 'rxjs'
 import { View, Text, Button } from 'react-native'
 import * as React from 'react'
 
-import { ignoreUndefined } from '../logic/utils'
 import { checkP2PRaw } from '../logic/check-p2p'
 
 // #region critical errors

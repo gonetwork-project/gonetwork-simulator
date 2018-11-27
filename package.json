@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "postinstall": "mkdir -p ./build && npm run vis-compile && npm run app-compile && npm run server-compile",
+    "rn": "node_modules/.bin/react-native start",
     "start": "node node_modules/react-native/local-cli/cli.js start",
     "test": "jest",
     "lint": "node_modules/tslint/bin/tslint -c tslint.json 'src/**/*.ts'",
@@ -25,7 +26,7 @@
     "ganache-core": "https://github.com/unao/ganache-core.git#43ac98ac5a58c9e0d1008ec7b226a1e6bfaa5111",
     "go-network-framework": "^0.2.33",
     "mqtt-connection": "^4.0.0",
-    "native-base": "^2.8.0",
+    "native-base": "^2.8.1",
     "node-libs-browser": "^2.1.0",
     "process": "^0.11.10",
     "qrcode": "^1.2.2",

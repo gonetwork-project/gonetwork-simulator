@@ -3,7 +3,7 @@ import { View, ActivityIndicator } from 'react-native'
 import { RNCamera, BarCodeType } from 'react-native-camera'
 import { Subscription, Observable } from 'rxjs'
 
-import { Container, Content, Text, Button, H1, H2, Tab, Tabs, Card, Item, Input, Label, Header } from 'native-base'
+import { Container, Content, Text, Button, H1, H2, Tab, Tabs, Card, Item, Input, Label, Header, Body, Title, Left, Right } from 'native-base'
 
 import { setUnknownError } from '../global'
 import { GeneralInfo, SessionConfigClient, SessionId } from '../../protocol'
@@ -198,7 +198,9 @@ export class Setup extends React.Component<Props, State> {
     if (!this.state) return null
     return <Container>
       <Header>
-        <H1>Welcome to GoNetwork Simulator</H1>
+        <Body>
+          <Title>GoNetwork Simulator</Title>
+        </Body>
       </Header>
       <Content>
         <Tabs>

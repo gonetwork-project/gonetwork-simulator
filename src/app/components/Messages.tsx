@@ -13,7 +13,9 @@ const headerKeysMap = Object.values(headerKeys).reduce((a, k) => (a[k] = true, a
 const valueToString = (v: Buffer | BN | string) =>
   BN.isBN(v) ? v.toString(10) :
     Buffer.isBuffer(v) ? '0x' + v.toString('hex') :
-    typeof v === 'object' ? '[TODO]' : `${v}`
+    typeof v === 'object' ? '[TODO]' :
+    v === void 0 ? '-' :
+    `${v}`
 
 const MessageItem = (k: string, v: Buffer | BN | string) =>
   <View key={k} style={{ margin: 4 }}>
