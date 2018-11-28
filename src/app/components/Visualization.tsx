@@ -27,24 +27,17 @@ const transform: Transform = dir => m => {
   if (m instanceof SignedMessage) {
     let sentAmount: number | undefined
     let receivedAmount: number | undefined
-    // assumes left->right perspective if dir is different it will swap it
     if ((m.classType === 'MediatedTransfer' || m.classType === 'DirectTransfer')) {
       sentAmount = -(m as any).transferredAmount.toNumber()
     }
     if ((m.classType === 'SecretToProof' || m.classType === 'DirectTransfer')) {
       receivedAmount = (m as any).transferredAmount.toNumber()
     }
-    if (dir === 'right->left') {
-      const temp = sentAmount
-      sentAmount = receivedAmount
-      receivedAmount = temp
-    }
     return {
       messageType: m.classType,
       message: '',
-      // technically sent/received were swapped if 'right->left'
-      amountLeft: sentAmount,
-      amountRight: receivedAmount
+      sentAmount,
+      receivedAmount
     }
   } else if (m instanceof Ack) { // Ack and Lock seems to be not used
     return {

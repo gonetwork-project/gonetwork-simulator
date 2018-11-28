@@ -1,6 +1,7 @@
 interface Point { x: number, y: number }
 type MetaData = { text: string }
 type BlockData = MetaData & { y: number, height: number }
+type Transfer = { amount: number, anchor: 'start' | 'end' } & Point
 
 const margin = { top: 50, right: 10, bottom: 30, left: 10 }
 const width = window.innerWidth - margin.left - margin.right
@@ -108,6 +109,8 @@ const blockData: BlockData[] = []
 const arrows = chart.append('g').attr('id', 'arrows')
 const arrowData: Point[][] = []
 const metaData: MetaData[] = []
+const transfers = chart.append('g').attr('id', 'transfers')
+const transferData: Transfer[] = []
 
 // draw the block from y height to max-height
 function drawBlock (val: BlockData) {
@@ -151,6 +154,27 @@ function drawBlock (val: BlockData) {
 }
 
 function next_arrows () {
+
+  (transfers.selectAll('.transfer') as any)
+    .data(transferData, d => d.y)
+    .exit().remove();
+  (transfers.selectAll('.transfer') as any)
+    .data(transferData, d => d.y)
+    .enter().append('text')
+    .attr('class', 'transfer')
+    .attr('text-anchor', d => d.anchor)
+    .attr('font-family', 'sans-serif')
+    .attr('font-size', '10px')
+    .attr('fill', d => d.amount < 0 ? 'red' : 'green')
+    // .style('text-anchor', 'middle') // place the text halfway on the arc
+    // .attr('startOffset', '50%')
+    .attr('opacity', 0)
+    .text((d) => `${d.amount < 0 ? '-' : ''}${d.amount}`)
+    .transition()
+    .duration(duration)
+    .ease(d3.easeLinear, 2)
+    .attr('opacity', 1);
+
   (arrows.selectAll('.arrow') as any)
     .data(arrowData, function (d) { return d[d.length - 1].y }).exit().remove();
   (arrows.selectAll('.arrow') as any)
@@ -295,12 +319,16 @@ function tick () {
     .attr('transform', 'translate(0,' + y(globalY - stepY) + ')')
     .on('end',
       function () {
+        // TODO: not sure but seems that we should compare sum of lengths of arrowData and blockData
         if (arrowData.length >= maxEvents) {
           arrowData.splice(0, arrowData.length - maxEvents)
           metaData.splice(0, metaData.length - maxEvents)
         }
         if (blockData.length >= maxEvents) {
           blockData.splice(0, blockData.length - maxEvents)
+        }
+        if (transferData.length >= maxEvents) {
+          transferData.splice(0, transferData.length - maxEvents)
         }
         next_arrows()
       })
@@ -327,10 +355,28 @@ initBridge(
         break
       case 'off-msg':
         metaData.push({ text: e.messageType + ': ' + e.message })
+        if ((e as any).amountLeft) {
+          transferData.push({ x: 0, y: globalY - stepY, amount: (e as any).amountLeft, anchor: 'end' })
+        }
+        if ((e as any).amountRight) {
+          transferData.push({ x: 0, y: globalY - stepY, amount: (e as any).amountLeft, anchor: 'end' })
+        }
         if (e.dir === 'left->right') {
+          if ((e as any).sentAmount) {
+            transferData.push({ x: 0, y: globalY - stepY, anchor: 'end', amount: (e as any).sentAmount })
+          }
+          if ((e as any).receivedAmount) {
+            transferData.push({  x: 1, y: globalY, anchor: 'start', amount: (e as any).receivedAmount })
+          }
           arrowData.push([{ x: 0, y: globalY - stepY },
           { x: 0.25, y: globalY - stepY * .125 }, { x: 0.75, y: globalY + stepY * .125 }, { x: 1, y: globalY }])
         } else {
+          if ((e as any).sentAmount) {
+            transferData.push({ x: 1, y: globalY, anchor: 'end', amount: (e as any).sentAmount })
+          }
+          if ((e as any).receivedAmount) {
+            transferData.push({ x: 0, y: globalY - stepY, anchor: 'start', amount: (e as any).receivedAmount })
+          }
           arrowData.push([{ x: 1, y: globalY - stepY },
           { x: 0.75, y: globalY - stepY * .125 }, { x: 0.25, y: globalY + stepY * .125 }, { x: 0, y: globalY }])
         }
