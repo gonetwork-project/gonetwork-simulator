@@ -23,7 +23,7 @@ const chart = d3.select('#chart')
   .append('g')
   .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
 
-const x = d3.scaleLinear().domain([0, 1]).range([100, max - 100])
+const x = d3.scaleLinear().domain([0, 1]).range([85, max - 100])
 const y = d3.scaleLinear().domain([globalY - maxY, globalY]).range([height, 0])
 const lineGenerator = d3.line()
   .curve(d3.curveCardinal)
@@ -47,12 +47,13 @@ const lineGen = d3.line<Point>()
 
 const yAxis = (d3 as any).axisLeft().scale(y).tickSizeOuter(0).tickFormat('')
 const axisY = chart.append('g').attr('class', 'y axis')
-  .attr('transform', 'translate(100,0)').call(yAxis)
-const yAxis2 = (d3 as any).axisRight().scale(y).tickSize(15).tickSizeOuter(0).tickFormat('')// We dont use .tickSize(0) because we want the distance away from the axis to remain;
+  .attr('transform', 'translate(85,0)').call(yAxis)
+const yAxis2 = (d3 as any).axisRight().scale(y)
+  .tickSize(15).tickSizeOuter(0).tickFormat('')// We dont use .tickSize(0) because we want the distance away from the axis to remain;
 const axisY2 = chart.append('g').attr('class', 'y axis')
   .attr('transform', `translate(${max - 100},0)`).call(yAxis2)
 
-chart.append('g').attr('transform', 'translate(88,-30) scale(0.25)')
+chart.append('g').attr('transform', 'translate(73,-30) scale(0.25)')
   .append('use').attr('xlink:href', '#man')
 chart.append('g').attr('transform', `translate(${max - 112},-30),scale(0.25)`)
   .append('use').attr('xlink:href', '#man')
@@ -116,7 +117,7 @@ function drawBlock (val: BlockData) {
     .enter()
   let block = add.append('g').attr('class', 'block')
   block.append('rect')
-    .attr('x', 100)// static
+    .attr('x', 85)// static
     .attr('y', function (d) {
       return y(d.y)
     })
@@ -129,14 +130,14 @@ function drawBlock (val: BlockData) {
   (block as any).append('use').attr('class', 'block-marker')
     .attr('transform', 'scale(0.0225)')
     .attr('xlink:href', '#marker')
-    .attr('x', 100 / 0.045)// divide by scale
+    .attr('x', 85 / 0.045)// divide by scale
     .attr('y', function (d) {
 
       return (y(d.y) + 5) / 0.0225 + 933.3333333333334
     }).transition()
     .duration(duration)
     .ease(d3.easeElastic, 2)
-    .attr('x', 100 / 0.0225)
+    .attr('x', 85 / 0.0225)
 
   block.append('text')
     .attr('class', 'block-text')
@@ -326,11 +327,13 @@ initBridge(
         break
       case 'off-msg':
         metaData.push({ text: e.messageType + ': ' + e.message })
-        e.dir === 'right->left' ?
+        if (e.dir === 'left->right') {
           arrowData.push([{ x: 0, y: globalY - stepY },
-          { x: 0.25, y: globalY - stepY * .125 }, { x: 0.75, y: globalY + stepY * .125 }, { x: 1, y: globalY }]) :
+          { x: 0.25, y: globalY - stepY * .125 }, { x: 0.75, y: globalY + stepY * .125 }, { x: 1, y: globalY }])
+        } else {
           arrowData.push([{ x: 1, y: globalY - stepY },
           { x: 0.75, y: globalY - stepY * .125 }, { x: 0.25, y: globalY + stepY * .125 }, { x: 0, y: globalY }])
+        }
         tick()
         break
     }
