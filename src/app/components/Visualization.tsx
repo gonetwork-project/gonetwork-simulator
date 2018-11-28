@@ -13,21 +13,38 @@ import { SignedMessage, deserializeAndDecode, Ack, Lock } from 'go-network-frame
 const html = require('../../vis/vis.html')
 
 type P2PMsg = ReturnType<typeof deserializeAndDecode>
-type Transform = (m: P2PMsg) =>
+type Transform = (dir: OffchainEv['dir']) => (m: P2PMsg) =>
   { messageType: OffchainEv['messageType'], message: OffchainEv['message'] }
 
-const p2pMessageToVisEv = (dir: OffchainEv['dir'], transform: Transform) =>
+const p2pMessageToVisEv = (dir: OffchainEv['dir'], transform: ReturnType<Transform>) =>
   (m: P2PMsg): OffchainEv =>
     Object.assign({
       dir, type: 'off-msg' as 'off-msg'
     }, transform(m))
 
-const transform: Transform = m => {
+const transform: Transform = dir => m => {
   console.log('TR', m)
   if (m instanceof SignedMessage) {
+    let sentAmount: number | undefined
+    let receivedAmount: number | undefined
+    // assumes left->right perspective if dir is different it will swap it
+    if ((m.classType === 'MediatedTransfer' || m.classType === 'DirectTransfer')) {
+      sentAmount = -(m as any).transferredAmount.toNumber()
+    }
+    if ((m.classType === 'SecretToProof' || m.classType === 'DirectTransfer')) {
+      receivedAmount = (m as any).transferredAmount.toNumber()
+    }
+    if (dir === 'right->left') {
+      const temp = sentAmount
+      sentAmount = receivedAmount
+      receivedAmount = temp
+    }
     return {
       messageType: m.classType,
-      message: ''
+      message: '',
+      // technically sent/received were swapped if 'right->left'
+      amountLeft: sentAmount,
+      amountRight: receivedAmount
     }
   } else if (m instanceof Ack) { // Ack and Lock seems to be not used
     return {
@@ -77,7 +94,7 @@ export class Visualization extends React.Component<Props, State> {
       .mergeMap(([evName, dir]) =>
         Observable.fromEvent<any>(this.props.account.p2p, evName)
           .map(deserializeAndDecode)
-          .map(p2pMessageToVisEv(dir, transform))
+          .map(p2pMessageToVisEv(dir, transform(dir)))
       )
       .merge(
         this.props.account.blockchain.monitoring.asStream('*')

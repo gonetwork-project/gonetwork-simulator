@@ -71,6 +71,8 @@ export type OffchainEv = {
   dir: 'right->left' | 'left->right'
   messageType: string
   message: string
+  amountLeft?: number
+  amountRight?: number
 }
 
 export type OnchainEv = {
