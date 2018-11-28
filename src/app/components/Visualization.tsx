@@ -23,10 +23,11 @@ const p2pMessageToVisEv = (dir: OffchainEv['dir'], transform: Transform) =>
     }, transform(m))
 
 const transform: Transform = m => {
+  console.log('TR', m)
   if (m instanceof SignedMessage) {
     return {
       messageType: m.classType,
-      message: '[tood]'
+      message: ''
     }
   } else if (m instanceof Ack) { // Ack and Lock seems to be not used
     return {
@@ -68,13 +69,13 @@ export class Visualization extends React.Component<Props, State> {
 
   componentDidMount () {
     const cfg = [
-      [this.props.account.p2p, 'left->right'],
-      [this.props.other.local && this.props.other.local.p2p, 'right->left']
-    ].filter(c => !!c[0]) as Array<[P2P, OffchainEv['dir']]>
+      ['message-received', 'right->left'],
+     ['message-sent', 'left->right']
+    ].filter(c => !!c[0]) as Array<[string, OffchainEv['dir']]>
 
     this.sub = Observable.from(cfg)
-      .mergeMap(([p2p, dir]) =>
-        Observable.fromEvent<any>(p2p, 'message-received')
+      .mergeMap(([evName, dir]) =>
+        Observable.fromEvent<any>(this.props.account.p2p, evName)
           .map(deserializeAndDecode)
           .map(p2pMessageToVisEv(dir, transform))
       )

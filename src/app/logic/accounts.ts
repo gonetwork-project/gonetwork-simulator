@@ -95,9 +95,8 @@ const shortAddress = (a: string) => '0x' + a.substring(0, 16) + '...'
 
 const weiToEthString = (w: Wei) => w.div(new BN('1000000000000000000')).toString()
 
-const collectEvents = (evs: Observable<any>, name = 'N/A') =>
+const collectEvents = (evs: Observable<any>) =>
   evs
-    // .do(x => console.log('EVENT', name, x))
     .scan((a, e) => a.concat([e]), [])
     .shareReplay(1)
 
@@ -162,34 +161,19 @@ const initAccount = (cfg: UserSession, contracts: Contracts) => (account: Accoun
 
   const events = collectEvents(Observable.merge(
     blockchain.monitoring.asStream('*').map(e => {
-      const payload = JSON.stringify(
-        Object.entries(e).reduce((acc, [k, v]) => {
-          acc[k] = Buffer.isBuffer(v) ? '0x' + v.toString('hex') :
-            BN.isBN(v) ? v.toString(10) : v
-          return acc
-        }, {}),
-        null, 4)
       return {
-        // block has to be defined to load the acocunt
         block: blockchain.monitoring.blockNumber()!.toNumber(),
         at: Date.now(),
         source: EventSource.Blockchain,
         event: e
-        // header: e._type,
-        // payload: payload,
-        // short: payload
       } as Event
     }),
     Observable.fromEvent(p2p, 'message-received').map(e => {
-      const payload = JSON.stringify(e, null, 4)
       return {
         at: Date.now(),
         block: blockchain.monitoring.blockNumber()!.toNumber(),
         source: EventSource.P2P,
         event: e
-        // header: 'P2P',
-        // payload,
-        // short: payload.split('\n').slice(0, 4).join('\n')
       } as Event
     }),
     // FIXME - remove
@@ -199,7 +183,7 @@ const initAccount = (cfg: UserSession, contracts: Contracts) => (account: Accoun
         source: EventSource.BlockNumber,
         event: bn.toNumber()
       } as any))
-  ), 'EVENTS') as Observable<Array<Event>> // todo: improve typing
+  )) as Observable<Array<Event>> // todo: improve typing
 
   // do not loose any event
   const sub = events
