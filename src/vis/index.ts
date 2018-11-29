@@ -372,10 +372,10 @@ initBridge(
           { x: 0.25, y: globalY - stepY * .125 }, { x: 0.75, y: globalY + stepY * .125 }, { x: 1, y: globalY }])
         } else {
           if ((e as any).sentAmount) {
-            transferData.push({ x: 1.03, y: globalY - stepY - 0.03, anchor: 'end', amount: (e as any).sentAmount })
+            transferData.push({ x: 1.03, y: globalY - 2 * stepY - 0.03, anchor: 'start', amount: (e as any).sentAmount })
           }
           if ((e as any).receivedAmount) {
-            transferData.push({ x: -0.03, y: globalY - stepY * 2 - 0.03, anchor: 'start', amount: (e as any).receivedAmount })
+            transferData.push({ x: -0.03, y: globalY - stepY - 0.03, anchor: 'end', amount: (e as any).receivedAmount })
           }
           arrowData.push([{ x: 1, y: globalY - stepY },
           { x: 0.75, y: globalY - stepY * .125 }, { x: 0.25, y: globalY + stepY * .125 }, { x: 0, y: globalY }])
