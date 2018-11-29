@@ -7,13 +7,13 @@ import { Subscription, Observable } from 'rxjs'
 import { BlockNumber, Wei } from 'eth-types'
 import { VisEvent, OffchainEv } from '../../protocol'
 import { sendMediated, sendDirect } from '../logic/offchain-actions'
-import { as, BN, P2P } from 'go-network-framework'
+import { as, BN, ChannelState } from 'go-network-framework'
 import { SignedMessage, deserializeAndDecode, Ack, Lock } from 'go-network-framework/lib/state-channel/message'
 
 const html = require('../../vis/vis.html')
 
 type P2PMsg = ReturnType<typeof deserializeAndDecode>
-type Transform = (dir: OffchainEv['dir']) => (m: P2PMsg) =>
+type Transform = (ch: ChannelState) => (m: P2PMsg) =>
   { messageType: OffchainEv['messageType'], message: OffchainEv['message'] }
 
 const p2pMessageToVisEv = (dir: OffchainEv['dir'], transform: ReturnType<Transform>) =>
@@ -22,35 +22,52 @@ const p2pMessageToVisEv = (dir: OffchainEv['dir'], transform: ReturnType<Transfo
       dir, type: 'off-msg' as 'off-msg'
     }, transform(m))
 
-const transform: Transform = dir => m => {
-  console.log('TR', m)
-  if (m instanceof SignedMessage) {
-    let sentAmount: number | undefined
-    let receivedAmount: number | undefined
-    if ((m.classType === 'MediatedTransfer' || m.classType === 'DirectTransfer')) {
-      sentAmount = -(m as any).transferredAmount.toNumber()
+const transform: Transform = state => {
+  let lastMediated = 0
+  let lastTransferredAmount = state.transferredAmount.toNumber()
+  return m => {
+    console.log('TR', m)
+    if (m instanceof SignedMessage) {
+      let sentAmount: number | undefined
+      let receivedAmount: number | undefined
+
+      if (m.classType === 'DirectTransfer') {
+        const a = (m as any).transferredAmount.toNumber()
+        receivedAmount = (a - lastTransferredAmount)
+        sentAmount = -receivedAmount
+        lastTransferredAmount = a
+      }
+
+      if (m.classType === 'MediatedTransfer') {
+        sentAmount = -(m as any).lock.amount.toNumber()
+        lastMediated = sentAmount
+        lastTransferredAmount = (m as any).transferredAmount.toNumber()
+      }
+
+      if (m.classType === 'SecretToProof') {
+        receivedAmount = -lastMediated
+        lastTransferredAmount = (m as any).transferredAmount.toNumber()
+      }
+
+      return {
+        messageType: m.classType,
+        message: '',
+        sentAmount,
+        receivedAmount
+      }
+    } else if (m instanceof Ack) { // Ack and Lock seems to be not used
+      return {
+        messageType: 'Ack',
+        message: '[todo]'
+      }
+    } else if (m instanceof Lock) {
+      return {
+        messageType: 'Lock',
+        message: '[todo]'
+      }
     }
-    if ((m.classType === 'SecretToProof' || m.classType === 'DirectTransfer')) {
-      receivedAmount = (m as any).transferredAmount.toNumber()
-    }
-    return {
-      messageType: m.classType,
-      message: '',
-      sentAmount,
-      receivedAmount
-    }
-  } else if (m instanceof Ack) { // Ack and Lock seems to be not used
-    return {
-      messageType: 'Ack',
-      message: '[todo]'
-    }
-  } else if (m instanceof Lock) {
-    return {
-      messageType: 'Lock',
-      message: '[todo]'
-    }
+    throw new Error('UNKNOWN_CASE')
   }
-  throw new Error('UNKNOWN_CASE')
 }
 
 export interface Props {
@@ -79,15 +96,15 @@ export class Visualization extends React.Component<Props, State> {
 
   componentDidMount () {
     const cfg = [
-      ['message-received', 'right->left'],
-     ['message-sent', 'left->right']
-    ].filter(c => !!c[0]) as Array<[string, OffchainEv['dir']]>
+      ['message-received', 'right->left', this.props.channel.peerState],
+      ['message-sent', 'left->right', this.props.channel.myState]
+    ].filter(c => !!c[0]) as Array<[string, OffchainEv['dir'], ChannelState]>
 
     this.sub = Observable.from(cfg)
-      .mergeMap(([evName, dir]) =>
+      .mergeMap(([evName, dir, st]) =>
         Observable.fromEvent<any>(this.props.account.p2p, evName)
           .map(deserializeAndDecode)
-          .map(p2pMessageToVisEv(dir, transform(dir)))
+          .map(p2pMessageToVisEv(dir, transform(st)))
       )
       .merge(
         this.props.account.blockchain.monitoring.asStream('*')
@@ -224,8 +241,8 @@ export class Visualization extends React.Component<Props, State> {
         style={{ flex: 1 }}
         source={source}
         scrollEnabled={false}
-        // @ts-ignore
-        // useWebKit={true}
+      // @ts-ignore
+      // useWebKit={true}
       >
       </WebView>
 
