@@ -162,14 +162,15 @@ function next_arrows () {
     .data(transferData, d => d.y)
     .enter().append('text')
     .attr('class', 'transfer')
-    .attr('text-anchor', d => d.anchor)
     .attr('font-family', 'sans-serif')
-    .attr('font-size', '10px')
+    .attr('font-size', '14px')
+    .attr('text-anchor', d => d.anchor)
+    .attr('transform', (d: any) => `translate(${x(d.x)},${y(d.y)})`)
     .attr('fill', d => d.amount < 0 ? 'red' : 'green')
     // .style('text-anchor', 'middle') // place the text halfway on the arc
     // .attr('startOffset', '50%')
     .attr('opacity', 0)
-    .text((d) => `${d.amount < 0 ? '-' : ''}${d.amount}`)
+    .text((d) => `${d.amount < 0 ? '' : '+'}${d.amount}`)
     .transition()
     .duration(duration)
     .ease(d3.easeLinear, 2)
@@ -290,7 +291,11 @@ function tick () {
     .data(arrowData, function (d: any) { return d[d.length - 1].y })
     .attr('d', lineGen)
     .attr('stroke-width', 1)
-    .attr('fill', 'none')
+    .attr('fill', 'none');
+
+  (transfers.selectAll('.transfer') as any)
+    .transition().duration(duration).ease(d3.easeLinear, 2)
+    .attr('transform', (d: any) => `translate(${x(d.x)},${y(d.y)})`)
 
   arrows.selectAll('.arrow-head')
     .data(arrowData, function (d: any) { return d[d.length - 1].y })
@@ -355,27 +360,22 @@ initBridge(
         break
       case 'off-msg':
         metaData.push({ text: e.messageType + ': ' + e.message })
-        if ((e as any).amountLeft) {
-          transferData.push({ x: 0, y: globalY - stepY, amount: (e as any).amountLeft, anchor: 'end' })
-        }
-        if ((e as any).amountRight) {
-          transferData.push({ x: 0, y: globalY - stepY, amount: (e as any).amountLeft, anchor: 'end' })
-        }
+        // todo: fix / improve setting transfers x, y
         if (e.dir === 'left->right') {
           if ((e as any).sentAmount) {
-            transferData.push({ x: 0, y: globalY - stepY, anchor: 'end', amount: (e as any).sentAmount })
+            transferData.push({ x: -0.03, y: globalY - stepY * 2 - 0.03, anchor: 'end', amount: (e as any).sentAmount })
           }
           if ((e as any).receivedAmount) {
-            transferData.push({  x: 1, y: globalY, anchor: 'start', amount: (e as any).receivedAmount })
+            transferData.push({  x: 1.03, y: globalY - stepY - 0.03, anchor: 'start', amount: (e as any).receivedAmount })
           }
           arrowData.push([{ x: 0, y: globalY - stepY },
           { x: 0.25, y: globalY - stepY * .125 }, { x: 0.75, y: globalY + stepY * .125 }, { x: 1, y: globalY }])
         } else {
           if ((e as any).sentAmount) {
-            transferData.push({ x: 1, y: globalY, anchor: 'end', amount: (e as any).sentAmount })
+            transferData.push({ x: 1.03, y: globalY - stepY - 0.03, anchor: 'end', amount: (e as any).sentAmount })
           }
           if ((e as any).receivedAmount) {
-            transferData.push({ x: 0, y: globalY - stepY, anchor: 'start', amount: (e as any).receivedAmount })
+            transferData.push({ x: -0.03, y: globalY - stepY * 2 - 0.03, anchor: 'start', amount: (e as any).receivedAmount })
           }
           arrowData.push([{ x: 1, y: globalY - stepY },
           { x: 0.75, y: globalY - stepY * .125 }, { x: 0.25, y: globalY + stepY * .125 }, { x: 0, y: globalY }])
