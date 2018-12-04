@@ -10,17 +10,21 @@ import { Account } from '../logic/accounts'
 const headerKeys = ['classType', 'nonce', 'msgID']
 const headerKeysMap = Object.values(headerKeys).reduce((a, k) => (a[k] = true, a), {})
 
-const valueToString = (v: Buffer | BN | string) =>
-  BN.isBN(v) ? v.toString(10) :
+const valueToString = (v: Buffer | BN | string, k: string) => {
+  if (k === 'lock') {
+    return `amount: ${(v as any).amount.toNumber(10)}, expiration: ${(v as any).expiration.toNumber(10)}`
+  }
+  return BN.isBN(v) ? v.toString(10) :
     Buffer.isBuffer(v) ? '0x' + v.toString('hex') :
-    typeof v === 'object' ? '[TODO]' :
-    v === void 0 ? '-' :
-    `${v}`
+      typeof v === 'object' ? '-' :
+        v === void 0 ? '-' :
+          `${v}`
+}
 
 const MessageItem = (k: string, v: Buffer | BN | string) =>
   <View key={k} style={{ margin: 4 }}>
     <Text note>{k}</Text>
-    <Text>{valueToString(v)}</Text>
+    <Text>{valueToString(v, k)}</Text>
   </View>
 
 export interface Props {
@@ -56,6 +60,7 @@ export class Messages extends React.Component<Props> {
 
   renderManual = () => {
     const ms = this.props.account.p2pProxy.messages.value
+    console.log('MSSSSSS', ms)
     return [
       <Button key='b' onPress={this.exitManual} style={{ alignSelf: 'center', margin: 24 }}>
         <Text>Exit Manual Mode</Text>
@@ -68,12 +73,12 @@ export class Messages extends React.Component<Props> {
         <CardItem header style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           {headerKeys.map(k => <View key={k} style={{ flex: k === 'classType' ? 3 : 1 }}>
             <Text note>{k}</Text>
-            <Text ellipsizeMode='head'>{valueToString(msg[k])}</Text>
+            <Text ellipsizeMode='head'>{valueToString(msg[k], k)}</Text>
           </View>)}
         </CardItem>
         <CardItem cardBody style={{ alignItems: 'flex-start', flexDirection: 'column' }}>
           {
-            Object.keys(msg).filter(k => !headerKeysMap[k]).map((k) => MessageItem(k, msg[k]))
+            Object.keys(msg).filter(k => !headerKeysMap[k] && k !== 'signature').map((k) => MessageItem(k, msg[k]))
           }
         </CardItem>
       </Card>)
